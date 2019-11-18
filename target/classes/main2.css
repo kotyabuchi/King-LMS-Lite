@@ -1,0 +1,194 @@
+/* JavaFX CSS - Leave this comment until you have at least create one rule which uses -fx-Property */
+
+#mainPane {
+    -fx-background-color: linear-gradient(to bottom right, #FFC778, #F89174);
+}
+
+#closeWindow {
+    -fx-background-color: transparent;
+	-fx-background-size: 16px;
+	-fx-background-repeat: no-repeat;
+	-fx-background-position: center 10%;
+	-fx-background-image: url('close.png');
+}
+
+#NavigationBox  > #HBox > .button {
+	-fx-background-color: transparent;
+	-fx-pref-height: 60;
+	-fx-background-size: 32px;
+	-fx-background-repeat: no-repeat;
+	-fx-background-position: center 10%;
+}
+
+#NavigationBox  > #HBox > .button:hover {
+    -fx-text-fill: #8b4513;
+}
+
+#NavigationBox  > #HBox > #news{
+	-fx-background-image: url('newsIcon.png');
+}
+
+#NavigationBox  > #HBox > #task{
+	-fx-background-image: url('taskIcon.png');
+}
+
+#NavigationBox  > #HBox > #time{
+	-fx-background-image: url('timeIcon.png');
+}
+
+#NavigationBox  > #HBox > #setting{
+	-fx-background-image: url('settingIcon.png');
+}
+
+.progress-bar {
+    -fx-indeterminate-bar-length: 100;
+}
+
+.progress-bar > .bar {
+    -fx-background-color: #444;
+    -fx-background-insets: 1 1 2 1;
+    -fx-padding: 0.25em;
+}
+
+.progress-bar:indeterminate > .bar {
+    -fx-background-color: linear-gradient(to left, transparent, -fx-accent);
+}
+
+.progress-bar > .track {
+    -fx-background-color: transparent;
+}
+
+#reloadButton {
+    -fx-background-color: transparent;
+    -fx-pref-width: 1200;
+   	-fx-background-size: 64px;
+   	-fx-background-repeat: no-repeat;
+   	-fx-background-position: center 10%;
+   	-fx-background-image: url('reload.png');
+}
+
+.text-field {
+    -fx-background-color: #a9a9a9 , white , white;
+    -fx-background-insets: 0 -1 -1 -1, 0 0 0 0, 0 -1 3 -1;
+    -fx-background-radius: 0;
+}
+
+#toolBoxTop > .toggle-button {
+    -fx-background-color: transparent;
+	-fx-background-size: 18px;
+	-fx-background-repeat: no-repeat;
+	-fx-background-position: center center;
+	-fx-cursor: hand;
+}
+
+#toolBoxTop > .toggle-button:selected {
+    -fx-background-color: #dcdcdc;
+}
+
+#listViewButton  {
+    -fx-background-image: url('list.png');
+}
+
+#gridViewButton {
+    -fx-background-color: transparent;
+	-fx-background-image: url('grid.png');
+}
+
+.text-field:focused {
+    -fx-background-color: #F89174 , white , white;
+}
+
+.toggle-button {
+    -fx-background-radius: 0;
+}
+
+.scroll-pane > .viewport {
+    -fx-background-color: #fff;
+}
+
+.scroll-bar:horizontal, .scroll-bar:vertical{
+    -fx-background-color:transparent;
+}
+
+.scroll-bar:vertical  .track {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0em;
+}
+
+.scroll-bar:vertical  .thumb {
+    -fx-background-color: #F89174;
+    -fx-background-radius: 5em;
+}
+
+/* News Tab CSS */
+.news-content-box {
+    -fx-border-width: 2px;
+}
+
+.news-content-box.is-read {
+    -fx-border-color: #a9d18e;
+}
+
+.news-content-box.not-read {
+    -fx-border-color: #FFC778;
+}
+
+.news-content-box:hover.is-read:hover {
+    -fx-border-color: #83c456;
+}
+
+.news-content-box:hover.not-read:hover {
+    -fx-border-color: #ffa21f;
+}
+
+.is-read .separator .line {
+    -fx-border-width: 1 0 0 0 ;
+    -fx-border-color: #a9d18e;
+}
+
+.not-read .separator .line {
+    -fx-border-width: 1 0 0 0 ;
+    -fx-border-color: #FFC778;
+}
+
+/* Task Tab CSS */
+.task-content-box {
+    -fx-border-width: 2px;
+}
+
+.task-content-box.task-before-one {
+    -fx-border-color: #ff4500;
+}
+
+.task-content-box.task-before-three {
+    -fx-border-color: #FFC778;
+}
+
+.task-content-box.task-before-seven {
+    -fx-border-color: #e6e600;
+}
+
+.task-content-box.task-after-seven {
+    -fx-border-color: #a9d18e;
+}
+
+.task-content-box .separator .line {
+    -fx-border-width: 1 0 0 0 ;
+}
+
+.task-content-box.task-before-one .separator .line {
+    -fx-border-color: #ff4500;
+}
+
+.task-content-box.task-before-three .separator .line {
+    -fx-border-color: #FFC778;
+}
+
+.task-content-box.task-before-seven .separator .line {
+    -fx-border-color: #e6e600;
+}
+
+.task-content-box.task-after-seven .separator .line {
+    -fx-border-color: #a9d18e;
+}
+

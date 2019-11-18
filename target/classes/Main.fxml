@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Accordion?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+
+<BorderPane minHeight="576.0" minWidth="1024.0" prefHeight="576.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.kabocchi.kingLmsLite.Controller.MainController">
+   <bottom>
+      <BorderPane maxHeight="40.0" minHeight="15.0" prefHeight="30.0" prefWidth="700.0" style="-fx-background-color: #f3f3f3;" BorderPane.alignment="CENTER">
+         <left>
+            <HBox prefHeight="18.0" prefWidth="550.0" BorderPane.alignment="CENTER">
+               <children>
+                  <ProgressBar fx:id="progressBar" prefWidth="300.0" progress="0.0">
+                     <opaqueInsets>
+                        <Insets />
+                     </opaqueInsets>
+                     <HBox.margin>
+                        <Insets right="10.0" />
+                     </HBox.margin>
+                  </ProgressBar>
+                  <Label fx:id="progressText" text="Label" />
+               </children>
+               <opaqueInsets>
+                  <Insets />
+               </opaqueInsets>
+               <BorderPane.margin>
+                  <Insets />
+               </BorderPane.margin>
+            </HBox>
+         </left>
+         <right>
+            <Button fx:id="updateButton" mnemonicParsing="false" onAction="#updateButtonClick" text="データ再取得" BorderPane.alignment="CENTER">
+               <BorderPane.margin>
+                  <Insets />
+               </BorderPane.margin>
+            </Button>
+         </right>
+         <BorderPane.margin>
+            <Insets />
+         </BorderPane.margin>
+         <padding>
+            <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+         </padding>
+      </BorderPane>
+   </bottom>
+   <center>
+      <TabPane fx:id="mainTabPane" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
+        <tabs>
+          <Tab fx:id="newsTab" text="お知らせ">
+               <content>
+                  <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="200.0" prefWidth="200.0">
+                     <content>
+                        <Accordion fx:id="newsAcco" />
+                     </content>
+                  </ScrollPane>
+               </content>
+          </Tab>
+            <Tab fx:id="taskTab" text="課題一覧">
+               <content>
+                  <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="200.0" prefWidth="200.0">
+                     <content>
+                        <Accordion fx:id="taskAcco" />
+                     </content>
+                  </ScrollPane>
+               </content>
+            </Tab>
+            <Tab fx:id="settingTab" text="設定">
+               <content>
+                  <VBox prefHeight="529.0" prefWidth="696.0">
+                     <children>
+                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Googleカレンダー通知">
+                           <font>
+                              <Font name="System Bold" size="18.0" />
+                           </font>
+                           <VBox.margin>
+                              <Insets left="15.0" top="10.0" />
+                           </VBox.margin>
+                        </Text>
+                        <HBox alignment="CENTER" prefHeight="40.0">
+                           <children>
+                              <CheckBox fx:id="googleNotificationMail" mnemonicParsing="false" text="メール" />
+                              <CheckBox fx:id="googleNotificationPopup" mnemonicParsing="false" text="ポップアップ通知">
+                                 <HBox.margin>
+                                    <Insets left="50.0" />
+                                 </HBox.margin>
+                              </CheckBox>
+                           </children>
+                           <VBox.margin>
+                              <Insets />
+                           </VBox.margin>
+                        </HBox>
+                        <HBox alignment="CENTER" prefHeight="40.0">
+                           <children>
+                              <TextField fx:id="reminderHour" prefHeight="27.0" prefWidth="30.0" promptText="0" />
+                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="時間">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Text>
+                              <TextField fx:id="reminderMinutes" prefHeight="27.0" prefWidth="30.0" promptText="0" />
+                              <Text layoutX="159.0" layoutY="23.0" strokeType="OUTSIDE" strokeWidth="0.0" text="分">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Text>
+                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="前に通知">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                                 <HBox.margin>
+                                    <Insets left="5.0" top="5.0" />
+                                 </HBox.margin>
+                              </Text>
+                           </children>
+                           <VBox.margin>
+                              <Insets bottom="10.0" />
+                           </VBox.margin>
+                        </HBox>
+                        <HBox alignment="CENTER">
+                           <children>
+                              <Button mnemonicParsing="false" onAction="#googleCalendarClick" prefHeight="28.0" prefWidth="300.0" text="Googleカレンダーを開く" textAlignment="CENTER" />
+                           </children>
+                           <VBox.margin>
+                              <Insets bottom="10.0" />
+                           </VBox.margin>
+                        </HBox>
+                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="データ自動再取得時間">
+                           <font>
+                              <Font name="System Bold" size="18.0" />
+                           </font>
+                           <VBox.margin>
+                              <Insets left="15.0" />
+                           </VBox.margin>
+                        </Text>
+                        <HBox alignment="CENTER" prefHeight="40.0">
+                           <children>
+                              <TextField fx:id="updateCycleDay" prefHeight="27.0" prefWidth="30.0" promptText="0" />
+                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="日">
+                                 <font>
+                                    <Font size="20.0" />
+                                 </font>
+                              </Text>
+                              <TextField fx:id="updateCycleHour" prefHeight="27.0" prefWidth="30.0" promptText="0" />
+                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="時">
+                                 <font>
+                                    <Font size="20.0" />
+                                 </font>
+                              </Text>
+                              <TextField fx:id="updateCycleMinutes" prefHeight="27.0" prefWidth="30.0" promptText="0" />
+                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="分">
+                                 <font>
+                                    <Font size="20.0" />
+                                 </font>
+                              </Text>
+                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="後に再取得">
+                                 <HBox.margin>
+                                    <Insets left="5.0" top="6.0" />
+                                 </HBox.margin>
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                              </Text>
+                           </children>
+                           <VBox.margin>
+                              <Insets bottom="10.0" />
+                           </VBox.margin>
+                        </HBox>
+                        <HBox alignment="CENTER">
+                           <children>
+                              <Button mnemonicParsing="false" onAction="#logout" prefHeight="28.0" prefWidth="300.0" text="KingLMSからサインアウト" textFill="RED" />
+                           </children>
+                           <VBox.margin>
+                              <Insets bottom="10.0" />
+                           </VBox.margin>
+                        </HBox>
+                        <HBox alignment="CENTER">
+                           <children>
+                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="このソフトウェアはアルファ版です。&#10;当アプリは、KingLmsの情報を利用した非公式アプリケーションであり、dotCampusとは一切関係がありません。&#10;当アプリの使用中に生じた、いかなる損害も一切の責任を負いかねます。" textAlignment="CENTER" wrappingWidth="699.779296875" />
+                           </children>
+                           <VBox.margin>
+                              <Insets bottom="10.0" />
+                           </VBox.margin>
+                        </HBox>
+                        <HBox alignment="TOP_CENTER" maxHeight="200.0" prefHeight="180.0">
+                           <children>
+                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="バグや要望などございましたら&#10;右のQRコードにアクセスしていただき情報提供のご協力をお願いします！" textAlignment="CENTER" wrappingWidth="350.7986755371094">
+                                 <HBox.margin>
+                                    <Insets top="45.0" />
+                                 </HBox.margin>
+                              </Text>
+                              <VBox alignment="TOP_CENTER" maxWidth="150.0" prefHeight="200.0" prefWidth="150.0">
+                                 <children>
+                                    <ImageView fitHeight="130.0" fitWidth="130.0" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@formQRCode.png" />
+                                       </image>
+                                    </ImageView>
+                                    <Hyperlink fx:id="formLink" onAction="#formLinkClicked" text="QRコードにアクセス&#10;できない場合はこちら" textAlignment="CENTER" textFill="#3985ff" />
+                                 </children>
+                              </VBox>
+                           </children>
+                           <VBox.margin>
+                              <Insets />
+                           </VBox.margin>
+                           <padding>
+                              <Insets top="10.0" />
+                           </padding>
+                        </HBox>
+                     </children>
+                  </VBox>
+               </content>
+            </Tab>
+        </tabs>
+      </TabPane>
+   </center>
+</BorderPane>
