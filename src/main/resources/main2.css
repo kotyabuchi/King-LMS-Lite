@@ -123,30 +123,31 @@
 /* News Tab CSS */
 .news-content-box {
     -fx-border-width: 2px;
+    -fx-border-color: #757575;
 }
 
-.news-content-box.is-read {
+.news-content-box.alreadyRead {
     -fx-border-color: #a9d18e;
 }
 
-.news-content-box.not-read {
+.news-content-box.unread {
     -fx-border-color: #FFC778;
 }
 
-.news-content-box:hover.is-read:hover {
+.news-content-box:hover.alreadyRead:hover {
     -fx-border-color: #83c456;
 }
 
-.news-content-box:hover.not-read:hover {
+.news-content-box:hover.unread:hover {
     -fx-border-color: #ffa21f;
 }
 
-.is-read .separator .line {
+.alreadyRead .separator .line {
     -fx-border-width: 1 0 0 0 ;
     -fx-border-color: #a9d18e;
 }
 
-.not-read .separator .line {
+.unread .separator .line {
     -fx-border-width: 1 0 0 0 ;
     -fx-border-color: #FFC778;
 }
@@ -172,6 +173,22 @@
     -fx-border-color: #a9d18e;
 }
 
+.task-content-box.task-before-one .taskLimitDay {
+    -fx-text-fill: #b33000;
+}
+
+.task-content-box.task-before-three .taskLimitDay {
+        -fx-text-fill: #b38b54;
+}
+
+.task-content-box.task-before-seven .taskLimitDay {
+    -fx-text-fill: #b3b300;
+}
+
+.task-content-box.task-after-seven .taskLimitDay {
+    -fx-text-fill: #90b379;
+}
+
 .task-content-box .separator .line {
     -fx-border-width: 1 0 0 0 ;
 }
@@ -192,3 +209,10 @@
     -fx-border-color: #a9d18e;
 }
 
+.check-box .box {
+    -fx-background-color: #fff;
+}
+
+.check-box:selected .mark {
+    -fx-background-color: #fff;
+}

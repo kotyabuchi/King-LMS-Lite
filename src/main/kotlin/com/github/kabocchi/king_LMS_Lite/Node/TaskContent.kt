@@ -17,7 +17,9 @@ import javafx.scene.text.FontWeight
 import javafx.scene.text.Text
 import javafx.scene.text.TextFlow
 import java.time.LocalDateTime
+import java.time.chrono.ChronoLocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 class TaskContent(json: JsonObject, _description: String, groupName: String, groupId: Int): VBox() {
     private val separator = Separator()
@@ -31,6 +33,7 @@ class TaskContent(json: JsonObject, _description: String, groupName: String, gro
     private var strLastUpdate: String = json.getString("UpdatedDate", "")
     private var submissionStart: LocalDateTime? = null
     private var submissionEnd: LocalDateTime? = null
+    private var limitHours: Long = 0
 
     private var longDescription: TextFlow
     private var shortDescription: Label
@@ -70,10 +73,15 @@ class TaskContent(json: JsonObject, _description: String, groupName: String, gro
             this.styleClass.add("task-after-seven")
         }
 
+        val groupLabel = Label(groupName).apply {
+            padding = Insets(0.0)
+            setMargin(this, Insets(0.0, 0.0, -4.0, 0.0))
+        }
+
         val topBorderPane = BorderPane()
-        this.children.add(topBorderPane)
         val titleBox = HBox()
         titleBox.spacing = 10.0
+        topBorderPane.left = titleBox
 
         separator.prefWidth = this.prefWidth / 40
 
@@ -81,9 +89,23 @@ class TaskContent(json: JsonObject, _description: String, groupName: String, gro
             font = Font.font(Font(14.0).family, FontWeight.BOLD, 14.0)
         }
         titleBox.children.add(titleText)
-        topBorderPane.left = titleBox
 
-        this.children.add(separator)
+        val dateText = Label().apply {
+            text = if (strSubmissionEnd == "") {
+                "期限: なし"
+            } else {
+                limitHours = ChronoUnit.HOURS.between(LocalDateTime.now(), submissionEnd)
+                val limit = if (limitHours / 24 <= 0) {
+                    "${limitHours}時間"
+                } else {
+                    "${limitHours / 24}日"
+                }
+                "期限: $limit"
+            }
+            font = Font.font(Font(13.0).family, FontWeight.BOLD, 13.0)
+            styleClass.add("taskLimitDay")
+        }
+        topBorderPane.right = dateText
 
         var description = _description
         if (description.trim().isBlank()) {
@@ -96,7 +118,6 @@ class TaskContent(json: JsonObject, _description: String, groupName: String, gro
                 textOverrun = OverrunStyle.ELLIPSIS
                 textFill = Color.GRAY
             }
-            this.children.add(shortDescription)
             longDescription = TextFlow()
         } else {
             shortDescription = Label(cleanDescription(description).replace("\n", "")).apply {
@@ -106,7 +127,6 @@ class TaskContent(json: JsonObject, _description: String, groupName: String, gro
                 ellipsisString = "..."
                 textOverrun = OverrunStyle.ELLIPSIS
             }
-            this.children.add(shortDescription)
 
             longDescription = cleanDescriptionVer2(description)
 
@@ -114,14 +134,16 @@ class TaskContent(json: JsonObject, _description: String, groupName: String, gro
                 showingDescription = if (showingDescription) {
                     this.children.remove(longDescription)
                     this.children.add(shortDescription)
-                    false
+                    !showingDescription
                 } else {
                     this.children.remove(shortDescription)
                     this.children.add(longDescription)
-                    true
+                    !showingDescription
                 }
             }
         }
+
+        this.children.addAll(groupLabel, topBorderPane, separator, shortDescription)
     }
 
     fun getSubmissionEnd(): LocalDateTime? {

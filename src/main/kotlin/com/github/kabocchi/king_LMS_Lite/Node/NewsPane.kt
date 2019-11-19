@@ -6,6 +6,7 @@ import com.github.kabocchi.king_LMS_Lite.connection
 import javafx.application.Platform
 import javafx.geometry.Insets
 import javafx.geometry.Pos
+import javafx.scene.Cursor
 import javafx.scene.control.*
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
@@ -13,6 +14,7 @@ import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
 import javafx.scene.text.Font
 import javafx.scene.text.FontWeight
+import javafx.scene.text.Text
 import kotlin.concurrent.thread
 
 class NewsPane: BorderPane() {
@@ -21,6 +23,7 @@ class NewsPane: BorderPane() {
     private val progressText: Label
     private val searchBox: TextField
     private val filterButton: Button
+    private val filterBox: VBox
     private val listViewButton: ToggleButton
     private val gridViewButton: ToggleButton
     private val scrollPane: ScrollPane
@@ -28,6 +31,7 @@ class NewsPane: BorderPane() {
     private var listView = VBox()
     private var gridView = VBox()
 
+    private var showingFilter = false
     private var updatingNews = false
 
     init {
@@ -50,7 +54,7 @@ class NewsPane: BorderPane() {
         this.top = toolBoxTopV
 
         progressText = Label().apply {
-            prefWidth = 880.0
+            prefWidth = 850.0
             font = Font.font(Font(14.0).family, FontWeight.BOLD, 14.0)
         }
 
@@ -59,9 +63,30 @@ class NewsPane: BorderPane() {
             prefWidth = 250.0
         }
 
+        filterBox = VBox().apply {
+            spacing = 4.0
+            padding = Insets(10.0, 30.0, 10.0, 30.0)
+            styleClass.add("news-content-box")
+        }
+
+        val unreadOnly = CheckBox()
+        val unreadOnlyText = Text("未読のみ表示する")
+        val unreadFilterHBox = HBox(unreadOnly, unreadOnlyText)
+        filterBox.children.add(unreadFilterHBox)
+
         filterButton = Button("").apply {
             setOnAction {
-                if (!updatingNews) updateNews()
+                showingFilter = if (showingFilter) {
+                    Platform.runLater {
+                        listView.children.remove(filterBox)
+                    }
+                    !showingFilter
+                } else {
+                    Platform.runLater {
+                        listView.children.add(0, filterBox)
+                    }
+                    !showingFilter
+                }
             }
         }
 
@@ -73,10 +98,10 @@ class NewsPane: BorderPane() {
             prefWidth = 26.0
             prefHeight = 26.0
             setOnAction {
-                if (this.isSelected) {
+                if (isSelected) {
                     showListView()
                 } else {
-                    this.isSelected = true
+                    isSelected = true
                 }
             }
         }
@@ -87,10 +112,10 @@ class NewsPane: BorderPane() {
             prefWidth = 26.0
             prefHeight = 26.0
             setOnAction {
-                if (this.isSelected) {
+                if (isSelected) {
                     showGridView()
                 } else {
-                    this.isSelected = true
+                    isSelected = true
                 }
             }
         }
@@ -198,7 +223,7 @@ class NewsPane: BorderPane() {
             println("GetNews: " + (end2 - end1).toString() + "ms")
             endUpdate()
             if (failAmount == 0) {
-                changeProgressText("お知らせの取得が完了しました")
+                changeProgressText("お知らせの取得が完了しました [${newsAmount}件]")
             } else {
                 changeProgressText("${failAmount}件のお知らせの取得に失敗しました", true)
             }

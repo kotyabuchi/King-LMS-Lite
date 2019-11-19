@@ -23,7 +23,7 @@ class NewsContent(json: JsonObject, description: String): VBox() {
 
     private var showingDescription = false
 
-    private var isRead = json.getBoolean("IsRead", false)
+    private var unread = json.getBoolean("IsRead", false)
 
     private val title = json.getString("Title", "")
 
@@ -42,10 +42,10 @@ class NewsContent(json: JsonObject, description: String): VBox() {
 
         separator.prefWidth = this.prefWidth / 40
 
-        if (isRead) {
-            this.styleClass.add("is-read")
+        if (unread) {
+            this.styleClass.add("alreadyRead")
         } else {
-            this.styleClass.add("not-read")
+            this.styleClass.add("unread")
             val notRead = Label("[未読]")
             notRead.font = Font.font(Font(14.0).family, FontWeight.BOLD, 14.0)
             notRead.textFill = Color.web("#e12929")
@@ -78,18 +78,18 @@ class NewsContent(json: JsonObject, description: String): VBox() {
             showingDescription = if (showingDescription) {
                 this.children.remove(longDescription)
                 this.children.add(shortDescription)
-                false
+                !showingDescription
             } else {
-                if (!isRead) setRead()
+                if (!unread) setRead()
                 this.children.remove(shortDescription)
                 this.children.add(longDescription)
-                true
+                !showingDescription
             }
         }
     }
 
     private fun setRead() {
-        this.styleClass.remove("not-read")
-        this.styleClass.add("is-read")
+        this.styleClass.remove("unread")
+        this.styleClass.add("alreadyRead")
     }
 }

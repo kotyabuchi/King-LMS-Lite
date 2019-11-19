@@ -15,7 +15,9 @@ import javafx.scene.control.TextField
 import javafx.stage.Stage
 import org.jsoup.Connection
 import org.jsoup.Jsoup
+import java.net.SocketTimeoutException
 import java.net.UnknownHostException
+import javax.net.ssl.SSLHandshakeException
 
 class Login {
 
@@ -68,8 +70,15 @@ class Login {
             connection = Jsoup.connect("https://king.kcg.kyoto/campus/Secure/Login.aspx?ReturnUrl=%2Fcampus%2FCommunity%2FMySetting")
             val loginResult = try {
                 kcgLogin(connection, idField.text, passField.text)
-            } catch (e: UnknownHostException) {
-                showError("ホストに接続できませんでした。ネットワークの接続を確認してください。")
+            } catch (e: Exception) {
+                when (e) {
+                    is UnknownHostException, is SocketTimeoutException, is SSLHandshakeException -> {
+                        showError("ホストに接続できませんでした。ネットワークの接続を確認してください。")
+                    }
+                    else -> {
+                        showError("エラーが発生しました")
+                    }
+                }
             }
             Platform.runLater {
                 when (loginResult) {
@@ -115,6 +124,7 @@ class Login {
                     .data("TextPassword", pass)
                     .data("buttonHtmlLogon", "ログイン")
                     .userAgent("Mozilla")
+                    .timeout(10000)
                     .post()
             return if (doc != null && !doc.select("span#lblWarning").hasText()) {
                 LoginResult.SUCCESS
@@ -123,8 +133,10 @@ class Login {
             }
         } catch (e: UnknownHostException) {
             throw e
+        } catch (e: SocketTimeoutException) {
+            throw e
         } catch (e: Exception) {
-            e.printStackTrace()
+            throw e
 //                if (useSchoolWifi() && wifiLogin(id, pass)) {
 //                    TimeUnit.SECONDS.sleep(3)
 //                    loginCount++
@@ -132,7 +144,6 @@ class Login {
 //                    break
 //                }
         }
-        return LoginResult.ERROR
     }
 
     private fun showError(text: String) {

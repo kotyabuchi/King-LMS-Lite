@@ -60,17 +60,20 @@ class TaskPane: BorderPane() {
         toolBoxTopV.children.add(toolBoxTopH)
         this.top = toolBoxTopV
 
-        progressText = Label()
-        progressText.prefWidth = 880.0
-        progressText.font = Font.font(Font(14.0).family, FontWeight.BOLD, 14.0)
+        progressText = Label().apply {
+            prefWidth = 850.0
+            font = Font.font(Font(14.0).family, FontWeight.BOLD, 14.0)
+        }
 
-        searchBox = TextField()
-        searchBox.promptText = "検索"
-        searchBox.prefWidth = 250.0
+        searchBox = TextField().apply {
+            promptText = "検索"
+            prefWidth = 250.0
+        }
 
-        filterButton = Button("")
-        filterButton.setOnAction {
-            if (!updatingTask) updateTask()
+        filterButton = Button("").apply {
+            setOnAction {
+                if (!updatingTask) updateTask()
+            }
         }
 
         val viewButtonGroup = ToggleGroup()
@@ -224,7 +227,7 @@ class TaskPane: BorderPane() {
             println("GetTasks: " + (end - start).toString() + "ms")
             endUpdate()
             if (failAmount == 0) {
-                changeProgressText("課題の取得が完了しました")
+                changeProgressText("課題の取得が完了しました [${taskCount}件]")
             } else {
                 changeProgressText("${failAmount}件の課題の取得に失敗しました", true)
             }
