@@ -63,7 +63,9 @@ class NewsPane: BorderPane() {
 
         progressText = Label().apply {
             prefWidth = 850.0
-            font = Font.font(Font(14.0).family, FontWeight.BOLD, 14.0)
+            style = "-fx-font-weight: bold; -fx-font-size: 14px;"
+//            font = Font.font(Font(14.0).family, FontWeight.BOLD, 14.0)
+            println("Font is " + font.family)
         }
 
         searchBox = TextField().apply {
@@ -72,6 +74,7 @@ class NewsPane: BorderPane() {
         }
 
         filterButton = Button("").apply {
+            styleClass.add("filter-button")
             setOnAction {
                 showingFilter = if (showingFilter) {
                     Platform.runLater {
@@ -248,11 +251,10 @@ class NewsPane: BorderPane() {
             listView.children.clear()
             if (showingFilter) listView.children.add(filterBox)
             val unreadOnly = filterBox.showUnreadOnly()
+            val emergency = filterBox.showEmergency()
             for (it in newsList) {
                 if (unreadOnly && !it.unread) continue
-                NewsCategory.values().forEach {
-
-                }
+                if (emergency && !it.emergency) continue
                 if (filterBox.categoryFilter(it.category)) listView.children.add(it)
             }
             showListView()

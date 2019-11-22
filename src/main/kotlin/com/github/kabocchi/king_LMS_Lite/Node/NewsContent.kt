@@ -33,6 +33,7 @@ class NewsContent(doc: Document, _unread: Boolean, published: String, newsCatego
     private var showingDescription = false
 
     var unread = _unread
+    val emergency: Boolean
     val category = newsCategoryMap[json.getInt("CategoryId", 1)]!!
 
     private val title = json.getString("Title", "")
@@ -62,10 +63,13 @@ class NewsContent(doc: Document, _unread: Boolean, published: String, newsCatego
             }
 
             if (json.getString("Priority", "普通") == "緊急") {
+                emergency = true
                 val priorityLabel = Label("緊急").apply {
                     textFill = Color.web("#ff4500")
                 }
                 children.add(priorityLabel)
+            } else {
+                emergency = false
             }
 
             val categoryLabel = Label(category.categoryName)
@@ -76,12 +80,16 @@ class NewsContent(doc: Document, _unread: Boolean, published: String, newsCatego
 
         separator.prefWidth = this.prefWidth / 40
 
-        val titleText = Text(title)
-        titleText.font = Font.font(Font(14.0).family, FontWeight.BOLD, 14.0)
+        val titleText = Text(title).apply {
+            style = "-fx-font-size: 14px; -fx-font-weight: bold;"
+        }
+//        titleText.font = Font.font(Font(14.0).family, FontWeight.BOLD, 14.0)
         topBorderPane.left = titleText
 
-        val dateText = Text("掲載日: $published")
-        dateText.font = Font.font(Font(13.0).family, FontWeight.BOLD, 13.0)
+        val dateText = Text("掲載日: $published").apply {
+            style = "-fx-font-size: 13px; -fx-font-weight: bold;"
+        }
+//        dateText.font = Font.font(Font(13.0).family, FontWeight.BOLD, 13.0)
         topBorderPane.right = dateText
 
 
