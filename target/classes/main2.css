@@ -126,6 +126,19 @@
     -fx-border-color: #757575;
 }
 
+.setting-box .check-box {
+    -fx-pref-height: 22px;
+    -fx-font-size: 12.5;
+    -fx-cursor: hand;
+}
+
+.apply-button {
+    -fx-background-color: #FFC778;
+    -fx-text-fill: #fff;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
 .news-content-box.alreadyRead {
     -fx-border-color: #a9d18e;
 }
@@ -134,12 +147,8 @@
     -fx-border-color: #FFC778;
 }
 
-.news-content-box:hover.alreadyRead:hover {
-    -fx-border-color: #83c456;
-}
-
-.news-content-box:hover.unread:hover {
-    -fx-border-color: #ffa21f;
+.tag-box .label {
+    -fx-font-weight: bold;
 }
 
 .alreadyRead .separator .line {
@@ -209,3 +218,24 @@
     -fx-border-color: #a9d18e;
 }
 
+.check-box .box {
+    -fx-background-color: #fff;
+    -fx-border-color: #FFC778;
+    -fx-border-radius:3px;
+}
+
+.check-box:hover .box {
+    -fx-background-color: #ffd;
+}
+
+.check-box:hover .mark {
+    -fx-background-color: #fff;
+}
+
+.check-box:selected .box {
+    -fx-background-color: #FFC778;
+}
+
+.check-box:selected .mark {
+    -fx-background-color: #fff;
+}

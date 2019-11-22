@@ -1,12 +1,13 @@
 package com.github.kabocchi.kingLmsLite.Node
 
 import com.eclipsesource.json.Json
+import com.github.kabocchi.king_LMS_Lite.NewsCategory
+import com.github.kabocchi.king_LMS_Lite.Node.NewsFilterContent
 import com.github.kabocchi.king_LMS_Lite.Utility.getDocument
 import com.github.kabocchi.king_LMS_Lite.connection
 import javafx.application.Platform
 import javafx.geometry.Insets
 import javafx.geometry.Pos
-import javafx.scene.Cursor
 import javafx.scene.control.*
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
@@ -14,7 +15,6 @@ import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
 import javafx.scene.text.Font
 import javafx.scene.text.FontWeight
-import javafx.scene.text.Text
 import kotlin.concurrent.thread
 
 class NewsPane: BorderPane() {
@@ -23,7 +23,7 @@ class NewsPane: BorderPane() {
     private val progressText: Label
     private val searchBox: TextField
     private val filterButton: Button
-    private val filterBox: VBox
+    private val filterBox = NewsFilterContent(this)
     private val listViewButton: ToggleButton
     private val gridViewButton: ToggleButton
     private val scrollPane: ScrollPane
@@ -31,10 +31,18 @@ class NewsPane: BorderPane() {
     private var listView = VBox()
     private var gridView = VBox()
 
+    private val newsList = mutableListOf<NewsContent>()
+
     private var showingFilter = false
     private var updatingNews = false
 
+    val newsCategoryMap = mutableMapOf<Int, NewsCategory>()
+
     init {
+        NewsCategory.values().forEach {
+            newsCategoryMap[it.id] = it
+        }
+
         val start = System.currentTimeMillis()
         this.style = "-fx-background-color: white;"
 
@@ -62,17 +70,6 @@ class NewsPane: BorderPane() {
             promptText = "検索"
             prefWidth = 250.0
         }
-
-        filterBox = VBox().apply {
-            spacing = 4.0
-            padding = Insets(10.0, 30.0, 10.0, 30.0)
-            styleClass.add("news-content-box")
-        }
-
-        val unreadOnly = CheckBox()
-        val unreadOnlyText = Text("未読のみ表示する")
-        val unreadFilterHBox = HBox(unreadOnly, unreadOnlyText)
-        filterBox.children.add(unreadFilterHBox)
 
         filterButton = Button("").apply {
             setOnAction {
@@ -198,8 +195,8 @@ class NewsPane: BorderPane() {
                     failAmount++
                     continue
                 }
-                val listNewsContent = NewsContent(json, detail.body().toString().split("\"Body\": \"")[1].split("\", \"SenderId\"")[0])
-                listView.children.add(listNewsContent)
+                val newsContent = NewsContent(detail, !json.getBoolean("IsRead", false), json.getString("Published", ""), newsCategoryMap)
+                newsList.add(newsContent)
 
 //                if (index % 3 == 0) {
 //                    gridHBox = HBox()
@@ -210,6 +207,8 @@ class NewsPane: BorderPane() {
 //                newsGridContent.prefWidth = 400.0
 //                gridHBox.children.add(newsGridContent)
             }
+
+            filterApply()
 
             if (listViewButton.isSelected) {
                 println("List view Selected")
@@ -242,5 +241,29 @@ class NewsPane: BorderPane() {
             progressBar.progress = 0.0
         }
         updatingNews = false
+    }
+
+    fun filterApply() {
+        Platform.runLater {
+            listView.children.clear()
+            if (showingFilter) listView.children.add(filterBox)
+            val unreadOnly = filterBox.showUnreadOnly()
+            for (it in newsList) {
+                if (unreadOnly && !it.unread) continue
+                NewsCategory.values().forEach {
+
+                }
+                if (filterBox.categoryFilter(it.category)) listView.children.add(it)
+            }
+            showListView()
+        }
+    }
+
+    private fun showAllNews() {
+        Platform.runLater {
+            listView.children.clear()
+            if (showingFilter) listView.children.add(filterBox)
+            listView.children.addAll(newsList)
+        }
     }
 }

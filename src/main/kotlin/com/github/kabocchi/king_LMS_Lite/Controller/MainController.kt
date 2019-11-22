@@ -25,7 +25,7 @@ class MainController {
         mainPane.center = newsPane
         taskPane = TaskPane()
         getNews()
-        getTask()
+//        getTask()
         println(mainPane.width)
     }
 

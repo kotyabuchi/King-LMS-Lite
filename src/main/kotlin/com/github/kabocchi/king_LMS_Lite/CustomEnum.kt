@@ -20,3 +20,17 @@ enum class EventType {
     MAIN(),
     NOTICE()
 }
+
+enum class NewsCategory(val categoryName: String, val id: Int) {
+    GENERAL("一般", 1),
+    EVENT("イベント", 3),
+    NEWS("ニュース", 5),
+    CLASS_CANCELLATION("休講", 6),
+    SUPPLEMENTARY_CURSE("補講", 7),
+    CLASS_ROOM_CHANGE("教室変更", 8),
+    STUDENT_CALL("学生呼び出し", 9),
+    PERSONAL("個人", 10),
+    GRADE_NOTIFICATION("成績通知", 11),
+    QUESTIONNAIRE("アンケート", 12),
+    PROJECT_GROUP("Project Group", 13);
+}
