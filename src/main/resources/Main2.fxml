@@ -33,7 +33,7 @@
                   </Text>
                   <HBox alignment="CENTER_RIGHT" prefHeight="100.0" prefWidth="100.0" spacing="5.0" GridPane.columnIndex="2">
                      <children>
-                        <Button mnemonicParsing="false">
+                        <Button fx:id="minimize" mnemonicParsing="false" onAction="#onClickMinimize">
                            <HBox.margin>
                               <Insets bottom="-10.0" />
                            </HBox.margin></Button>

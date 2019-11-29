@@ -10,12 +10,14 @@ import javafx.scene.control.Label
 import javafx.scene.control.Separator
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.FlowPane
+import javafx.scene.layout.HBox
 import javafx.scene.layout.VBox
 
 class NewsFilterContent(newsPane: NewsPane): VBox() {
 
     private val unreadOnly: CheckBox
     private val emergency: CheckBox
+    private val important: CheckBox
     private val categoryFilterMap = mutableMapOf<NewsCategory, CheckBox>()
 
     init {
@@ -32,7 +34,8 @@ class NewsFilterContent(newsPane: NewsPane): VBox() {
         val tagFilterText = Label("タグ")
         unreadOnly = CheckBox("未読のみ")
         emergency = CheckBox("緊急のみ")
-        tagFilter.children.addAll(unreadOnly, emergency)
+        important = CheckBox("重要のみ")
+        tagFilter.children.addAll(unreadOnly, emergency, important)
 
         val categoryFilter = FlowPane().apply {
             vgap = 6.0
@@ -59,13 +62,35 @@ class NewsFilterContent(newsPane: NewsPane): VBox() {
         }
 
         val applyBorder = BorderPane()
+        val clearButton = Button("クリア").apply {
+            styleClass.add("clear-button")
+            setOnAction {
+                tagFilter.children.forEach {
+                    if (it is CheckBox) {
+                        Platform.runLater {
+                            it.isSelected = false
+                        }
+                    }
+                }
+                categoryFilter.children.forEach {
+                    if (it is CheckBox) {
+                        Platform.runLater {
+                            it.isSelected = true
+                        }
+                    }
+                }
+            }
+        }
         val applyButton = Button("適用").apply {
             styleClass.add("apply-button")
             setOnAction {
                 newsPane.filterApply()
             }
         }
-        applyBorder.right = applyButton
+        val applyHBox = HBox(clearButton, applyButton).apply {
+            spacing = 10.0
+        }
+        applyBorder.right = applyHBox
 
         this.children.addAll(tagFilterText, tagFilter, Separator(), Label("カテゴリー"), categoryFilter, Separator(), applyBorder)
     }
@@ -76,6 +101,10 @@ class NewsFilterContent(newsPane: NewsPane): VBox() {
     
     fun showEmergency(): Boolean {
         return emergency.isSelected
+    }
+    
+    fun showImportant(): Boolean {
+        return important.isSelected
     }
 
     fun categoryFilter(category: NewsCategory): Boolean {

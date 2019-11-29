@@ -17,7 +17,6 @@ import javafx.scene.text.FontWeight
 import javafx.scene.text.Text
 import javafx.scene.text.TextFlow
 import java.time.LocalDateTime
-import java.time.chrono.ChronoLocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
@@ -43,10 +42,15 @@ class TaskContent(json: JsonObject, _description: String, groupName: String, gro
             strSubmissionStart = json.getString("SubmissionStart", "")
             submissionStart = LocalDateTime.parse(strSubmissionStart, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")).plusHours(9)
         }
-        if (json.toString().split("\"SubmissionEnd\":\"").size >= 2) {
+        if (json.get("ReSubmissions").asArray().size() >= 1) {
+            val resubmission = json.get("ReSubmissions").asArray()[0] as JsonObject
+            strSubmissionEnd = resubmission.getString("EndDate", "")
+            submissionEnd = LocalDateTime.parse(strSubmissionEnd, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")).plusHours(9)
+        } else if (json.toString().split("\"SubmissionEnd\":\"").size >= 2) {
             strSubmissionEnd = json.getString("SubmissionEnd", "")
             submissionEnd = LocalDateTime.parse(strSubmissionEnd, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")).plusHours(9)
         }
+        
         
         this.spacing = 4.0
         this.cursor = Cursor.HAND
@@ -79,8 +83,9 @@ class TaskContent(json: JsonObject, _description: String, groupName: String, gro
         }
 
         val topBorderPane = BorderPane()
-        val titleBox = HBox()
-        titleBox.spacing = 10.0
+        val titleBox = HBox().apply {
+            spacing = 10.0
+        }
         topBorderPane.left = titleBox
 
         separator.prefWidth = this.prefWidth / 40

@@ -12,6 +12,14 @@
 	-fx-background-image: url('close.png');
 }
 
+#minimize {
+    -fx-background-color: transparent;
+	-fx-background-size: 16px;
+	-fx-background-repeat: no-repeat;
+	-fx-background-position: center 10%;
+	-fx-background-image: url('minimize.png');
+}
+
 #NavigationBox  > #HBox > .button {
 	-fx-background-color: transparent;
 	-fx-pref-height: 60;
@@ -131,6 +139,7 @@
 
 /* News Tab CSS */
 .news-content-box {
+    -fx-background-color: #fff;
     -fx-border-width: 2px;
     -fx-border-color: #757575;
 }
@@ -138,6 +147,13 @@
 .setting-box .check-box {
     -fx-pref-height: 22px;
     -fx-font-size: 12.5;
+    -fx-cursor: hand;
+}
+
+.clear-button {
+    -fx-background-color: #fff;
+    -fx-text-fill: #FFC778;
+    -fx-font-weight: bold;
     -fx-cursor: hand;
 }
 

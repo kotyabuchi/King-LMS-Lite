@@ -30,7 +30,8 @@ class TaskPane: BorderPane() {
 
     private var listView = VBox()
     private var gridView = VBox()
-
+    
+    private var showingFilter = false
     private var updatingTask = false
 
     init {
@@ -69,10 +70,21 @@ class TaskPane: BorderPane() {
             promptText = "検索"
             prefWidth = 250.0
         }
-
+    
         filterButton = Button("").apply {
+            styleClass.add("filter-button")
             setOnAction {
-                if (!updatingTask) updateTask()
+                showingFilter = if (showingFilter) {
+                    Platform.runLater {
+//                        listView.children.remove(filterBox)
+                    }
+                    !showingFilter
+                } else {
+                    Platform.runLater {
+//                        listView.children.add(0, filterBox)
+                    }
+                    !showingFilter
+                }
             }
         }
 

@@ -92,7 +92,7 @@ class Login {
                             val version = main!!.getVersion()
                             main!!.primaryStage?.close()
                             val stage = Stage()
-                            AppUtil(version, main!!).showTest(stage)
+                            AppUtil(version, main!!).showMain(stage)
                         }
                     }
                     LoginResult.FAIL -> {

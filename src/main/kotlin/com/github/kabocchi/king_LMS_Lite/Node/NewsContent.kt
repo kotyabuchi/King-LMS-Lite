@@ -33,7 +33,8 @@ class NewsContent(doc: Document, _unread: Boolean, published: String, newsCatego
     private var showingDescription = false
 
     var unread = _unread
-    val emergency: Boolean
+    var emergency = false
+    var important = false
     val category = newsCategoryMap[json.getInt("CategoryId", 1)]!!
 
     private val title = json.getString("Title", "")
@@ -62,14 +63,21 @@ class NewsContent(doc: Document, _unread: Boolean, published: String, newsCatego
                 this@NewsContent.styleClass.add("alreadyRead")
             }
 
-            if (json.getString("Priority", "普通") == "緊急") {
-                emergency = true
-                val priorityLabel = Label("緊急").apply {
-                    textFill = Color.web("#ff4500")
+            when (json.getString("Priority", "普通")) {
+                "緊急" -> {
+                    emergency = true
+                    val priorityLabel = Label("緊急").apply {
+                        textFill = Color.web("#ff4500")
+                    }
+                    children.add(priorityLabel)
                 }
-                children.add(priorityLabel)
-            } else {
-                emergency = false
+                "重要" -> {
+                    important = true
+                    val priorityLabel = Label("重要").apply {
+                        textFill = Color.web("#ff4500")
+                    }
+                    children.add(priorityLabel)
+                }
             }
 
             val categoryLabel = Label(category.categoryName)
@@ -104,6 +112,11 @@ class NewsContent(doc: Document, _unread: Boolean, published: String, newsCatego
         longDescription = cleanDescriptionVer2(description)
 
         this.setOnMouseClicked {
+            println("showingDescription $showingDescription")
+            this.layoutChildren()
+            println(this.height)
+            println(shortDescription.height)
+            println(longDescription.height)
             showingDescription = if (showingDescription) {
                 this.children.remove(longDescription)
                 this.children.add(shortDescription)
@@ -128,5 +141,10 @@ class NewsContent(doc: Document, _unread: Boolean, published: String, newsCatego
                 tagBox.children.remove(unreadLabel)
             }
         }
+    }
+
+    enum class DescriptionType {
+        SHORT,
+        LONG
     }
 }

@@ -8,6 +8,8 @@ import com.github.kabocchi.king_LMS_Lite.connection
 import javafx.application.Platform
 import javafx.geometry.Insets
 import javafx.geometry.Pos
+import javafx.scene.Node
+import javafx.scene.Scene
 import javafx.scene.control.*
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
@@ -15,6 +17,9 @@ import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
 import javafx.scene.text.Font
 import javafx.scene.text.FontWeight
+import javafx.stage.Modality
+import javafx.stage.Stage
+import javafx.stage.StageStyle
 import kotlin.concurrent.thread
 
 class NewsPane: BorderPane() {
@@ -159,6 +164,7 @@ class NewsPane: BorderPane() {
     fun updateNews() {
         thread {
             updatingNews = true
+            
             val start = System.currentTimeMillis()
             Platform.runLater {
                 progressBar.progress = -1.0
@@ -220,7 +226,6 @@ class NewsPane: BorderPane() {
                 showGridView()
             }
 
-
             val end2 = System.currentTimeMillis()
             println("GetNews: " + (end2 - end1).toString() + "ms")
             endUpdate()
@@ -252,10 +257,14 @@ class NewsPane: BorderPane() {
             if (showingFilter) listView.children.add(filterBox)
             val unreadOnly = filterBox.showUnreadOnly()
             val emergency = filterBox.showEmergency()
+            val important = filterBox.showImportant()
             for (it in newsList) {
                 if (unreadOnly && !it.unread) continue
-                if (emergency && !it.emergency) continue
-                if (filterBox.categoryFilter(it.category)) listView.children.add(it)
+                if ((emergency && it.emergency) || (important && it.important) && filterBox.categoryFilter(it.category)) {
+                    listView.children.add(it)
+                    continue
+                }
+                if (!emergency && !important && filterBox.categoryFilter(it.category)) listView.children.add(it)
             }
             showListView()
         }
