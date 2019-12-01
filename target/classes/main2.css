@@ -152,13 +152,15 @@
 
 .clear-button {
     -fx-background-color: #fff;
-    -fx-text-fill: #FFC778;
+    -fx-text-fill: #F0A470;
     -fx-font-weight: bold;
     -fx-cursor: hand;
+    -fx-border-color: #F0A470;
+    -fx-border-radius:3px;
 }
 
 .apply-button {
-    -fx-background-color: #FFC778;
+    -fx-background-color: #F0A470;
     -fx-text-fill: #fff;
     -fx-font-weight: bold;
     -fx-cursor: hand;
@@ -245,7 +247,7 @@
 
 .check-box .box {
     -fx-background-color: #fff;
-    -fx-border-color: #FFC778;
+    -fx-border-color: #F0A470;
     -fx-border-radius:3px;
 }
 
@@ -258,7 +260,7 @@
 }
 
 .check-box:selected .box {
-    -fx-background-color: #FFC778;
+    -fx-background-color: #F0A470;
 }
 
 .check-box:selected .mark {
