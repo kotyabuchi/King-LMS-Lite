@@ -1,11 +1,14 @@
 package com.github.kabocchi.kingLmsLite.Node
 
 import com.eclipsesource.json.Json
-import com.eclipsesource.json.JsonObject
 import com.github.kabocchi.king_LMS_Lite.NewsCategory
 import com.github.kabocchi.king_LMS_Lite.Utility.cleanDescription
 import com.github.kabocchi.king_LMS_Lite.Utility.cleanDescriptionVer2
+import javafx.animation.KeyFrame
+import javafx.animation.KeyValue
+import javafx.animation.Timeline
 import javafx.application.Platform
+import javafx.beans.value.ChangeListener
 import javafx.geometry.Insets
 import javafx.scene.Cursor
 import javafx.scene.control.Label
@@ -15,10 +18,9 @@ import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
 import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
-import javafx.scene.text.Font
-import javafx.scene.text.FontWeight
 import javafx.scene.text.Text
 import javafx.scene.text.TextFlow
+import javafx.util.Duration
 import org.jsoup.nodes.Document
 
 class NewsContent(doc: Document, _unread: Boolean, published: String, newsCategoryMap: MutableMap<Int, NewsCategory>): VBox() {
@@ -41,6 +43,12 @@ class NewsContent(doc: Document, _unread: Boolean, published: String, newsCatego
 
     private var longDescription: TextFlow
     private var shortDescription: Label
+
+    private var shortHeight = 0.0
+    private var longHeight = 0.0
+
+    private var shortAnimation: Timeline? = null
+    private var longAnimation: Timeline? = null
 
     init {
         this.spacing = 4.0
@@ -107,29 +115,65 @@ class NewsContent(doc: Document, _unread: Boolean, published: String, newsCatego
             isWrapText = false
             ellipsisString = "..."
             textOverrun = OverrunStyle.ELLIPSIS
+            layoutBoundsProperty().addListener { observableValue, oldValue, newValue ->
+                if (newValue.height > 0) {
+                    shortHeight = this@NewsContent.height
+                    this@NewsContent.prefHeight = shortHeight
+                }
+            }
         }
 
-        longDescription = cleanDescriptionVer2(description)
+        longDescription = cleanDescriptionVer2(description).apply {
+            layoutBoundsProperty().addListener(ChangeListener { _, _, newValue ->
+                if (newValue.height > 0) {
+                    longHeight = this@NewsContent.prefHeight - shortDescription.height + newValue.height
+                    this@NewsContent.children.remove(this)
+                    this@NewsContent.children.add(shortDescription)
+                    showingDescription = false
+                    longAnimation = Timeline(KeyFrame(Duration.seconds(0.2), KeyValue(this@NewsContent.prefHeightProperty(), longHeight)))
+                    longAnimation?.cycleCount = 1
+                    longAnimation?.setOnFinished {
+                        this@NewsContent.children.remove(shortDescription)
+                        this@NewsContent.children.add(this)
+                    }
+                    longAnimation?.play()
+                    showingDescription = true
+                    setAnimation()
+                }
+            })
+        }
 
         this.setOnMouseClicked {
-            println("showingDescription $showingDescription")
-            this.layoutChildren()
-            println(this.height)
-            println(shortDescription.height)
-            println(longDescription.height)
-            showingDescription = if (showingDescription) {
-                this.children.remove(longDescription)
-                this.children.add(shortDescription)
-                !showingDescription
-            } else {
+            if (!showingDescription) {
                 if (unread) setRead()
                 this.children.remove(shortDescription)
                 this.children.add(longDescription)
-                !showingDescription
+                showingDescription = true
             }
         }
 
         this.children.addAll(tagBox, topBorderPane, separator, shortDescription)
+    }
+
+    private fun setAnimation() {
+        this.setOnMouseClicked {
+            showingDescription = if (showingDescription) {
+                if (shortAnimation == null) {
+                    shortAnimation = Timeline(KeyFrame(Duration.seconds(0.2), KeyValue(this@NewsContent.prefHeightProperty(), shortHeight)))
+                    shortAnimation?.cycleCount = 1
+                }
+                shortAnimation?.play()
+                Platform.runLater {
+                    this.children.remove(longDescription)
+                    this.children.add(shortDescription)
+                }
+                !showingDescription
+            } else {
+                if (unread) setRead()
+                longAnimation?.play()
+                !showingDescription
+            }
+        }
     }
 
     private fun setRead() {
