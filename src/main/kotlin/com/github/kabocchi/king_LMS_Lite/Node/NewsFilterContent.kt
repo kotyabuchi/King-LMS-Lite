@@ -20,6 +20,12 @@ class NewsFilterContent(newsPane: NewsPane): VBox() {
     private val important: CheckBox
     private val categoryFilterMap = mutableMapOf<NewsCategory, CheckBox>()
 
+    private val tagFilter: FlowPane
+    private val categoryFilter: FlowPane
+
+    private val tagFilterBuffer = mutableListOf<Boolean>()
+    private val categoryFilterBuffer = mutableListOf<Boolean>()
+
     init {
         this.apply {
             spacing = 6.0
@@ -27,7 +33,7 @@ class NewsFilterContent(newsPane: NewsPane): VBox() {
             styleClass.addAll("news-content-box", "setting-box")
         }
         
-        val tagFilter = FlowPane().apply {
+        tagFilter = FlowPane().apply {
             vgap = 6.0
             hgap = 10.0
         }
@@ -36,13 +42,18 @@ class NewsFilterContent(newsPane: NewsPane): VBox() {
         emergency = CheckBox("緊急のみ")
         important = CheckBox("重要のみ")
         tagFilter.children.addAll(unreadOnly, emergency, important)
+        tagFilter.children.forEach {
+            it as CheckBox
+            tagFilterBuffer.add(it.isSelected)
+        }
 
-        val categoryFilter = FlowPane().apply {
+        categoryFilter = FlowPane().apply {
             vgap = 6.0
             hgap = 10.0
         }
         val categoryAllCheck = CheckBox("全てのカテゴリー").apply {
             isSelected = true
+            categoryFilterBuffer.add(isSelected)
             setOnAction {
                 categoryFilter.children.forEach {
                     if (it is CheckBox) {
@@ -53,12 +64,13 @@ class NewsFilterContent(newsPane: NewsPane): VBox() {
                 }
             }
         }
-        categoryFilter.children.add((categoryAllCheck))
+        categoryFilter.children.add(categoryAllCheck)
         NewsCategory.values().forEach {
             val categoryCheckBox = CheckBox(it.categoryName)
             categoryCheckBox.isSelected = true
             categoryFilterMap[it] = categoryCheckBox
             categoryFilter.children.add(categoryCheckBox)
+            categoryFilterBuffer.add(categoryCheckBox.isSelected)
         }
 
         val applyBorder = BorderPane()
@@ -85,6 +97,17 @@ class NewsFilterContent(newsPane: NewsPane): VBox() {
             styleClass.add("apply-button")
             setOnAction {
                 newsPane.filterApply()
+                // フィルターのバッファーを登録
+                tagFilterBuffer.clear()
+                tagFilter.children.forEach {
+                    it as CheckBox
+                    tagFilterBuffer.add(it.isSelected)
+                }
+                categoryFilterBuffer.clear()
+                categoryFilter.children.forEach {
+                    it as CheckBox
+                    categoryFilterBuffer.add(it.isSelected)
+                }
             }
         }
         val applyHBox = HBox(clearButton, applyButton).apply {
@@ -109,5 +132,16 @@ class NewsFilterContent(newsPane: NewsPane): VBox() {
 
     fun categoryFilter(category: NewsCategory): Boolean {
         return categoryFilterMap[category]?.isSelected ?: false
+    }
+
+    fun undoFilter() {
+        tagFilter.children.forEachIndexed { index, node ->
+            node as CheckBox
+            node.isSelected = tagFilterBuffer[index]
+        }
+        categoryFilter.children.forEachIndexed { index, node ->
+            node as CheckBox
+            node.isSelected = categoryFilterBuffer[index]
+        }
     }
 }

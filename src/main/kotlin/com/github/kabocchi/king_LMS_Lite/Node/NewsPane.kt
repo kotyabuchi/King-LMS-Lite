@@ -83,17 +83,17 @@ class NewsPane: BorderPane() {
         filterButton = Button("").apply {
             styleClass.add("filter-button")
             setOnAction {
-                showingFilter = if (showingFilter) {
+                if (showingFilter) {
                     Platform.runLater {
                         listView.children.remove(filterBox)
+                        filterBox.undoFilter()
                     }
-                    !showingFilter
                 } else {
                     Platform.runLater {
                         listView.children.add(0, filterBox)
                     }
-                    !showingFilter
                 }
+                showingFilter = !showingFilter
             }
         }
 
