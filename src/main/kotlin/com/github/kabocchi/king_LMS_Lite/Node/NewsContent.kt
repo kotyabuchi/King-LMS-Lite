@@ -61,6 +61,7 @@ class NewsContent(doc: Document, _unread: Boolean, published: String, newsCatego
             spacing = 10.0
             padding = Insets(0.0)
             setMargin(this, Insets(-2.0, 0.0, -4.0, 0.0))
+
             if (unread) {
                 this@NewsContent.styleClass.add("unread")
                 unreadLabel = Label("未読").apply {

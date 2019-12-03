@@ -34,3 +34,9 @@ enum class NewsCategory(val categoryName: String, val id: Int) {
     QUESTIONNAIRE("アンケート", 12),
     PROJECT_GROUP("Project Group", 13);
 }
+
+enum class TaskType(val typeName: String, val id: Int) {
+    REPORT("レポート(ファイル提出)", 14),
+    TEXT_REPORT("レポート(テキスト)", 14),
+    TEST("テスト", 10)
+}

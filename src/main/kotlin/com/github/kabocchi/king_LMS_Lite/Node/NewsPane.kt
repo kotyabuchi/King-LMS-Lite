@@ -41,7 +41,7 @@ class NewsPane: BorderPane() {
     private var showingFilter = false
     private var updatingNews = false
 
-    val newsCategoryMap = mutableMapOf<Int, NewsCategory>()
+    private val newsCategoryMap = mutableMapOf<Int, NewsCategory>()
 
     private var mousePressed = false
 
