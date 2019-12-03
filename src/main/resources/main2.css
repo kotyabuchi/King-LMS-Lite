@@ -12,6 +12,14 @@
 	-fx-background-image: url('close.png');
 }
 
+#minimize {
+    -fx-background-color: transparent;
+	-fx-background-size: 16px;
+	-fx-background-repeat: no-repeat;
+	-fx-background-position: center 10%;
+	-fx-background-image: url('minimize.png');
+}
+
 #NavigationBox  > #HBox > .button {
 	-fx-background-color: transparent;
 	-fx-pref-height: 60;
@@ -73,6 +81,15 @@
     -fx-background-radius: 0;
 }
 
+.filter-button {
+    -fx-background-image: url('filter.png');
+    -fx-background-color: transparent;
+    -fx-background-size: 18px;
+    -fx-background-repeat: no-repeat;
+    -fx-background-position: center center;
+    -fx-cursor: hand;
+}
+
 #toolBoxTop > .toggle-button {
     -fx-background-color: transparent;
 	-fx-background-size: 18px;
@@ -102,6 +119,11 @@
     -fx-background-radius: 0;
 }
 
+.scroll-pane {
+    -fx-padding: 10px;
+    -fx-background-color: #fff;
+}
+
 .scroll-pane > .viewport {
     -fx-background-color: #fff;
 }
@@ -122,6 +144,7 @@
 
 /* News Tab CSS */
 .news-content-box {
+    -fx-background-color: #fff;
     -fx-border-width: 2px;
     -fx-border-color: #757575;
 }
@@ -132,8 +155,17 @@
     -fx-cursor: hand;
 }
 
+.clear-button {
+    -fx-background-color: #fff;
+    -fx-text-fill: #F0A470;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-border-color: #F0A470;
+    -fx-border-radius:3px;
+}
+
 .apply-button {
-    -fx-background-color: #FFC778;
+    -fx-background-color: #F0A470;
     -fx-text-fill: #fff;
     -fx-font-weight: bold;
     -fx-cursor: hand;
@@ -220,7 +252,7 @@
 
 .check-box .box {
     -fx-background-color: #fff;
-    -fx-border-color: #FFC778;
+    -fx-border-color: #F0A470;
     -fx-border-radius:3px;
 }
 
@@ -233,7 +265,7 @@
 }
 
 .check-box:selected .box {
-    -fx-background-color: #FFC778;
+    -fx-background-color: #F0A470;
 }
 
 .check-box:selected .mark {

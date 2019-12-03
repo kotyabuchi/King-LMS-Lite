@@ -8,6 +8,8 @@ import com.github.kabocchi.king_LMS_Lite.connection
 import javafx.application.Platform
 import javafx.geometry.Insets
 import javafx.geometry.Pos
+import javafx.scene.Node
+import javafx.scene.Scene
 import javafx.scene.control.*
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
@@ -15,6 +17,9 @@ import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
 import javafx.scene.text.Font
 import javafx.scene.text.FontWeight
+import javafx.stage.Modality
+import javafx.stage.Stage
+import javafx.stage.StageStyle
 import kotlin.concurrent.thread
 
 class NewsPane: BorderPane() {
@@ -36,7 +41,9 @@ class NewsPane: BorderPane() {
     private var showingFilter = false
     private var updatingNews = false
 
-    val newsCategoryMap = mutableMapOf<Int, NewsCategory>()
+    private val newsCategoryMap = mutableMapOf<Int, NewsCategory>()
+
+    private var mousePressed = false
 
     init {
         NewsCategory.values().forEach {
@@ -63,7 +70,9 @@ class NewsPane: BorderPane() {
 
         progressText = Label().apply {
             prefWidth = 850.0
-            font = Font.font(Font(14.0).family, FontWeight.BOLD, 14.0)
+            style = "-fx-font-weight: bold; -fx-font-size: 14px;"
+//            font = Font.font(Font(14.0).family, FontWeight.BOLD, 14.0)
+            println("Font is " + font.family)
         }
 
         searchBox = TextField().apply {
@@ -72,18 +81,19 @@ class NewsPane: BorderPane() {
         }
 
         filterButton = Button("").apply {
+            styleClass.add("filter-button")
             setOnAction {
-                showingFilter = if (showingFilter) {
+                if (showingFilter) {
                     Platform.runLater {
                         listView.children.remove(filterBox)
+                        filterBox.undoFilter()
                     }
-                    !showingFilter
                 } else {
                     Platform.runLater {
                         listView.children.add(0, filterBox)
                     }
-                    !showingFilter
                 }
+                showingFilter = !showingFilter
             }
         }
 
@@ -120,8 +130,8 @@ class NewsPane: BorderPane() {
         toolBoxTopH.children.addAll(progressText, searchBox, filterButton, listViewButton, gridViewButton)
 
         scrollPane = ScrollPane().apply {
+            isPannable = true
             prefWidth = 1240.0
-            style = "-fx-padding: 10.0px;" + "-fx-background-color: #fff;"
         }
 
         this.center = scrollPane
@@ -156,6 +166,7 @@ class NewsPane: BorderPane() {
     fun updateNews() {
         thread {
             updatingNews = true
+            
             val start = System.currentTimeMillis()
             Platform.runLater {
                 progressBar.progress = -1.0
@@ -217,7 +228,6 @@ class NewsPane: BorderPane() {
                 showGridView()
             }
 
-
             val end2 = System.currentTimeMillis()
             println("GetNews: " + (end2 - end1).toString() + "ms")
             endUpdate()
@@ -248,12 +258,15 @@ class NewsPane: BorderPane() {
             listView.children.clear()
             if (showingFilter) listView.children.add(filterBox)
             val unreadOnly = filterBox.showUnreadOnly()
+            val emergency = filterBox.showEmergency()
+            val important = filterBox.showImportant()
             for (it in newsList) {
                 if (unreadOnly && !it.unread) continue
-                NewsCategory.values().forEach {
-
+                if ((emergency && it.emergency) || (important && it.important) && filterBox.categoryFilter(it.category)) {
+                    listView.children.add(it)
+                    continue
                 }
-                if (filterBox.categoryFilter(it.category)) listView.children.add(it)
+                if (!emergency && !important && filterBox.categoryFilter(it.category)) listView.children.add(it)
             }
             showListView()
         }

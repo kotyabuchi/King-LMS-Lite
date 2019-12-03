@@ -25,13 +25,18 @@ class MainController {
         mainPane.center = newsPane
         taskPane = TaskPane()
         getNews()
-//        getTask()
+        getTask()
         println(mainPane.width)
     }
 
     @FXML
     fun onClickClose() {
         main?.primaryStage?.hide()
+    }
+    
+    @FXML
+    fun onClickMinimize() {
+        main?.primaryStage?.isIconified = true
     }
 
     @FXML

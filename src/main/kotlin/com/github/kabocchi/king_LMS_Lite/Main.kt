@@ -40,6 +40,7 @@ class Main: Application() {
     override fun start(stage: Stage?) {
         main = this
         if (stage != null) {
+            primaryStage = stage
             Platform.setImplicitExit(false)
             stage.icons.add(Image(ClassLoader.getSystemResourceAsStream("logo.png")))
             initSystemTray()

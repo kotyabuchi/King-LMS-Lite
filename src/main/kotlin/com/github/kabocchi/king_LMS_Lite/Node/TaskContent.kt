@@ -1,6 +1,7 @@
 package com.github.kabocchi.kingLmsLite.Node
 
 import com.eclipsesource.json.JsonObject
+import com.github.kabocchi.king_LMS_Lite.TaskType
 import com.github.kabocchi.king_LMS_Lite.Utility.cleanDescription
 import com.github.kabocchi.king_LMS_Lite.Utility.cleanDescriptionVer2
 import javafx.geometry.Insets
@@ -17,11 +18,10 @@ import javafx.scene.text.FontWeight
 import javafx.scene.text.Text
 import javafx.scene.text.TextFlow
 import java.time.LocalDateTime
-import java.time.chrono.ChronoLocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
-class TaskContent(json: JsonObject, _description: String, groupName: String, groupId: Int): VBox() {
+class TaskContent(json: JsonObject, _description: String, _groupName: String, groupId: Int): VBox() {
     private val separator = Separator()
 
     private var showingDescription = false
@@ -38,16 +38,37 @@ class TaskContent(json: JsonObject, _description: String, groupName: String, gro
     private var longDescription: TextFlow
     private var shortDescription: Label
 
+    private val groupName = _groupName
+    private var resubmission = false
+    private val taskType: TaskType
+
     init {
         if (json.toString().split("\"SubmissionStart\":\"").size >= 2) {
             strSubmissionStart = json.getString("SubmissionStart", "")
             submissionStart = LocalDateTime.parse(strSubmissionStart, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")).plusHours(9)
         }
-        if (json.toString().split("\"SubmissionEnd\":\"").size >= 2) {
+        if (json.get("ReSubmissions").asArray().size() >= 1) {
+            val resubmissions = json.get("ReSubmissions").asArray()[0] as JsonObject
+            strSubmissionEnd = resubmissions.getString("EndDate", "")
+            submissionEnd = LocalDateTime.parse(strSubmissionEnd, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")).plusHours(9)
+            resubmission = true
+        } else if (json.toString().split("\"SubmissionEnd\":\"").size >= 2) {
             strSubmissionEnd = json.getString("SubmissionEnd", "")
             submissionEnd = LocalDateTime.parse(strSubmissionEnd, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")).plusHours(9)
         }
-        
+
+        taskType = when (json.getInt("TaskType", 14)) {
+            14 -> {
+                if (json.getBoolean("IsTextReport", false)) {
+                    TaskType.REPORT
+                } else {
+                    TaskType.TEXT_REPORT
+                }
+            }
+            10 -> TaskType.TEST
+            else -> TaskType.REPORT
+        }
+
         this.spacing = 4.0
         this.cursor = Cursor.HAND
         this.padding = Insets(10.0, 30.0, 10.0, 30.0)
@@ -73,14 +94,28 @@ class TaskContent(json: JsonObject, _description: String, groupName: String, gro
             this.styleClass.add("task-after-seven")
         }
 
-        val groupLabel = Label(groupName).apply {
+        val tagBox = HBox().apply {
+            styleClass.add("tag-box")
+            spacing = 10.0
             padding = Insets(0.0)
-            setMargin(this, Insets(0.0, 0.0, -4.0, 0.0))
+            setMargin(this, Insets(-2.0, 0.0, -4.0, 0.0))
+
+            if (resubmission) {
+                val resubmissionLabel = Label("再提出").apply {
+                    textFill = Color.web("#ff4500")
+                }
+                children.add(resubmissionLabel)
+            }
+            val groupLabel = Label(groupName)
+            val taskTypeLabel = Label(taskType.typeName)
+            children.addAll(groupLabel, taskTypeLabel)
+
         }
 
         val topBorderPane = BorderPane()
-        val titleBox = HBox()
-        titleBox.spacing = 10.0
+        val titleBox = HBox().apply {
+            spacing = 10.0
+        }
         topBorderPane.left = titleBox
 
         separator.prefWidth = this.prefWidth / 40
@@ -143,7 +178,7 @@ class TaskContent(json: JsonObject, _description: String, groupName: String, gro
             }
         }
 
-        this.children.addAll(groupLabel, topBorderPane, separator, shortDescription)
+        this.children.addAll(tagBox, topBorderPane, separator, shortDescription)
     }
 
     fun getSubmissionEnd(): LocalDateTime? {

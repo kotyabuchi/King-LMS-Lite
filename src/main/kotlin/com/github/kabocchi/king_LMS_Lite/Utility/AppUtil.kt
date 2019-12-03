@@ -26,7 +26,7 @@ class AppUtil(private val version: String, private val main: Main) {
         }
     }
 
-    fun showTest(stage: Stage) {
+    fun showMain(stage: Stage) {
         var xOffset = 0.0
         var yOffset = 0.0
         stage.initStyle(StageStyle.UNDECORATED)
