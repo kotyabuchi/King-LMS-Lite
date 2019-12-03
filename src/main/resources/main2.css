@@ -119,6 +119,11 @@
     -fx-background-radius: 0;
 }
 
+.scroll-pane {
+    -fx-padding: 10px;
+    -fx-background-color: #fff;
+}
+
 .scroll-pane > .viewport {
     -fx-background-color: #fff;
 }

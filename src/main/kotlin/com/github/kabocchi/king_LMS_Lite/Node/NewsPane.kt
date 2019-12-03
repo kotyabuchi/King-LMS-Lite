@@ -43,6 +43,8 @@ class NewsPane: BorderPane() {
 
     val newsCategoryMap = mutableMapOf<Int, NewsCategory>()
 
+    private var mousePressed = false
+
     init {
         NewsCategory.values().forEach {
             newsCategoryMap[it.id] = it
@@ -128,8 +130,8 @@ class NewsPane: BorderPane() {
         toolBoxTopH.children.addAll(progressText, searchBox, filterButton, listViewButton, gridViewButton)
 
         scrollPane = ScrollPane().apply {
+            isPannable = true
             prefWidth = 1240.0
-            style = "-fx-padding: 10.0px;" + "-fx-background-color: #fff;"
         }
 
         this.center = scrollPane

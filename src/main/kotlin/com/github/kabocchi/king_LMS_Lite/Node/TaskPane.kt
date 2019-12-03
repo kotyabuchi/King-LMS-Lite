@@ -119,9 +119,10 @@ class TaskPane: BorderPane() {
         }
         toolBoxTopH.children.addAll(progressText, searchBox, filterButton, listViewButton, gridViewButton)
 
-        scrollPane = ScrollPane()
-        scrollPane.prefWidth = 1240.0
-        scrollPane.style = "-fx-padding: 10.0px;" + "-fx-background-color: #fff;"
+        scrollPane = ScrollPane().apply {
+            isPannable = true
+            prefWidth = 1240.0
+        }
         this.center = scrollPane
         val end = System.currentTimeMillis()
         println("TaskPaneInit: " + (end - start).toString() + "ms")
