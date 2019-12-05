@@ -1,6 +1,7 @@
 package com.github.kabocchi.kingLmsLite.Node
 
 import com.eclipsesource.json.Json
+import com.github.kabocchi.king_LMS_Lite.Node.TaskFilterContent
 import com.github.kabocchi.king_LMS_Lite.Utility.getDocument
 import com.github.kabocchi.king_LMS_Lite.connection
 import javafx.application.Platform
@@ -24,18 +25,30 @@ class TaskPane: BorderPane() {
     private val progressText: Label
     private val searchBox: TextField
     private val filterButton: Button
+    private val filterBox: TaskFilterContent
     private val listViewButton: ToggleButton
     private val gridViewButton: ToggleButton
     private val scrollPane: ScrollPane
 
     private var listView = VBox()
     private var gridView = VBox()
-    
+
+    private val groupList = mutableSetOf<String>()
+    private val taskList = mutableListOf<TaskContent>()
+
     private var showingFilter = false
     private var updatingTask = false
 
+    private var endedInitialize = false
+
     init {
         val start = System.currentTimeMillis()
+
+        val timetableDoc = getDocument(connection, "https://king.kcg.kyoto/campus/Portal/Home")
+        timetableDoc?.select("span.tag-timetable")?.forEach {
+            groupList.add(it.text())
+        }
+        filterBox = TaskFilterContent(this)
 
         this.style = "-fx-background-color: white;"
 
@@ -70,21 +83,21 @@ class TaskPane: BorderPane() {
             promptText = "検索"
             prefWidth = 250.0
         }
-    
+
         filterButton = Button("").apply {
             styleClass.add("filter-button")
             setOnAction {
-                showingFilter = if (showingFilter) {
+                if (showingFilter) {
                     Platform.runLater {
-//                        listView.children.remove(filterBox)
+                        listView.children.remove(filterBox)
+                        filterBox.undoFilter()
                     }
-                    !showingFilter
                 } else {
                     Platform.runLater {
-//                        listView.children.add(0, filterBox)
+                        listView.children.add(0, filterBox)
                     }
-                    !showingFilter
                 }
+                showingFilter = !showingFilter
             }
         }
 
@@ -124,6 +137,8 @@ class TaskPane: BorderPane() {
             prefWidth = 1240.0
         }
         this.center = scrollPane
+
+        endedInitialize = true
         val end = System.currentTimeMillis()
         println("TaskPaneInit: " + (end - start).toString() + "ms")
     }
@@ -221,13 +236,16 @@ class TaskPane: BorderPane() {
                 val comparator = Comparator.comparing(TaskContent::getSubmissionEnd)
                 Platform.runLater {
                     for (taskContent in taskContents.stream().sorted(comparator)) {
-                        listView.children.add(taskContent)
+                        taskList.add(taskContent)
                     }
                     for (taskContent in unlimitedTaskContents) {
-                        listView.children.add(taskContent)
+                        taskList.add(taskContent)
                     }
                 }
+
+                filterApply()
             }
+
 
             if (listViewButton.isSelected) {
                 showListView()
@@ -259,5 +277,22 @@ class TaskPane: BorderPane() {
             progressBar.progress = 0.0
         }
         updatingTask = false
+    }
+
+    fun getGroupList(): Set<String> {
+        return groupList
+    }
+
+    fun filterApply() {
+        Platform.runLater {
+            listView.children.clear()
+            if (showingFilter) listView.children.add(filterBox)
+            for (it in taskList) {
+                if (filterBox.isResubmissionOnly() && !it.resubmission) continue
+                if (filterBox.getTypeFilter()[it.taskType]?.isSelected == false) continue
+                if (filterBox.getGroupFilter()[it.groupName]?.isSelected == false) continue
+                listView.children.add(it)
+            }
+        }
     }
 }

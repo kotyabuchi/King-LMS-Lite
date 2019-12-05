@@ -38,9 +38,9 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
     private var longDescription: TextFlow
     private var shortDescription: Label
 
-    private val groupName = _groupName
-    private var resubmission = false
-    private val taskType: TaskType
+    val groupName = _groupName
+    var resubmission = false
+    val taskType: TaskType
 
     init {
         if (json.toString().split("\"SubmissionStart\":\"").size >= 2) {

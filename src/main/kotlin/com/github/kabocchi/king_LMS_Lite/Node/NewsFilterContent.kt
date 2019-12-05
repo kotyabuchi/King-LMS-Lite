@@ -37,7 +37,7 @@ class NewsFilterContent(newsPane: NewsPane): VBox() {
             vgap = 6.0
             hgap = 10.0
         }
-        val tagFilterText = Label("タグ")
+        val tagFilterLabel = Label("タグ")
         unreadOnly = CheckBox("未読のみ")
         emergency = CheckBox("緊急のみ")
         important = CheckBox("重要のみ")
@@ -115,10 +115,10 @@ class NewsFilterContent(newsPane: NewsPane): VBox() {
         }
         applyBorder.right = applyHBox
 
-        this.children.addAll(tagFilterText, tagFilter, Separator(), Label("カテゴリー"), categoryFilter, Separator(), applyBorder)
+        this.children.addAll(tagFilterLabel, tagFilter, Separator(), Label("カテゴリー"), categoryFilter, Separator(), applyBorder)
     }
 
-    fun showUnreadOnly(): Boolean {
+    fun isUnreadOnly(): Boolean {
         return unreadOnly.isSelected
     }
     
