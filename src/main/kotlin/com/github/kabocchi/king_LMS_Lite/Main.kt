@@ -2,6 +2,7 @@ package com.github.kabocchi.king_LMS_Lite
 
 import com.github.kabocchi.king_LMS_Lite.Controller.MainController
 import com.github.kabocchi.king_LMS_Lite.Utility.AppUtil
+import com.github.kabocchi.king_LMS_Lite.Utility.newLoginTest
 import javafx.application.Application
 import javafx.application.Platform
 import javafx.scene.image.Image
@@ -25,7 +26,8 @@ val os = System.getProperty("os.name").toLowerCase()
 var main: Main? = null
 
 fun main(args: Array<String>) {
-    Application.launch(Main::class.java, *args)
+//    Application.launch(Main::class.java, *args)
+    newLoginTest()
 }
 
 class Main: Application() {

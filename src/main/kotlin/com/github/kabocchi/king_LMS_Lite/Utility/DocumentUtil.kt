@@ -4,13 +4,20 @@ import com.github.kabocchi.king_LMS_Lite.os
 import javafx.scene.control.Hyperlink
 import javafx.scene.control.Label
 import javafx.scene.text.TextFlow
+import org.apache.http.HttpStatus
+import org.apache.http.client.config.RequestConfig
+import org.apache.http.client.entity.UrlEncodedFormEntity
+import org.apache.http.client.methods.HttpPost
+import org.apache.http.impl.client.HttpClients
+import org.apache.http.message.BasicNameValuePair
+import org.apache.http.util.EntityUtils
 import org.jsoup.Connection
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import java.awt.Desktop
 import java.io.IOException
 import java.net.URI
-import java.util.concurrent.TimeUnit
+import java.util.*
 
 
 fun doPost(connection: Connection, url: String, datas: Map<String, String>): Document? {
@@ -134,4 +141,54 @@ fun replaceEscapeTag(text: String): String {
             .replace("&quot;", "\"")
             .replace("&#39;", "\'")
             .replace("&nbsp;", "")
+}
+
+fun newLoginTest() {
+    try {
+        HttpClients.createDefault().use { httpClient ->
+            // HTTPリクエストの設定を行います。
+// ここでは例としてタイムアウトの時間を設定します。
+            val config = RequestConfig.custom()
+                    .setSocketTimeout(3000)
+                    .setConnectTimeout(3000)
+                    .build()
+            // フォームの項目としてPOSTパラメータを送信する設定をします。
+
+            val formparams = mutableListOf<BasicNameValuePair>()
+            formparams.add(BasicNameValuePair("__VIEWSTATE", "/wEPDwULLTE2MDkwMzkxOTRkZHY/AzvXjoMqTsVgJd4ipDEPUaNz"))
+            formparams.add(BasicNameValuePair("__VIEWSTATEGENERATOR", "C57CFBF9"))
+            formparams.add(BasicNameValuePair("__EVENTVALIDATION", "/wEdAASsWh7OxHZiOdC3v4rgI+lhmoSnNhet8R/Uqc0Y+L4tIt5lw99SYJ+Wv9EE4DvTk2BF8gstbfJCPOTeBk01E6UD2dD7i/ZD0yK6ahPUIO4y8Y1lnjI="))
+            formparams.add(BasicNameValuePair("TextLoginID", "st011602"))
+            formparams.add(BasicNameValuePair("TextPassword", "setuna4021"))
+            formparams.add(BasicNameValuePair("buttonHtmlLogon", "ログイン"))
+            val entity = UrlEncodedFormEntity(formparams, "UTF-8")
+            // HTTPのPOSTリクエストを構築します。
+// ここでは例としてHTTPヘッダ(User-Agent)と設定をセットします。
+            val httpPost = HttpPost("https://king.kcg.kyoto/campus/Secure/login.aspx")
+//            httpPost.addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
+//            httpPost.addHeader("Accept-Encoding", "gzip, deflate, br")
+//            httpPost.addHeader("Content-Type", "application/x-www-form-urlencoded")
+            httpPost.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:72.0) Gecko/20100101 Firefox/72.0")
+            httpPost.config = config
+            httpPost.entity = entity
+
+            println(httpPost.requestLine)
+            // HTTPリクエストを実行します。 HTTPステータスが200の場合は取得したHTMLを表示します。
+            try {
+                httpClient.execute(httpPost).use { httpResponse ->
+                    if (httpResponse.statusLine.statusCode == HttpStatus.SC_OK) {
+                        println(EntityUtils.toString(httpResponse.entity))
+                    } else if (httpResponse.statusLine.statusCode == HttpStatus.SC_TEMPORARY_REDIRECT) {
+                        println("リダイレクト!")
+                    } else {
+                        println("200以外のステータスコードが返却されました。")
+                    }
+                }
+            } catch (exception: Exception) {
+                throw exception
+            }
+        }
+    } catch (exception: Exception) {
+        exception.printStackTrace()
+    }
 }
