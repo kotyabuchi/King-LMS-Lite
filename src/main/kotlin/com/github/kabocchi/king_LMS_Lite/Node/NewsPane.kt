@@ -46,7 +46,7 @@ class NewsPane: BorderPane() {
 
         val toolBoxTopV = VBox()
         progressBar = ProgressBar()
-        progressBar.prefWidth = 1280.0
+        progressBar.prefWidthProperty().bind(this.widthProperty())
         toolBoxTopV.children.add(progressBar)
 
         val toolBoxTopH = HBox().apply {
@@ -60,10 +60,8 @@ class NewsPane: BorderPane() {
         this.top = toolBoxTopV
 
         progressText = Label().apply {
-            prefWidth = 850.0
+            prefWidthProperty().bind(this@NewsPane.widthProperty().subtract(400))
             style = "-fx-font-weight: bold; -fx-font-size: 14px;"
-//            font = Font.font(Font(14.0).family, FontWeight.BOLD, 14.0)
-            println("Font is " + font.family)
         }
 
         searchBox = TextField().apply {
@@ -93,6 +91,7 @@ class NewsPane: BorderPane() {
             toggleGroup = viewButtonGroup
             isSelected = true
             id = "listViewButton"
+            minWidth = 26.0
             prefWidth = 26.0
             prefHeight = 26.0
             setOnAction {
@@ -107,6 +106,7 @@ class NewsPane: BorderPane() {
         gridViewButton = ToggleButton().apply {
             toggleGroup = viewButtonGroup
             id = "gridViewButton"
+            minWidth = 26.0
             prefWidth = 26.0
             prefHeight = 26.0
             setOnAction {
@@ -122,7 +122,8 @@ class NewsPane: BorderPane() {
 
         scrollPane = ScrollPane().apply {
             isPannable = true
-            prefWidth = 1240.0
+            isFitToWidth = true
+            prefWidthProperty().bind(this@NewsPane.widthProperty())
         }
 
         this.center = scrollPane
@@ -165,7 +166,7 @@ class NewsPane: BorderPane() {
 
             listView = VBox().apply {
                 spacing = 5.0
-                prefWidth = 1240.0
+                progressBar.prefWidthProperty().bind(this@NewsPane.widthProperty())
                 style = "-fx-background-color: #fff;"
             }
 

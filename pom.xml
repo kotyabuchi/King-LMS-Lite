@@ -6,7 +6,7 @@
 
     <groupId>com.github.kabocchi.king-LMS-Lite</groupId>
     <artifactId>king-LMS-Lite</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>v1.0.1</version>
 
     <repositories>
         <repository>

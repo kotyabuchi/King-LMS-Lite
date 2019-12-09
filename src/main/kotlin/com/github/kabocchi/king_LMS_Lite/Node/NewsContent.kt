@@ -100,19 +100,15 @@ class NewsContent(doc: Document, _unread: Boolean, published: String, newsCatego
         val titleText = Text(title).apply {
             style = "-fx-font-size: 14px; -fx-font-weight: bold;"
         }
-//        titleText.font = Font.font(Font(14.0).family, FontWeight.BOLD, 14.0)
         topBorderPane.left = titleText
 
         val dateText = Text("掲載日: $published").apply {
             style = "-fx-font-size: 13px; -fx-font-weight: bold;"
         }
-//        dateText.font = Font.font(Font(13.0).family, FontWeight.BOLD, 13.0)
         topBorderPane.right = dateText
 
 
         shortDescription = Label(cleanDescription(description).replace("\n", "")).apply {
-            maxWidth = 1200.0
-            prefWidth = 1200.0
             isWrapText = false
             ellipsisString = "..."
             textOverrun = OverrunStyle.ELLIPSIS

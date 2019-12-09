@@ -40,7 +40,7 @@
 	-fx-background-image: url('taskIcon.png');
 }
 
-#NavigationBox  > #HBox > #time{
+#NavigationBox  > #HBox > #timeTable{
 	-fx-background-image: url('timeIcon.png');
 }
 
@@ -270,4 +270,18 @@
 
 .check-box:selected .mark {
     -fx-background-color: #fff;
+}
+
+/* Time Table */
+.time-table .label {
+    -fx-font-size: 14px;
+}
+
+/*  */
+.border-button {
+    -fx-background-color: #fff;
+    -fx-border-color: #F0A470;
+    -fx-border-radius:3px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
 }

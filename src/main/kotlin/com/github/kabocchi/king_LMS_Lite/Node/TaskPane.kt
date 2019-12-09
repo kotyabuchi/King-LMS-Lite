@@ -19,7 +19,7 @@ import java.io.IOException
 import java.net.URLEncoder
 import kotlin.concurrent.thread
 
-class TaskPane: BorderPane() {
+class TaskPane(timetableDoc: Document?): BorderPane() {
 
     private val progressBar: ProgressBar
     private val progressText: Label
@@ -44,7 +44,6 @@ class TaskPane: BorderPane() {
     init {
         val start = System.currentTimeMillis()
 
-        val timetableDoc = getDocument(connection, "https://king.kcg.kyoto/campus/Portal/Home")
         timetableDoc?.select("span.tag-timetable")?.forEach {
             groupList.add(it.text())
         }
@@ -52,14 +51,8 @@ class TaskPane: BorderPane() {
 
         this.style = "-fx-background-color: white;"
 
-        listView = VBox().apply {
-            spacing = 5.0
-            prefWidth = 1240.0
-            style =  "-fx-background-color: #fff;"
-        }
-
         progressBar = ProgressBar()
-        progressBar.prefWidth = 1280.0
+        progressBar.prefWidthProperty().bind(this.widthProperty())
 
         val toolBoxTopV = VBox()
         toolBoxTopV.children.add(progressBar)
@@ -75,7 +68,7 @@ class TaskPane: BorderPane() {
         this.top = toolBoxTopV
 
         progressText = Label().apply {
-            prefWidth = 850.0
+            prefWidthProperty().bind(this@TaskPane.widthProperty().subtract(400))
             font = Font.font(Font(14.0).family, FontWeight.BOLD, 14.0)
         }
 
@@ -106,6 +99,7 @@ class TaskPane: BorderPane() {
             toggleGroup = viewButtonGroup
             isSelected = true
             id = "listViewButton"
+            minWidth = 26.0
             prefWidth = 26.0
             prefHeight = 26.0
             setOnAction {
@@ -120,6 +114,7 @@ class TaskPane: BorderPane() {
         gridViewButton = ToggleButton().apply {
             toggleGroup = viewButtonGroup
             id = "gridViewButton"
+            minWidth = 26.0
             prefWidth = 26.0
             prefHeight = 26.0
             setOnAction {
@@ -134,6 +129,7 @@ class TaskPane: BorderPane() {
 
         scrollPane = ScrollPane().apply {
             isPannable = true
+            isFitToWidth = true
             prefWidth = 1240.0
         }
         this.center = scrollPane
@@ -170,8 +166,8 @@ class TaskPane: BorderPane() {
 
             listView = VBox().apply {
                 spacing = 5.0
-                prefWidth = 1240.0
-                style = "-fx-background-color: #fff;"
+                prefWidthProperty().bind(this@TaskPane.widthProperty())
+                style =  "-fx-background-color: #fff;"
             }
 
             changeProgressText("課題の一覧を取得しています...")

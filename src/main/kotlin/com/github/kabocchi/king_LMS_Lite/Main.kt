@@ -31,11 +31,16 @@ fun main(args: Array<String>) {
 class Main: Application() {
 
     private val VERSION = "v0.1.0"
+    val appUtil: AppUtil
 
     var primaryStage: Stage? = null
     var mainController: MainController? = null
     private val systemTrayImage = Toolkit.getDefaultToolkit().createImage(ClassLoader.getSystemResource("logo.png"))
     private val trayIcon = TrayIcon(systemTrayImage, "King-lms Lite $VERSION")
+
+    init {
+        appUtil = AppUtil(VERSION, this)
+    }
 
     override fun start(stage: Stage?) {
         main = this
@@ -44,7 +49,7 @@ class Main: Application() {
             Platform.setImplicitExit(false)
             stage.icons.add(Image(ClassLoader.getSystemResourceAsStream("logo.png")))
             initSystemTray()
-            AppUtil(VERSION, this).showLogin(stage)
+            appUtil.showLogin(stage)
         }
     }
 

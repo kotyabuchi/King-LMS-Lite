@@ -88,11 +88,9 @@ class Login {
                         json.add("id", idField.text).add("pass", passField.text)
                         encryptFile2(ACCOUNT_FILE_PATH, json)
                         println("ログインしました。")
-                        if (main != null) {
-                            val version = main!!.getVersion()
-                            main!!.primaryStage?.close()
-                            val stage = Stage()
-                            AppUtil(version, main!!).showMain(stage)
+                        main?.let {
+                            it.primaryStage?.close()
+                            it.appUtil.showMain(Stage())
                         }
                     }
                     LoginResult.FAIL -> {

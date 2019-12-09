@@ -146,8 +146,6 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
         if (description.trim().isBlank()) {
             description = "このタスクには詳細文が設定されていません"
             shortDescription = Label(description).apply {
-                maxWidth = 1200.0
-                prefWidth = 1200.0
                 isWrapText = false
                 ellipsisString = "..."
                 textOverrun = OverrunStyle.ELLIPSIS
@@ -156,8 +154,6 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
             longDescription = TextFlow()
         } else {
             shortDescription = Label(cleanDescription(description).replace("\n", "")).apply {
-                maxWidth = 1200.0
-                prefWidth = 1200.0
                 isWrapText = false
                 ellipsisString = "..."
                 textOverrun = OverrunStyle.ELLIPSIS

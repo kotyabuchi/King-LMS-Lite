@@ -39,8 +39,8 @@ class NewsFilterContent(newsPane: NewsPane): VBox() {
         }
         val tagFilterLabel = Label("タグ")
         unreadOnly = CheckBox("未読のみ")
-        emergency = CheckBox("緊急のみ")
-        important = CheckBox("重要のみ")
+        emergency = CheckBox("緊急")
+        important = CheckBox("重要")
         tagFilter.children.addAll(unreadOnly, emergency, important)
         tagFilter.children.forEach {
             it as CheckBox
