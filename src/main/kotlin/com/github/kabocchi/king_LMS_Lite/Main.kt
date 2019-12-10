@@ -7,6 +7,8 @@ import javafx.application.Application
 import javafx.application.Platform
 import javafx.scene.image.Image
 import javafx.stage.Stage
+import org.apache.http.client.protocol.HttpClientContext
+import org.apache.http.impl.client.BasicCookieStore
 import org.jsoup.Connection
 import org.jsoup.Jsoup
 import java.awt.*
@@ -22,10 +24,12 @@ val SETTING_FILE_PATH = FOLDER_PATH + "setting.klite"
 val PROJECT_FODLER = File(FOLDER_PATH)
 val ACCOUNT_FILE = File(ACCOUNT_FILE_PATH)
 var connection: Connection = Jsoup.connect("https://king.kcg.kyoto/campus/Secure/Login.aspx?ReturnUrl=%2Fcampus%2FCommunity%2FMySetting")
+var context = HttpClientContext.create()
 val os = System.getProperty("os.name").toLowerCase()
 var main: Main? = null
 
 fun main(args: Array<String>) {
+    context.cookieStore = BasicCookieStore()
     Application.launch(Main::class.java, *args)
 }
 

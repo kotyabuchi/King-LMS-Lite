@@ -2,8 +2,10 @@ package com.github.kabocchi.kingLmsLite.Node
 
 import com.eclipsesource.json.Json
 import com.github.kabocchi.king_LMS_Lite.Node.TaskFilterContent
-import com.github.kabocchi.king_LMS_Lite.Utility.getDocument
+import com.github.kabocchi.king_LMS_Lite.Utility.getDocumentWithJsoup
+import com.github.kabocchi.king_LMS_Lite.Utility.toMap
 import com.github.kabocchi.king_LMS_Lite.connection
+import com.github.kabocchi.king_LMS_Lite.context
 import javafx.application.Platform
 import javafx.geometry.Insets
 import javafx.geometry.Pos
@@ -173,7 +175,7 @@ class TaskPane(timetableDoc: Document?): BorderPane() {
             changeProgressText("課題の一覧を取得しています...")
 
             val tasks: Document = try {
-                getDocument(connection, "https://king.kcg.kyoto/campus/Mvc/Home/GetDeliverables")
+                getDocumentWithJsoup(context.cookieStore.toMap(), "https://king.kcg.kyoto/campus/Mvc/Home/GetDeliverables")
             } catch (e: IOException) {
                 changeProgressText("課題の一覧の取得に失敗しました", true)
                 endUpdate()
@@ -201,14 +203,14 @@ class TaskPane(timetableDoc: Document?): BorderPane() {
 
                         val taskId = json.getInt("TaskID", 0)
                         val groupId = json.getInt("GroupID", 0)
-                        val tokenGetUrl = getDocument(connection, "https://king.kcg.kyoto/campus/Course/$groupId/21/")
+                        val tokenGetUrl = getDocumentWithJsoup(context.cookieStore.toMap(), "https://king.kcg.kyoto/campus/Course/$groupId/18/")
                         if (tokenGetUrl == null) {
                             failAmount++
                             continue
                         }
                         val token = URLEncoder.encode(tokenGetUrl.select("input[name=__GroupAccessToken]").`val`(), "UTF-8")
                         val taskDetailUrl = "https://king.kcg.kyoto/campus/Mvc/Manavi/GetTask?tId=$taskId&gToken=$token"
-                        val taskDoc = getDocument(connection, taskDetailUrl)
+                        val taskDoc = getDocumentWithJsoup(context.cookieStore.toMap(), taskDetailUrl)
                         if (taskDoc == null) {
                             failAmount++
                             continue
@@ -256,7 +258,7 @@ class TaskPane(timetableDoc: Document?): BorderPane() {
             if (failAmount == 0) {
                 changeProgressText("課題の取得が完了しました [${taskCount}件]")
             } else {
-                changeProgressText("${failAmount}件の課題の取得に失敗しました", true)
+                changeProgressText("${taskCount}件中${failAmount}件の課題の取得に失敗しました", true)
             }
         }
     }

@@ -1,44 +1,52 @@
 package com.github.kabocchi.king_LMS_Lite.Utility
 
+import com.github.kabocchi.king_LMS_Lite.context
 import com.github.kabocchi.king_LMS_Lite.os
 import javafx.scene.control.Hyperlink
 import javafx.scene.control.Label
 import javafx.scene.text.TextFlow
+import org.apache.http.HttpEntity
 import org.apache.http.HttpStatus
+import org.apache.http.client.CookieStore
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.entity.UrlEncodedFormEntity
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.impl.client.BasicCookieStore
+import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClientBuilder
-import org.apache.http.impl.client.HttpClients
 import org.apache.http.impl.client.LaxRedirectStrategy
 import org.apache.http.message.BasicNameValuePair
-import org.apache.http.util.EntityUtils
-import org.jsoup.Connection
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import java.awt.Desktop
-import java.io.File
-import java.io.FileOutputStream
 import java.io.IOException
 import java.net.URI
-import java.util.*
 
-
-fun doPost(connection: Connection, url: String, datas: Map<String, String>): Document? {
-    return try {
-        Jsoup.connect(url).cookies(connection.response().cookies()).data(datas).userAgent("Mozilla").post()
-    } catch (e: IOException) {
-        e.printStackTrace()
-        null
+fun doGet(url: String): HttpEntity {
+    HttpClientBuilder.create().setRedirectStrategy(LaxRedirectStrategy()).build().use { httpClient ->
+        val config = RequestConfig.custom()
+                .setSocketTimeout(3000)
+                .setConnectTimeout(3000)
+                .build()
+        val httpGet = HttpGet(url).apply {
+            addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:72.0) Gecko/20100101 Firefox/72.0")
+            setConfig(config)
+        }
+        try {
+            httpClient.execute(httpGet, context).use {
+                return it.entity
+            }
+        } catch (exception: Exception) {
+            throw exception
+        }
     }
 }
 
-fun getDocument(connection: Connection, url: String): Document? {
+fun getDocumentWithJsoup(cookieMap: Map<String, String>, url: String): Document? {
     return try {
-        Jsoup.connect(url).cookies(connection.response().cookies()).ignoreContentType(true).timeout(0).get()
+        Jsoup.connect(url).cookies(cookieMap).ignoreContentType(true).timeout(0).get()
     } catch (e: IOException) {
         throw e
     }
@@ -150,8 +158,15 @@ fun replaceEscapeTag(text: String): String {
             .replace("&nbsp;", "")
 }
 
+fun createHttpClient(): CloseableHttpClient {
+    return HttpClientBuilder.create().setRedirectStrategy(LaxRedirectStrategy()).build()
+}
+
 fun newLoginTest() {
     try {
+        val cookieStore = BasicCookieStore()
+        val context = HttpClientContext.create()
+        context.cookieStore = cookieStore
         HttpClientBuilder.create().setRedirectStrategy(LaxRedirectStrategy()).build().use { httpClient ->
             val config = RequestConfig.custom()
                     .setSocketTimeout(3000)
@@ -172,28 +187,11 @@ fun newLoginTest() {
             httpPost.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:72.0) Gecko/20100101 Firefox/72.0")
             httpPost.config = config
             httpPost.entity = entity
-            
-            val cookieStore = BasicCookieStore()
-            val context = HttpClientContext.create()
-            context.cookieStore = cookieStore
 
             try {
                 httpClient.execute(httpPost, context).use { httpResponse ->
                     if (httpResponse.statusLine.statusCode == HttpStatus.SC_OK) {
-                        httpClient.execute(HttpGet("https://king.kcg.kyoto/campus/Download/DownloadHandler.aspx?q=f1kAAA8aQBAAxOH2Awdj1DIpW3ZUWgSkA5XzKdBg&f=2019%E7%A7%8B%E5%AD%A6%E6%9C%9FTOEICIP%E3%83%86%E3%82%B9%E3%83%88.pdf"), context).use {
-                            println(it.statusLine.statusCode)
-                            val inputStream = it.entity.content
-                            val filePath = "2019秋学期TOEICIPテスト.pdf"
-                            val fileOutputStream = FileOutputStream(File(filePath))
-                            
-                            var inByte = inputStream.read()
-                            while (inByte != -1) {
-                                fileOutputStream.write(inByte)
-                                inByte = inputStream.read()
-                            }
-                            inputStream.close()
-                            fileOutputStream.close()
-                        }
+                        println("Login Success")
                     } else {
                         println("200以外のステータスコードが返却されました。")
                     }
@@ -202,7 +200,43 @@ fun newLoginTest() {
                 throw exception
             }
         }
+        
+//        HttpClientBuilder.create().setRedirectStrategy(LaxRedirectStrategy()).build().use { httpClient ->
+//            val config = RequestConfig.custom()
+//                    .setSocketTimeout(3000)
+//                    .setConnectTimeout(3000)
+//                    .build()
+//            val httpGet = HttpGet("https://king.kcg.kyoto/campus/Download/DownloadHandler.aspx?q=f1kAAA8aQBAAxOH2Awdj1DIpW3ZUWgSkA5XzKdBg&f=2019%E7%A7%8B%E5%AD%A6%E6%9C%9FTOEICIP%E3%83%86%E3%82%B9%E3%83%88.pdf").apply {
+//                addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:72.0) Gecko/20100101 Firefox/72.0")
+//                setConfig(config)
+//            }
+//            try {
+//                httpClient.execute(httpGet, context).use {
+//                    val inputStream = it.entity.content
+//                    val filePath = "2019秋学期TOEICIPテスト.pdf"
+//                    val fileOutputStream = FileOutputStream(File(filePath))
+//
+//                    var inByte = inputStream.read()
+//                    while (inByte != -1) {
+//                        fileOutputStream.write(inByte)
+//                        inByte = inputStream.read()
+//                    }
+//                    inputStream.close()
+//                    fileOutputStream.close()
+//                }
+//            } catch (exception: Exception) {
+//                throw exception
+//            }
+//        }
     } catch (exception: Exception) {
         exception.printStackTrace()
     }
+}
+
+fun CookieStore.toMap(): Map<String, String> {
+    val result = mutableMapOf<String, String>()
+    this.cookies.forEach {
+        result[it.name] = it.value
+    }
+    return result
 }

@@ -3,8 +3,8 @@ package com.github.kabocchi.king_LMS_Lite.Controller
 import com.eclipsesource.json.Json
 import com.eclipsesource.json.JsonObject
 import com.github.kabocchi.king_LMS_Lite.*
-import com.github.kabocchi.king_LMS_Lite.Utility.AppUtil
 import com.github.kabocchi.king_LMS_Lite.Utility.decryptFile2
+import com.github.kabocchi.king_LMS_Lite.Utility.doGet
 import com.github.kabocchi.king_LMS_Lite.Utility.encryptFile2
 import javafx.application.Platform
 import javafx.fxml.FXML
@@ -13,10 +13,19 @@ import javafx.scene.control.Label
 import javafx.scene.control.PasswordField
 import javafx.scene.control.TextField
 import javafx.stage.Stage
-import org.jsoup.Connection
+import org.apache.http.HttpStatus
+import org.apache.http.client.config.RequestConfig
+import org.apache.http.client.entity.UrlEncodedFormEntity
+import org.apache.http.client.methods.HttpGet
+import org.apache.http.client.methods.HttpPost
+import org.apache.http.impl.client.HttpClientBuilder
+import org.apache.http.impl.client.LaxRedirectStrategy
+import org.apache.http.message.BasicNameValuePair
+import org.apache.http.util.EntityUtils
 import org.jsoup.Jsoup
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
+import java.util.*
 import javax.net.ssl.SSLHandshakeException
 
 class Login {
@@ -67,9 +76,9 @@ class Login {
             loginButton.isDisable = true
             error.isVisible = false
             val start = System.currentTimeMillis()
-            connection = Jsoup.connect("https://king.kcg.kyoto/campus/Secure/Login.aspx?ReturnUrl=%2Fcampus%2FCommunity%2FMySetting")
+            
             val loginResult = try {
-                kcgLogin(connection, idField.text, passField.text)
+                kcgLogin(idField.text, passField.text)
             } catch (e: Exception) {
                 when (e) {
                     is UnknownHostException, is SocketTimeoutException, is SSLHandshakeException -> {
@@ -113,26 +122,34 @@ class Login {
         }
     }
     
-    private fun kcgLogin(conn: Connection, id: String, pass: String): LoginResult {
+    private fun kcgLogin(id: String, pass: String): LoginResult {
         try {
-            val doc = conn.data("__VIEWSTATE", "/wEPDwULLTE2MDkwMzkxOTRkZHY/AzvXjoMqTsVgJd4ipDEPUaNz")
-                    .data("__VIEWSTATEGENERATOR", "C57CFBF9")
-                    .data("__EVENTVALIDATION", "/wEdAASsWh7OxHZiOdC3v4rgI+lhmoSnNhet8R/Uqc0Y+L4tIt5lw99SYJ+Wv9EE4DvTk2BF8gstbfJCPOTeBk01E6UD2dD7i/ZD0yK6ahPUIO4y8Y1lnjI=")
-                    .data("TextLoginID", id)
-                    .data("TextPassword", pass)
-                    .data("buttonHtmlLogon", "ログイン")
-                    .userAgent("Mozilla")
-                    .timeout(10000)
-                    .post()
-            return if (doc != null && !doc.select("span#lblWarning").hasText()) {
-                LoginResult.SUCCESS
-            } else {
-                LoginResult.FAIL
+            HttpClientBuilder.create().setRedirectStrategy(LaxRedirectStrategy()).build().use { httpClient ->
+                val config = RequestConfig.custom().setSocketTimeout(3000).setConnectTimeout(3000).build()
+                
+                val formParams = mutableListOf<BasicNameValuePair>()
+                formParams.add(BasicNameValuePair("__VIEWSTATE", "/wEPDwULLTE2MDkwMzkxOTRkZHY/AzvXjoMqTsVgJd4ipDEPUaNz"))
+                formParams.add(BasicNameValuePair("__VIEWSTATEGENERATOR", "C57CFBF9"))
+                formParams.add(BasicNameValuePair("__EVENTVALIDATION", "/wEdAASsWh7OxHZiOdC3v4rgI+lhmoSnNhet8R/Uqc0Y+L4tIt5lw99SYJ+Wv9EE4DvTk2BF8gstbfJCPOTeBk01E6UD2dD7i/ZD0yK6ahPUIO4y8Y1lnjI="))
+                formParams.add(BasicNameValuePair("TextLoginID", id))
+                formParams.add(BasicNameValuePair("TextPassword", pass))
+                formParams.add(BasicNameValuePair("buttonHtmlLogon", "ログイン"))
+                val entity = UrlEncodedFormEntity(formParams, "UTF-8")
+        
+                val httpPost = HttpPost("https://king.kcg.kyoto/campus/Secure/login.aspx")
+    
+                httpPost.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:72.0) Gecko/20100101 Firefox/72.0")
+                httpPost.config = config
+                httpPost.entity = entity
+    
+                httpClient.execute(httpPost, context).use { httpResponse ->
+                    return if (httpResponse.statusLine.statusCode == HttpStatus.SC_OK) {
+                        LoginResult.SUCCESS
+                    } else {
+                        LoginResult.FAIL
+                    }
+                }
             }
-        } catch (e: UnknownHostException) {
-            throw e
-        } catch (e: SocketTimeoutException) {
-            throw e
         } catch (e: Exception) {
             throw e
 //                if (useSchoolWifi() && wifiLogin(id, pass)) {

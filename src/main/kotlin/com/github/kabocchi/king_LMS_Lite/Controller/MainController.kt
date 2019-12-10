@@ -4,8 +4,10 @@ import com.github.kabocchi.kingLmsLite.Node.NewsPane
 import com.github.kabocchi.kingLmsLite.Node.TaskPane
 import com.github.kabocchi.king_LMS_Lite.Node.SettingPane
 import com.github.kabocchi.king_LMS_Lite.Node.TimeTablePane
-import com.github.kabocchi.king_LMS_Lite.Utility.getDocument
+import com.github.kabocchi.king_LMS_Lite.Utility.getDocumentWithJsoup
+import com.github.kabocchi.king_LMS_Lite.Utility.toMap
 import com.github.kabocchi.king_LMS_Lite.connection
+import com.github.kabocchi.king_LMS_Lite.context
 import com.github.kabocchi.king_LMS_Lite.main
 import javafx.fxml.FXML
 import javafx.scene.control.Button
@@ -31,15 +33,14 @@ class MainController {
 
     @FXML
     fun initialize() {
-        timeTableDoc = getDocument(connection, "https://king.kcg.kyoto/campus/Portal/Home")
+//        timeTableDoc = getDocumentWithJsoup(context.cookieStore.toMap(), "https://king.kcg.kyoto/campus/Portal/Home")
         newsPane = NewsPane()
         mainPane.center = newsPane
-        taskPane = TaskPane(timeTableDoc)
-        timeTablePane = TimeTablePane(timeTableDoc)
-        settingPane = SettingPane()
+//        taskPane = TaskPane(timeTableDoc)
+//        timeTablePane = TimeTablePane(timeTableDoc)
+//        settingPane = SettingPane()
         getNews()
-        getTask()
-        println(mainPane.width)
+//        getTask()
     }
 
     @FXML

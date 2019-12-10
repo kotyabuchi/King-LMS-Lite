@@ -1,8 +1,10 @@
 package com.github.kabocchi.king_LMS_Lite.Node
 
 import com.github.kabocchi.king_LMS_Lite.ACCOUNT_FILE
-import com.github.kabocchi.king_LMS_Lite.Utility.getDocument
+import com.github.kabocchi.king_LMS_Lite.Utility.getDocumentWithJsoup
+import com.github.kabocchi.king_LMS_Lite.Utility.toMap
 import com.github.kabocchi.king_LMS_Lite.connection
+import com.github.kabocchi.king_LMS_Lite.context
 import com.github.kabocchi.king_LMS_Lite.main
 import javafx.geometry.Insets
 import javafx.scene.control.Button
@@ -24,7 +26,7 @@ class SettingPane: VBox() {
             styleClass.add("border-button")
             logoutBorder.center = this
             setOnAction {
-                getDocument(connection, "https://king.kcg.kyoto/campus/Secure/Logoff.aspx")
+                getDocumentWithJsoup(context.cookieStore.toMap(), "https://king.kcg.kyoto/campus/Secure/Logoff.aspx")
                 ACCOUNT_FILE.delete()
                 main?.let {
                     it.primaryStage?.close()

@@ -23,10 +23,10 @@ import javafx.scene.text.TextFlow
 import javafx.util.Duration
 import org.jsoup.nodes.Document
 
-class NewsContent(doc: Document, _unread: Boolean, published: String, newsCategoryMap: MutableMap<Int, NewsCategory>): VBox() {
+class NewsContent(doc: String, _unread: Boolean, published: String, newsCategoryMap: MutableMap<Int, NewsCategory>): VBox() {
 
-    private val json = Json.parse(doc.text()).asObject()
-    private val description = doc.body().toString().split("\"Body\": \"")[1].split("\", \"SenderId\"")[0]
+    private val json = Json.parse(doc).asObject()
+    private val description = doc.split("\"Body\": \"")[1].split("\"SenderId\":")[0].trim().removeSuffix("\",")
 
     private val tagBox: HBox
     private var unreadLabel: Label? = null
