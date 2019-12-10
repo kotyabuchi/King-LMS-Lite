@@ -26,8 +26,7 @@ val os = System.getProperty("os.name").toLowerCase()
 var main: Main? = null
 
 fun main(args: Array<String>) {
-//    Application.launch(Main::class.java, *args)
-    newLoginTest()
+    Application.launch(Main::class.java, *args)
 }
 
 class Main: Application() {
