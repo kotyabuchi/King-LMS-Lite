@@ -35,7 +35,7 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
     private var submissionEnd: LocalDateTime? = null
     private var limitHours: Long = 0
 
-    private var longDescription: TextFlow
+    private var longDescription: VBox
     private var shortDescription: Label
 
     val groupName = _groupName
@@ -151,7 +151,7 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
                 textOverrun = OverrunStyle.ELLIPSIS
                 textFill = Color.GRAY
             }
-            longDescription = TextFlow()
+            longDescription = VBox()
         } else {
             shortDescription = Label(cleanDescription(description).replace("\n", "")).apply {
                 isWrapText = false

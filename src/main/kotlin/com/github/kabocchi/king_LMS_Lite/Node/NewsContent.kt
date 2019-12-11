@@ -1,9 +1,12 @@
 package com.github.kabocchi.kingLmsLite.Node
 
 import com.eclipsesource.json.Json
+import com.eclipsesource.json.JsonObject
 import com.github.kabocchi.king_LMS_Lite.NewsCategory
 import com.github.kabocchi.king_LMS_Lite.Utility.cleanDescription
 import com.github.kabocchi.king_LMS_Lite.Utility.cleanDescriptionVer2
+import com.github.kabocchi.king_LMS_Lite.Utility.createHttpClient
+import com.github.kabocchi.king_LMS_Lite.context
 import javafx.animation.KeyFrame
 import javafx.animation.KeyValue
 import javafx.animation.Timeline
@@ -11,6 +14,7 @@ import javafx.application.Platform
 import javafx.beans.value.ChangeListener
 import javafx.geometry.Insets
 import javafx.scene.Cursor
+import javafx.scene.control.Hyperlink
 import javafx.scene.control.Label
 import javafx.scene.control.OverrunStyle
 import javafx.scene.control.Separator
@@ -19,14 +23,16 @@ import javafx.scene.layout.HBox
 import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
 import javafx.scene.text.Text
-import javafx.scene.text.TextFlow
 import javafx.util.Duration
-import org.jsoup.nodes.Document
+import org.apache.http.client.methods.HttpGet
+import java.io.File
+import java.io.FileOutputStream
 
 class NewsContent(doc: String, _unread: Boolean, published: String, newsCategoryMap: MutableMap<Int, NewsCategory>): VBox() {
 
     private val json = Json.parse(doc).asObject()
-    private val description = doc.split("\"Body\": \"")[1].split("\"SenderId\":")[0].trim().removeSuffix("\",")
+    private var description = doc.split("\"Body\": \"")[1].split("\"SenderId\":")[0].trim().removeSuffix("\",")
+    private val files = json.get("Files").asArray()
 
     private val tagBox: HBox
     private var unreadLabel: Label? = null
@@ -41,7 +47,7 @@ class NewsContent(doc: String, _unread: Boolean, published: String, newsCategory
 
     private val title = json.getString("Title", "")
 
-    private var longDescription: TextFlow
+    private var longDescription: VBox
     private var shortDescription: Label
 
     private var shortHeight = 0.0
@@ -107,37 +113,108 @@ class NewsContent(doc: String, _unread: Boolean, published: String, newsCategory
         }
         topBorderPane.right = dateText
 
-
-        shortDescription = Label(cleanDescription(description).replace("\n", "")).apply {
-            isWrapText = false
-            ellipsisString = "..."
-            textOverrun = OverrunStyle.ELLIPSIS
-            layoutBoundsProperty().addListener { observableValue, oldValue, newValue ->
-                if (newValue.height > 0) {
-                    shortHeight = this@NewsContent.height
-                    this@NewsContent.prefHeight = shortHeight
+        if (description.trim().isBlank()) {
+            description = "このタスクには詳細文が設定されていません"
+            shortDescription = Label(description).apply {
+                isWrapText = false
+                ellipsisString = "..."
+                textOverrun = OverrunStyle.ELLIPSIS
+                textFill = Color.GRAY
+                layoutBoundsProperty().addListener { observableValue, oldValue, newValue ->
+                    if (newValue.height > 0) {
+                        shortHeight = this@NewsContent.height
+                        this@NewsContent.prefHeight = shortHeight
+                    }
                 }
             }
-        }
-
-        longDescription = cleanDescriptionVer2(description).apply {
-            layoutBoundsProperty().addListener(ChangeListener { _, _, newValue ->
-                if (newValue.height > 0) {
-                    longHeight = this@NewsContent.prefHeight - shortDescription.height + newValue.height
-                    this@NewsContent.children.remove(this)
-                    this@NewsContent.children.add(shortDescription)
-                    showingDescription = false
-                    longAnimation = Timeline(KeyFrame(Duration.seconds(0.2), KeyValue(this@NewsContent.prefHeightProperty(), longHeight)))
-                    longAnimation?.cycleCount = 1
-                    longAnimation?.setOnFinished {
-                        this@NewsContent.children.remove(shortDescription)
-                        this@NewsContent.children.add(this)
+            longDescription = VBox().apply {
+                if (files.size() > 0) {
+                    val descriptionLabel = Label(description).apply {
+                        isWrapText = true
+                        textFill = Color.GRAY
                     }
-                    longAnimation?.play()
-                    showingDescription = true
-                    setAnimation()
+                    children.add(descriptionLabel)
+                    layoutBoundsProperty().addListener(ChangeListener { _, _, newValue ->
+                        if (newValue.height > 0) {
+                            longHeight = this@NewsContent.prefHeight - shortDescription.height + newValue.height
+                            this@NewsContent.children.remove(this)
+                            this@NewsContent.children.add(shortDescription)
+                            showingDescription = false
+                            longAnimation = Timeline(KeyFrame(Duration.seconds(0.2), KeyValue(this@NewsContent.prefHeightProperty(), longHeight)))
+                            longAnimation?.cycleCount = 1
+                            longAnimation?.setOnFinished {
+                                this@NewsContent.children.remove(shortDescription)
+                                this@NewsContent.children.add(this)
+                            }
+                            longAnimation?.play()
+                            showingDescription = true
+                            setAnimation()
+                        }
+                    })
                 }
-            })
+            }
+        } else {
+            shortDescription = Label(cleanDescription(description).replace("\n", "")).apply {
+                isWrapText = false
+                ellipsisString = "..."
+                textOverrun = OverrunStyle.ELLIPSIS
+                layoutBoundsProperty().addListener { observableValue, oldValue, newValue ->
+                    if (newValue.height > 0) {
+                        shortHeight = this@NewsContent.height
+                        this@NewsContent.prefHeight = shortHeight
+                    }
+                }
+            }
+            longDescription = cleanDescriptionVer2(description).apply {
+                layoutBoundsProperty().addListener(ChangeListener { _, _, newValue ->
+                    if (newValue.height > 0) {
+                        longHeight = this@NewsContent.prefHeight - shortDescription.height + newValue.height
+                        this@NewsContent.children.remove(this)
+                        this@NewsContent.children.add(shortDescription)
+                        showingDescription = false
+                        longAnimation = Timeline(KeyFrame(Duration.seconds(0.2), KeyValue(this@NewsContent.prefHeightProperty(), longHeight)))
+                        longAnimation?.cycleCount = 1
+                        longAnimation?.setOnFinished {
+                            this@NewsContent.children.remove(shortDescription)
+                            this@NewsContent.children.add(this)
+                        }
+                        longAnimation?.play()
+                        showingDescription = true
+                        setAnimation()
+                    }
+                })
+            }
+        }
+        if (files.size() > 0) {
+            longDescription.children.add(Separator())
+            files.forEach { json ->
+                json as JsonObject
+                val hyperlink = Hyperlink(json.getString("FileName", "")).apply {
+                    setOnAction {
+                        createHttpClient().use { httpClient ->
+                            val httpGet = HttpGet("https://king.kcg.kyoto/campus/Portal/TryAnnouncement/GetFileAttachment/${json.getInt("Id", 0)}")
+                            try {
+                                httpClient.execute(httpGet, context).use {
+                                    val inputStream = it.entity.content
+                                    val filePath = json.getString("FileName", "")
+                                    val fileOutputStream = FileOutputStream(File(filePath))
+
+                                    var inByte = inputStream.read()
+                                    while (inByte != -1) {
+                                        fileOutputStream.write(inByte)
+                                        inByte = inputStream.read()
+                                    }
+                                    inputStream.close()
+                                    fileOutputStream.close()
+                                }
+                            }catch (exception: Exception) {
+                                throw exception
+                            }
+                        }
+                    }
+                }
+                longDescription.children.add(hyperlink)
+            }
         }
 
         this.setOnMouseClicked {

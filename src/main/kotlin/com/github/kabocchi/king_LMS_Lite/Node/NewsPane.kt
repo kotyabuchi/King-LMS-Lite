@@ -228,64 +228,8 @@ class NewsPane: BorderPane() {
                         return@thread
                     }
                 }
+                httpClient.close()
             }
-//
-//            val doc = getDocumentWithJsoup(context.cookieStore.toMap(), "https://king.kcg.kyoto/campus/Portal/TryAnnouncement/GetAnnouncements?categoryId=0&passdaysId=0&isCustomSearch=false")
-//            if (doc == null) {
-//                endUpdate()
-//                showError()
-//                return@thread
-//            }
-//            val end1 = System.currentTimeMillis()
-//            println("GetNewsList: " + (end1 - start).toString() + "ms")
-//            val jsonArray = Json.parse(doc.text()).asObject().get("data").asArray()
-//
-//            var gridHBox = HBox()
-//
-//            val newsAmount = jsonArray.size()
-//
-//            var failAmount = 0
-//
-//            for ((index, value) in jsonArray.withIndex()) {
-//
-//                changeProgressText("お知らせの詳細を取得しています... [${index + 1}/$newsAmount]")
-//
-//                val json = value.asObject()
-//                val detail = getDocumentWithJsoup(context.cookieStore.toMap(), "https://king.kcg.kyoto/campus/Portal/TryAnnouncement/GetAnnouncement?aId=" + json.getInt("Id", 0))
-//                if (detail == null) {
-//                    failAmount++
-//                    continue
-//                }
-//                val newsContent = NewsContent(detail, !json.getBoolean("IsRead", false), json.getString("Published", ""), newsCategoryMap)
-//                newsList.add(newsContent)
-//
-////                if (index % 3 == 0) {
-////                    gridHBox = HBox()
-////                    gridHBox.spacing = 10.0
-////                    gridView.children.add(gridHBox)
-////                }
-////                val newsGridContent = NewsContent(json, detail?.body().toString().split("\"Body\": \"")[1].split("\", \"SenderId\"")[0])
-////                newsGridContent.prefWidth = 400.0
-////                gridHBox.children.add(newsGridContent)
-//            }
-//
-//            filterApply()
-//
-//            if (listViewButton.isSelected) {
-//                println("List view Selected")
-//                showListView()
-//            } else {
-//                showGridView()
-//            }
-//
-//            val end2 = System.currentTimeMillis()
-//            println("GetNews: " + (end2 - end1).toString() + "ms")
-//            endUpdate()
-//            if (failAmount == 0) {
-//                changeProgressText("お知らせの取得が完了しました [${newsAmount}件]")
-//            } else {
-//                changeProgressText("${failAmount}件のお知らせの取得に失敗しました", true)
-//            }
         }
     }
 

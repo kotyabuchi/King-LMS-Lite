@@ -4,6 +4,7 @@ import com.github.kabocchi.king_LMS_Lite.context
 import com.github.kabocchi.king_LMS_Lite.os
 import javafx.scene.control.Hyperlink
 import javafx.scene.control.Label
+import javafx.scene.layout.VBox
 import javafx.scene.text.TextFlow
 import org.apache.http.HttpEntity
 import org.apache.http.HttpStatus
@@ -83,10 +84,15 @@ fun cleanDescription(text: String): String {
     return result.trim()
 }
 
-fun cleanDescriptionVer2(_text: String): TextFlow {
-    val textFlow = TextFlow()
-    textFlow.maxWidth = 1200.0
-    textFlow.prefWidth = 1200.0
+fun cleanDescriptionVer2(_text: String): VBox {
+    val textFlow = TextFlow().apply {
+        maxWidth = 1200.0
+        prefWidth = 1200.0
+    }
+    val result = VBox(textFlow).apply {
+        spacing = 4.0
+    }
+
     var text = _text.trim().replace("\n", "")
             .replace("<br />", "\n")
             .replace("<br>\n <br>", "")
@@ -136,7 +142,7 @@ fun cleanDescriptionVer2(_text: String): TextFlow {
         if (text.contains("<") && text.contains(">")) text = removeTag(text)
         textFlow.children.add(Label(replaceEscapeTag(text)))
     }
-    return textFlow
+    return result
 }
 
 fun removeTag(text: String): String {
