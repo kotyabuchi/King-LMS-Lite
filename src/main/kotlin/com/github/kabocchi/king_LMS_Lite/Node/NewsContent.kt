@@ -23,9 +23,9 @@ import javafx.scene.layout.HBox
 import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
 import javafx.scene.text.Text
+import javafx.stage.FileChooser
 import javafx.util.Duration
 import org.apache.http.client.methods.HttpGet
-import java.io.File
 import java.io.FileOutputStream
 
 class NewsContent(doc: String, _unread: Boolean, published: String, newsCategoryMap: MutableMap<Int, NewsCategory>): VBox() {
@@ -45,8 +45,9 @@ class NewsContent(doc: String, _unread: Boolean, published: String, newsCategory
     var important = false
     val category = newsCategoryMap[json.getInt("CategoryId", 1)]!!
 
-    private val title = json.getString("Title", "")
+    val title: String = json.getString("Title", "")
 
+    private val simpleDescription: String
     private var longDescription: VBox
     private var shortDescription: Label
 
@@ -117,6 +118,7 @@ class NewsContent(doc: String, _unread: Boolean, published: String, newsCategory
 
         if (description.trim().isBlank()) {
             description = "このタスクには詳細文が設定されていません"
+            simpleDescription = ""
             shortDescription = Label(description).apply {
                 isWrapText = false
                 ellipsisString = "..."
@@ -147,7 +149,8 @@ class NewsContent(doc: String, _unread: Boolean, published: String, newsCategory
                 }
             }
         } else {
-            shortDescription = Label(cleanDescription(description).replace("\n", "")).apply {
+            simpleDescription = cleanDescription(description)
+            shortDescription = Label(simpleDescription).apply {
                 isWrapText = false
                 ellipsisString = "..."
                 textOverrun = OverrunStyle.ELLIPSIS
@@ -171,15 +174,18 @@ class NewsContent(doc: String, _unread: Boolean, published: String, newsCategory
             longDescription.children.addAll(Separator(), Label("添付ファイル"))
             files.forEach { json ->
                 json as JsonObject
-                val hyperlink = Hyperlink(json.getString("FileName", "")).apply {
+                val fileName = json.getString("FileName", "")
+                val hyperlink = Hyperlink(fileName).apply {
                     setOnAction {
+                        val chooser = FileChooser()
+                        chooser.initialFileName = fileName
+                        val file = chooser.showSaveDialog(null) ?: return@setOnAction
                         createHttpClient().use { httpClient ->
                             val httpGet = HttpGet("https://king.kcg.kyoto/campus/Portal/TryAnnouncement/GetFileAttachment/${json.getInt("Id", 0)}")
                             try {
                                 httpClient.execute(httpGet, context).use {
                                     val inputStream = it.entity.content
-                                    val filePath = json.getString("FileName", "")
-                                    val fileOutputStream = FileOutputStream(File(filePath))
+                                    val fileOutputStream = FileOutputStream(file)
 
                                     var inByte = inputStream.read()
                                     while (inByte != -1) {
@@ -265,5 +271,9 @@ class NewsContent(doc: String, _unread: Boolean, published: String, newsCategory
     enum class DescriptionType {
         SHORT,
         LONG
+    }
+    
+    fun getDecription(): String {
+        return simpleDescription
     }
 }

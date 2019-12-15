@@ -66,13 +66,18 @@ class NewsPane: BorderPane() {
         this.top = toolBoxTopV
 
         progressText = Label().apply {
-            prefWidthProperty().bind(this@NewsPane.widthProperty().subtract(400))
+            prefWidthProperty().bind(this@NewsPane.widthProperty().subtract(360))
+//            minWidth = 200.0
             style = "-fx-font-weight: bold; -fx-font-size: 14px;"
         }
 
         searchBox = TextField().apply {
             promptText = "検索"
             prefWidth = 250.0
+            setOnAction {
+                val searchText = text.trim()
+                filterApply(title = searchText)
+            }
         }
 
         filterButton = Button("").apply {
@@ -123,8 +128,18 @@ class NewsPane: BorderPane() {
                 }
             }
         }
+        
+        val reloadButton = Button().apply {
+            styleClass.add("reload-button")
+            minWidth = 26.0
+            prefWidth = 26.0
+            prefHeight = 26.0
+            setOnAction {
+                updateNews()
+            }
+        }
 
-        toolBoxTopH.children.addAll(progressText, searchBox, filterButton, listViewButton, gridViewButton)
+        toolBoxTopH.children.addAll(progressText, searchBox, filterButton, reloadButton)
 
         scrollPane = ScrollPane().apply {
             isPannable = true
@@ -163,6 +178,7 @@ class NewsPane: BorderPane() {
 
     fun updateNews() {
         thread {
+            if (updatingNews) return@thread
             updatingNews = true
 
             val start = System.currentTimeMillis()
@@ -247,22 +263,29 @@ class NewsPane: BorderPane() {
         updatingNews = false
     }
 
-    fun filterApply() {
+    fun filterApply(msg: Boolean = false, title: String = "") {
         Platform.runLater {
             listView.children.clear()
             if (showingFilter) listView.children.add(filterBox)
             val unreadOnly = filterBox.isUnreadOnly()
             val emergency = filterBox.showEmergency()
             val important = filterBox.showImportant()
+            var count = 0
             for (it in newsList) {
+                if (title != "" && (!it.title.contains(title, true) && !it.getDecription().contains(title, true))) continue
                 if (unreadOnly && !it.unread) continue
                 if ((emergency && it.emergency) || (important && it.important) && filterBox.categoryFilter(it.category)) {
                     listView.children.add(it)
+                    count++
                     continue
                 }
-                if (!emergency && !important && filterBox.categoryFilter(it.category)) listView.children.add(it)
+                if (!emergency && !important && filterBox.categoryFilter(it.category)) {
+                    listView.children.add(it)
+                    count++
+                }
             }
             showListView()
+            if (msg) changeProgressText("フィルターを適応しました [${count}件]")
         }
     }
 

@@ -82,6 +82,7 @@ fun cleanDescription(text: String): String {
             .replace("&quot;", "\"")
             .replace("&#39;", "\'")
             .replace("&nbsp;", "")
+            .replace("\n", "")
     return result.trim()
 }
 

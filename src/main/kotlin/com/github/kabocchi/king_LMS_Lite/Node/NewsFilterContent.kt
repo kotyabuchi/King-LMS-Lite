@@ -96,7 +96,7 @@ class NewsFilterContent(newsPane: NewsPane): VBox() {
         val applyButton = Button("適用").apply {
             styleClass.add("apply-button")
             setOnAction {
-                newsPane.filterApply()
+                newsPane.filterApply(true)
                 // フィルターのバッファーを登録
                 tagFilterBuffer.clear()
                 tagFilter.children.forEach {

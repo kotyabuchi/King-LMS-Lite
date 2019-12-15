@@ -84,13 +84,17 @@ class TaskPane(timetableDoc: Document?): BorderPane() {
         this.top = toolBoxTopV
 
         progressText = Label().apply {
-            prefWidthProperty().bind(this@TaskPane.widthProperty().subtract(400))
+            prefWidthProperty().bind(this@TaskPane.widthProperty().subtract(360))
             font = Font.font(Font(14.0).family, FontWeight.BOLD, 14.0)
         }
 
         searchBox = TextField().apply {
             promptText = "検索"
             prefWidth = 250.0
+            setOnAction {
+                val searchText = text.trim()
+                filterApply(title = searchText)
+            }
         }
 
         filterButton = Button("").apply {
@@ -141,7 +145,18 @@ class TaskPane(timetableDoc: Document?): BorderPane() {
                 }
             }
         }
-        toolBoxTopH.children.addAll(progressText, searchBox, filterButton, listViewButton, gridViewButton)
+    
+        val reloadButton = Button().apply {
+            styleClass.add("reload-button")
+            minWidth = 26.0
+            prefWidth = 26.0
+            prefHeight = 26.0
+            setOnAction {
+                updateTask()
+            }
+        }
+        
+        toolBoxTopH.children.addAll(progressText, searchBox, filterButton, reloadButton)
 
         scrollPane = ScrollPane().apply {
             isPannable = true
@@ -174,6 +189,7 @@ class TaskPane(timetableDoc: Document?): BorderPane() {
 
     fun updateTask() {
         thread {
+            if (updatingTask) return@thread
             updatingTask = true
             val start = System.currentTimeMillis()
             Platform.runLater {
@@ -310,16 +326,20 @@ class TaskPane(timetableDoc: Document?): BorderPane() {
         return groupList
     }
 
-    fun filterApply() {
+    fun filterApply(msg: Boolean = false, title: String = "") {
         Platform.runLater {
             listView.children.clear()
             if (showingFilter) listView.children.add(filterBox)
+            var count = 0
             for (it in taskList) {
+                if (title != "" && (!it.title.contains(title, true) && !it.getDecription().contains(title, true))) continue
                 if (filterBox.isResubmissionOnly() && !it.resubmission) continue
                 if (filterBox.getTypeFilter()[it.taskType]?.isSelected == false) continue
                 if (filterBox.getGroupFilter()[it.groupName]?.isSelected == false) continue
                 listView.children.add(it)
+                count++
             }
+            if (msg) changeProgressText("フィルターを適応しました [${count}件]")
         }
     }
 }

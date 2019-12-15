@@ -49,7 +49,7 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
 
     private var showingDescription = false
 
-    private val title = json.getString("Title", "")
+    val title: String = json.getString("Title", "")
     private val contentId = json.getString("ContentID", "")
     private val taskId = json.getInt("TaskID", 0)
     private val files = json.get("backgrounds")?.asArray() ?: JsonArray()
@@ -61,6 +61,7 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
     private var submissionEnd: LocalDateTime? = null
     private var limitHours: Long = 0
 
+    private val simpleDescription: String
     private var longDescription: VBox
     private var shortDescription: Label
 
@@ -179,6 +180,7 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
         var description = _description
         if (description.trim().isBlank()) {
             description = "このタスクには詳細文が設定されていません"
+            simpleDescription = ""
             shortDescription = Label(description).apply {
                 isWrapText = false
                 ellipsisString = "..."
@@ -209,7 +211,8 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
                 }
             }
         } else {
-            shortDescription = Label(cleanDescription(description).replace("\n", "")).apply {
+            simpleDescription = cleanDescription(description)
+            shortDescription = Label(simpleDescription).apply {
                 isWrapText = false
                 ellipsisString = "..."
                 textOverrun = OverrunStyle.ELLIPSIS
@@ -221,85 +224,88 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
                 }
             }
             longDescription = cleanDescriptionVer2(description).apply {
-                layoutBoundsProperty().addListener(ChangeListener { _, oldValue, newValue ->
+                layoutBoundsProperty().addListener { _, oldValue, newValue ->
                     if (newValue.height > oldValue.height) {
                         longHeight = this@TaskContent.prefHeight - shortDescription.height + newValue.height
                         setAnimation()
                     }
-                })
-                val submitButton = Button("提出").apply {
-                    styleClass.add("border-button")
-                    setOnAction {
-                        val fileChooser = FileChooser()
-                        fileChooser.title = "提出ファイルを選択"
-                        fileChooser.showOpenDialog(null)?.let { file ->
-                            createHttpClient().use { client ->
-                                val tempFolderId = "$userId-${System.currentTimeMillis()}"
-                                val boundary = "---------------------------${Random.nextInt(0..(Int.MAX_VALUE))}"
-                                val post = HttpPost("https://king.kcg.kyoto/campus/Mvc/Manavi/SaveTempFiles")
-                                val entity = MultipartEntityBuilder.create()
-                                        .setMode(HttpMultipartMode.BROWSER_COMPATIBLE)
-                                        .setCharset(Charset.forName("utf-8"))
-                                        .setBoundary(boundary)
-                                        .addTextBody("tempFolderId", tempFolderId)
-                                        .addBinaryBody("files", file, ContentType.create(Tika().detect(file)), file.name)
-                                        .build()
-
-                                post.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:72.0) Gecko/20100101 Firefox/72.0")
-                                post.addHeader("Content-Type", "multipart/form-data; boundary=$boundary")
-                                post.entity = entity
-                                println(EntityUtils.toString(entity))
-
-                                client.execute(post, context).use { response ->
-                                    val responseStr = EntityUtils.toString(response.entity)
-                                    println(response.statusLine.statusCode)
-                                    println(responseStr)
-                                    if (response.statusLine.statusCode == HttpStatus.SC_OK && responseStr.trim().isEmpty()) {
-                                        createHttpClient().use { client2 ->
-                                            println(requestVerToken)
-                                            val post2 = HttpPost("https://king.kcg.kyoto/campus/Mvc/Manavi/SaveFilesReport")
-                                            post2.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:72.0) Gecko/20100101 Firefox/72.0")
-                                            post2.addHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
-                                            post2.addHeader("RequestVerToken", requestVerToken)
-                                            post2.addHeader("X-Requested-With", "XMLHttpRequest")
-
-                                            val formParams = mutableListOf<BasicNameValuePair>()
-                                            formParams.add(BasicNameValuePair("taskId", taskId.toString()))
-                                            formParams.add(BasicNameValuePair("resubmitId", "0"))
-                                            formParams.add(BasicNameValuePair("tempFolderId", tempFolderId))
-                                            formParams.add(BasicNameValuePair("gToken", groupAccessToken))
-
-                                            val entity2 = UrlEncodedFormEntity(formParams, "UTF-8")
-                                            post2.entity = entity2
-                                            println(EntityUtils.toString(entity2))
-
-                                            client2.execute(post2, context).use { response2 ->
-                                                println(response2.statusLine.statusCode)
-                                                println(EntityUtils.toString(response2.entity))
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
                 }
-                children.add(submitButton)
+//                val submitButton = Button("提出").apply {
+//                    styleClass.add("border-button")
+//                    setOnAction {
+//                        val fileChooser = FileChooser()
+//                        fileChooser.title = "提出ファイルを選択"
+//                        fileChooser.showOpenDialog(null)?.let { file ->
+//                            createHttpClient().use { client ->
+//                                val tempFolderId = "$userId-${System.currentTimeMillis()}"
+//                                val boundary = "---------------------------${Random.nextInt(0..(Int.MAX_VALUE))}"
+//                                val post = HttpPost("https://king.kcg.kyoto/campus/Mvc/Manavi/SaveTempFiles")
+//                                val entity = MultipartEntityBuilder.create()
+//                                        .setMode(HttpMultipartMode.BROWSER_COMPATIBLE)
+//                                        .setCharset(Charset.forName("utf-8"))
+//                                        .setBoundary(boundary)
+//                                        .addTextBody("tempFolderId", tempFolderId)
+//                                        .addBinaryBody("files", file, ContentType.create(Tika().detect(file)), file.name)
+//                                        .build()
+//
+//                                post.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:72.0) Gecko/20100101 Firefox/72.0")
+//                                post.addHeader("Content-Type", "multipart/form-data; boundary=$boundary")
+//                                post.entity = entity
+//                                println(EntityUtils.toString(entity))
+//
+//                                client.execute(post, context).use { response ->
+//                                    val responseStr = EntityUtils.toString(response.entity)
+//                                    println(response.statusLine.statusCode)
+//                                    println(responseStr)
+//                                    if (response.statusLine.statusCode == HttpStatus.SC_OK && responseStr.trim().isEmpty()) {
+//                                        createHttpClient().use { client2 ->
+//                                            println(requestVerToken)
+//                                            val post2 = HttpPost("https://king.kcg.kyoto/campus/Mvc/Manavi/SaveFilesReport")
+//                                            post2.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:72.0) Gecko/20100101 Firefox/72.0")
+//                                            post2.addHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+//                                            post2.addHeader("RequestVerToken", requestVerToken)
+//                                            post2.addHeader("X-Requested-With", "XMLHttpRequest")
+//
+//                                            val formParams = mutableListOf<BasicNameValuePair>()
+//                                            formParams.add(BasicNameValuePair("taskId", taskId.toString()))
+//                                            formParams.add(BasicNameValuePair("resubmitId", "0"))
+//                                            formParams.add(BasicNameValuePair("tempFolderId", tempFolderId))
+//                                            formParams.add(BasicNameValuePair("gToken", groupAccessToken))
+//
+//                                            val entity2 = UrlEncodedFormEntity(formParams, "UTF-8")
+//                                            post2.entity = entity2
+//                                            println(EntityUtils.toString(entity2))
+//
+//                                            client2.execute(post2, context).use { response2 ->
+//                                                println(response2.statusLine.statusCode)
+//                                                println(EntityUtils.toString(response2.entity))
+//                                            }
+//                                        }
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//                children.add(submitButton)
             }
 
             if (files.size() > 0) {
                 longDescription.children.addAll(Separator(), Label("添付ファイル"))
                 files.forEach { fileJson ->
                     fileJson as JsonObject
-                    val hyperlink = Hyperlink(fileJson.getString("FileName", "")).apply {
+                    val fileName = fileJson.getString("FileName", "")
+                    val hyperlink = Hyperlink(fileName).apply {
                         setOnAction {
+                            val chooser = FileChooser()
+                            chooser.initialFileName = fileName
+                            val file = chooser.showSaveDialog(null) ?: return@setOnAction
                             createHttpClient().use { httpClient ->
                                 val httpGet = HttpGet("https://king.kcg.kyoto/campus/Download/DownloadHandler.aspx?cid=$contentId&docid=${fileJson.getInt("Id", 0)}")
                                 try {
                                     httpClient.execute(httpGet, context).use {
                                         val inputStream = it.entity.content
-                                        val filePath = fileJson.getString("FileName", "")
-                                        val fileOutputStream = FileOutputStream(File(filePath))
+                                        val fileOutputStream = FileOutputStream(file)
 
                                         var inByte = inputStream.read()
                                         while (inByte != -1) {
@@ -372,5 +378,9 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
                 !showingDescription
             }
         }
+    }
+    
+    fun getDecription(): String {
+        return simpleDescription
     }
 }

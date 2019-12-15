@@ -111,6 +111,15 @@
 	-fx-background-image: url('grid.png');
 }
 
+.reload-button {
+    -fx-background-color: transparent;
+    -fx-background-size: 18px;
+    -fx-background-repeat: no-repeat;
+    -fx-background-position: center center;
+    -fx-cursor: hand;
+    -fx-background-image: url('reload.png');
+}
+
 .text-field:focused {
     -fx-background-color: #F89174 , white , white;
 }

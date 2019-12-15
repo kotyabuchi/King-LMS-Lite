@@ -128,7 +128,7 @@ class TaskFilterContent(taskPane: TaskPane): VBox() {
         val applyButton = Button("適用").apply {
             styleClass.add("apply-button")
             setOnAction {
-                taskPane.filterApply()
+                taskPane.filterApply(true)
                 // フィルターのバッファーを登録
                 tagFilterBuffer.clear()
                 tagFilter.children.forEach {
