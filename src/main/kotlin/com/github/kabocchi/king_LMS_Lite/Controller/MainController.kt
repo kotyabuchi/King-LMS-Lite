@@ -31,16 +31,18 @@ class MainController {
 
     private var timeTableDoc: Document? = null
 
+    private var userId = ""
+
     @FXML
     fun initialize() {
-//        timeTableDoc = getDocumentWithJsoup(context.cookieStore.toMap(), "https://king.kcg.kyoto/campus/Portal/Home")
+        timeTableDoc = getDocumentWithJsoup(context.cookieStore.toMap(), "https://king.kcg.kyoto/campus/Portal/Home")
         newsPane = NewsPane()
         mainPane.center = newsPane
-//        taskPane = TaskPane(timeTableDoc)
-//        timeTablePane = TimeTablePane(timeTableDoc)
-//        settingPane = SettingPane()
+        taskPane = TaskPane(timeTableDoc)
+        timeTablePane = TimeTablePane(timeTableDoc)
+        settingPane = SettingPane()
         getNews()
-//        getTask()
+        getTask()
     }
 
     @FXML

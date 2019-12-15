@@ -56,6 +56,8 @@ class NewsContent(doc: String, _unread: Boolean, published: String, newsCategory
     private var shortAnimation: Timeline? = null
     private var longAnimation: Timeline? = null
 
+    private var animating = true
+
     init {
         this.spacing = 4.0
         this.cursor = Cursor.HAND
@@ -120,10 +122,12 @@ class NewsContent(doc: String, _unread: Boolean, published: String, newsCategory
                 ellipsisString = "..."
                 textOverrun = OverrunStyle.ELLIPSIS
                 textFill = Color.GRAY
-                layoutBoundsProperty().addListener { observableValue, oldValue, newValue ->
-                    if (newValue.height > 0) {
-                        shortHeight = this@NewsContent.height
-                        this@NewsContent.prefHeight = shortHeight
+                if (files.size() > 0) {
+                    layoutBoundsProperty().addListener { observableValue, oldValue, newValue ->
+                        if (newValue.height > 0) {
+                            shortHeight = this@NewsContent.height
+                            this@NewsContent.prefHeight = shortHeight
+                        }
                     }
                 }
             }
@@ -134,20 +138,9 @@ class NewsContent(doc: String, _unread: Boolean, published: String, newsCategory
                         textFill = Color.GRAY
                     }
                     children.add(descriptionLabel)
-                    layoutBoundsProperty().addListener(ChangeListener { _, _, newValue ->
-                        if (newValue.height > 0) {
+                    layoutBoundsProperty().addListener(ChangeListener { _, oldValue, newValue ->
+                        if (newValue.height > oldValue.height) {
                             longHeight = this@NewsContent.prefHeight - shortDescription.height + newValue.height
-                            this@NewsContent.children.remove(this)
-                            this@NewsContent.children.add(shortDescription)
-                            showingDescription = false
-                            longAnimation = Timeline(KeyFrame(Duration.seconds(0.2), KeyValue(this@NewsContent.prefHeightProperty(), longHeight)))
-                            longAnimation?.cycleCount = 1
-                            longAnimation?.setOnFinished {
-                                this@NewsContent.children.remove(shortDescription)
-                                this@NewsContent.children.add(this)
-                            }
-                            longAnimation?.play()
-                            showingDescription = true
                             setAnimation()
                         }
                     })
@@ -166,27 +159,16 @@ class NewsContent(doc: String, _unread: Boolean, published: String, newsCategory
                 }
             }
             longDescription = cleanDescriptionVer2(description).apply {
-                layoutBoundsProperty().addListener(ChangeListener { _, _, newValue ->
-                    if (newValue.height > 0) {
+                layoutBoundsProperty().addListener(ChangeListener { _, oldValue, newValue ->
+                    if (newValue.height > oldValue.height) {
                         longHeight = this@NewsContent.prefHeight - shortDescription.height + newValue.height
-                        this@NewsContent.children.remove(this)
-                        this@NewsContent.children.add(shortDescription)
-                        showingDescription = false
-                        longAnimation = Timeline(KeyFrame(Duration.seconds(0.2), KeyValue(this@NewsContent.prefHeightProperty(), longHeight)))
-                        longAnimation?.cycleCount = 1
-                        longAnimation?.setOnFinished {
-                            this@NewsContent.children.remove(shortDescription)
-                            this@NewsContent.children.add(this)
-                        }
-                        longAnimation?.play()
-                        showingDescription = true
                         setAnimation()
                     }
                 })
             }
         }
         if (files.size() > 0) {
-            longDescription.children.add(Separator())
+            longDescription.children.addAll(Separator(), Label("添付ファイル"))
             files.forEach { json ->
                 json as JsonObject
                 val hyperlink = Hyperlink(json.getString("FileName", "")).apply {
@@ -230,11 +212,30 @@ class NewsContent(doc: String, _unread: Boolean, published: String, newsCategory
     }
 
     private fun setAnimation() {
+        this.children.remove(longDescription)
+        this.children.add(shortDescription)
+        showingDescription = false
+        longAnimation = Timeline(KeyFrame(Duration.seconds(0.2), KeyValue(this.prefHeightProperty(), longHeight))).apply {
+            cycleCount = 1
+            setOnFinished {
+                this@NewsContent.children.remove(shortDescription)
+                this@NewsContent.children.add(longDescription)
+                animating = false
+            }
+        }
+        longAnimation?.play()
+        showingDescription = true
         this.setOnMouseClicked {
+            if (animating) return@setOnMouseClicked
+            animating = true
             showingDescription = if (showingDescription) {
                 if (shortAnimation == null) {
-                    shortAnimation = Timeline(KeyFrame(Duration.seconds(0.2), KeyValue(this@NewsContent.prefHeightProperty(), shortHeight)))
-                    shortAnimation?.cycleCount = 1
+                    shortAnimation = Timeline(KeyFrame(Duration.seconds(0.2), KeyValue(this.prefHeightProperty(), shortHeight))).apply {
+                        cycleCount = 1
+                        setOnFinished {
+                            animating = false
+                        }
+                    }
                 }
                 shortAnimation?.play()
                 Platform.runLater {

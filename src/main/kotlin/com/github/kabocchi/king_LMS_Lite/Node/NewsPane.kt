@@ -164,7 +164,7 @@ class NewsPane: BorderPane() {
     fun updateNews() {
         thread {
             updatingNews = true
-            
+
             val start = System.currentTimeMillis()
             Platform.runLater {
                 progressBar.progress = -1.0
@@ -183,17 +183,17 @@ class NewsPane: BorderPane() {
                 httpClient.execute(httpGet, context).use { newsListDoc ->
                     if (newsListDoc.statusLine.statusCode == HttpStatus.SC_OK) {
                         val jsonArray = Json.parse(EntityUtils.toString(newsListDoc.entity)).asObject().get("data").asArray()
-    
+
                         val newsAmount = jsonArray.size()
-    
+
                         var failAmount = 0
-    
+
                         for ((index, value) in jsonArray.withIndex()) {
-        
+
                             changeProgressText("お知らせの詳細を取得しています... [${index + 1}/$newsAmount]")
-        
+
                             val json = value.asObject()
-                            
+
                             httpClient.execute(HttpGet("https://king.kcg.kyoto/campus/Portal/TryAnnouncement/GetAnnouncement?aId=" + json.getInt("Id", 0)), context).use { newsDetailDoc ->
                                 if (newsDetailDoc.statusLine.statusCode == HttpStatus.SC_OK) {
                                     val newsContent = NewsContent(EntityUtils.toString(newsDetailDoc.entity), !json.getBoolean("IsRead", false), json.getString("Published", ""), newsCategoryMap)
@@ -204,16 +204,16 @@ class NewsPane: BorderPane() {
                                 newsDetailDoc.close()
                             }
                         }
-    
+
                         filterApply()
-    
+
                         if (listViewButton.isSelected) {
                             println("List view Selected")
                             showListView()
                         } else {
                             showGridView()
                         }
-    
+
                         val end2 = System.currentTimeMillis()
                         println("GetNews: " + (end2 - start).toString() + "ms")
                         endUpdate()

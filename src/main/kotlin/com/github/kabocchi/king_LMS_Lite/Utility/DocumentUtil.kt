@@ -18,6 +18,7 @@ import org.apache.http.impl.client.BasicCookieStore
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.impl.client.LaxRedirectStrategy
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.message.BasicNameValuePair
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -165,7 +166,7 @@ fun replaceEscapeTag(text: String): String {
 }
 
 fun createHttpClient(): CloseableHttpClient {
-    return HttpClientBuilder.create().setRedirectStrategy(LaxRedirectStrategy()).build()
+    return HttpClientBuilder.create().setRedirectStrategy(LaxRedirectStrategy()).setConnectionManager(PoolingHttpClientConnectionManager()).build()
 }
 
 fun newLoginTest() {
