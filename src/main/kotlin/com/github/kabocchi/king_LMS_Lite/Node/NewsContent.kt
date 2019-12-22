@@ -26,6 +26,7 @@ import javafx.scene.text.Text
 import javafx.stage.FileChooser
 import javafx.util.Duration
 import org.apache.http.client.methods.HttpGet
+import java.io.File
 import java.io.FileOutputStream
 
 class NewsContent(doc: String, _unread: Boolean, published: String, newsCategoryMap: MutableMap<Int, NewsCategory>): VBox() {
@@ -178,6 +179,8 @@ class NewsContent(doc: String, _unread: Boolean, published: String, newsCategory
                 val hyperlink = Hyperlink(fileName).apply {
                     setOnAction {
                         val chooser = FileChooser()
+                        chooser.extensionFilters.add(FileChooser.ExtensionFilter("All", "*.*"))
+                        chooser.initialDirectory = File(System.getProperty("user.home"))
                         chooser.initialFileName = fileName
                         val file = chooser.showSaveDialog(null) ?: return@setOnAction
                         createHttpClient().use { httpClient ->

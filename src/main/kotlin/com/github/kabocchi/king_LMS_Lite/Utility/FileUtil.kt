@@ -1,6 +1,7 @@
 package com.github.kabocchi.king_LMS_Lite.Utility
 
 import java.io.*
+import java.net.InetAddress
 import java.util.*
 import javax.crypto.Cipher
 import javax.crypto.CipherInputStream
@@ -71,34 +72,41 @@ fun decryptFile(path: String): String? {
 }
 
 fun encryptFile2(path: String, obj: Any) {
-    val key = SecretKeySpec("dkanwkdlnalsndia".toByteArray(), "AES")
+    var keyByte = InetAddress.getLocalHost().hostName
+    if (keyByte.length < 16) {
+        keyByte += keyByte.substring(0 until (16 - keyByte.length))
+    }
+    val key = SecretKeySpec(keyByte.toByteArray(), "AES")
     val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
     cipher.init(Cipher.ENCRYPT_MODE, key)
     val fos = FileOutputStream(path)
-    val cos = CipherOutputStream(fos, cipher)
-    fos.write(cipher.getIV())
-    cos.write(obj.toString().toByteArray())
-    cos.flush()
-    cos.close()
+    CipherOutputStream(fos, cipher).use { cos ->
+        fos.write(cipher.getIV())
+        cos.write(obj.toString().toByteArray())
+        cos.flush()
+    }
 }
 
 fun decryptFile2(path: String): String {
     val fis = FileInputStream(path)
-    val key = SecretKeySpec("dkanwkdlnalsndia".toByteArray(), "AES")
+    var keyByte = InetAddress.getLocalHost().hostName
+    if (keyByte.length < 16) {
+        keyByte += keyByte.substring(0 until (16 - keyByte.length))
+    }
+    val key = SecretKeySpec(keyByte.toByteArray(), "AES")
     val iv = ByteArray(16)
     fis.read(iv)
     val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
     val ivspec = IvParameterSpec(iv)
     cipher.init(Cipher.DECRYPT_MODE, key, ivspec)
     val cis = CipherInputStream(fis, cipher)
-    val reader = cis.bufferedReader()
-
-    val builder = StringBuilder()
-    var line: String? = reader.readLine()
-    while (line != null) {
-        builder.append(line)
-        line = reader.readLine()
+    cis.bufferedReader().use { reader ->
+        val builder = StringBuilder()
+        var line: String? = reader.readLine()
+        while (line != null) {
+            builder.append(line)
+            line = reader.readLine()
+        }
+        return builder.toString()
     }
-    reader.close()
-    return builder.toString()
 }

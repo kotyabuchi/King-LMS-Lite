@@ -4,7 +4,6 @@ import com.eclipsesource.json.Json
 import com.eclipsesource.json.JsonObject
 import com.github.kabocchi.king_LMS_Lite.*
 import com.github.kabocchi.king_LMS_Lite.Utility.decryptFile2
-import com.github.kabocchi.king_LMS_Lite.Utility.doGet
 import com.github.kabocchi.king_LMS_Lite.Utility.encryptFile2
 import javafx.application.Platform
 import javafx.fxml.FXML
@@ -16,16 +15,12 @@ import javafx.stage.Stage
 import org.apache.http.HttpStatus
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.entity.UrlEncodedFormEntity
-import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.impl.client.LaxRedirectStrategy
 import org.apache.http.message.BasicNameValuePair
-import org.apache.http.util.EntityUtils
-import org.jsoup.Jsoup
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
-import java.util.*
 import javax.net.ssl.SSLHandshakeException
 
 class Login {
@@ -37,7 +32,7 @@ class Login {
     
     @FXML
     fun initialize() {
-        if (!PROJECT_FODLER.exists()) PROJECT_FODLER.mkdirs()
+        if (!PROJECT_FOLDER.exists()) PROJECT_FOLDER.mkdirs()
         if (ACCOUNT_FILE.exists()) {
             val json = Json.parse(decryptFile2(ACCOUNT_FILE_PATH)).asObject()
             idField.text = json.getString("id", "")

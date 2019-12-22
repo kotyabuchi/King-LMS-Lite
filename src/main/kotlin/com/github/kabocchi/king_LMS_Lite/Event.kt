@@ -8,6 +8,4 @@ class Event(summary: String, startTime: DateTime, endTime: DateTime, reminders: 
     var startTime: DateTime = startTime
     var endTime: DateTime = endTime
     var reminders: Map<ReminderType, Int> = reminders
-    
-    
 }

@@ -147,7 +147,7 @@ class GoogleCalendar {
                 val items = events.items
                 for (event in items) {
                     registeredEvents[event.summary] = event.id
-                    println(event.summary)
+                    println("Google Registered Event: " + event.summary)
                 }
                 pageToken = events.nextPageToken
             } while (pageToken != null)

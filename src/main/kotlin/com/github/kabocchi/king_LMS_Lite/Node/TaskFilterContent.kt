@@ -32,7 +32,7 @@ class TaskFilterContent(taskPane: TaskPane): VBox() {
         this.apply {
             spacing = 6.0
             padding = Insets(10.0, 30.0, 10.0, 30.0)
-            styleClass.addAll("news-content-box", "setting-box")
+            styleClass.addAll("filter-box")
         }
 
         tagFilter = FlowPane().apply {

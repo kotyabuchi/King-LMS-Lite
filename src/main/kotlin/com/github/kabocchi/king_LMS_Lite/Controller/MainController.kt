@@ -12,10 +12,12 @@ import com.github.kabocchi.king_LMS_Lite.main
 import javafx.fxml.FXML
 import javafx.scene.control.Button
 import javafx.scene.layout.BorderPane
+import javafx.scene.layout.StackPane
 import org.jsoup.nodes.Document
 
 class MainController {
 
+    @FXML lateinit var mainStackPane: StackPane
     @FXML lateinit var mainPane: BorderPane
     @FXML lateinit var news: Button
     @FXML lateinit var task: Button
@@ -36,9 +38,9 @@ class MainController {
     @FXML
     fun initialize() {
         timeTableDoc = getDocumentWithJsoup(context.cookieStore.toMap(), "https://king.kcg.kyoto/campus/Portal/Home")
-        newsPane = NewsPane()
+        newsPane = NewsPane(mainStackPane)
         mainPane.center = newsPane
-        taskPane = TaskPane(timeTableDoc)
+        taskPane = TaskPane(mainStackPane, timeTableDoc)
         timeTablePane = TimeTablePane(timeTableDoc)
         settingPane = SettingPane()
         getNews()

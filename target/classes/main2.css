@@ -48,6 +48,14 @@
 	-fx-background-image: url('settingIcon.png');
 }
 
+.h1 {
+    -fx-font-size: 16px;
+}
+
+.h2 {
+    -fx-font-size: 14px;
+}
+
 .progress-bar {
     -fx-indeterminate-bar-length: 100;
 }
@@ -76,9 +84,37 @@
 }
 
 .text-field {
-    -fx-background-color: #a9a9a9 , white , white;
-    -fx-background-insets: 0 -1 -1 -1, 0 0 0 0, 0 -1 3 -1;
+    -fx-background-color: #a9a9a9 , white;
+    -fx-background-insets: 0 0 0 0, 0 0 1 0;
     -fx-background-radius: 0;
+}
+
+.text-field:focused {
+    -fx-background-color: #F89174 , white;
+    -fx-background-insets: 0 0 -1 0, 0 0 1 0;
+}
+
+.choice-box {
+    -fx-background-color: #fff;
+    -fx-border-color: #F0A470;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-mark-color: #F0A470;
+    -fx-pref-width: 100px;
+}
+
+.choice-box .context-menu {
+    -fx-pref-width: 100px;
+    -fx-max-height: 700px;
+}
+
+.choice-box .menu-item:focused {
+    -fx-background-color: #F0A470;
+}
+
+.choice-box .menu-item:focused .label {
+    -fx-font-weight: bold;
+    -fx-text-fill: #fff;
 }
 
 .filter-button {
@@ -120,10 +156,6 @@
     -fx-background-image: url('reload.png');
 }
 
-.text-field:focused {
-    -fx-background-color: #F89174 , white , white;
-}
-
 .toggle-button {
     -fx-background-radius: 0;
 }
@@ -158,7 +190,11 @@
     -fx-border-color: #757575;
 }
 
-.setting-box .check-box {
+.filter-box {
+    -fx-background-color: #fff;
+}
+
+.filter-box .check-box {
     -fx-pref-height: 22px;
     -fx-font-size: 12.5;
     -fx-cursor: hand;

@@ -1,21 +1,22 @@
 package com.github.kabocchi.kingLmsLite.Node
 
 import com.eclipsesource.json.Json
+import com.github.kabocchi.king_LMS_Lite.GoogleCalendar
 import com.github.kabocchi.king_LMS_Lite.Node.TaskFilterContent
 import com.github.kabocchi.king_LMS_Lite.Utility.createHttpClient
 import com.github.kabocchi.king_LMS_Lite.Utility.getDocumentWithJsoup
 import com.github.kabocchi.king_LMS_Lite.Utility.toMap
 import com.github.kabocchi.king_LMS_Lite.context
+import javafx.animation.FadeTransition
 import javafx.application.Platform
 import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.control.*
-import javafx.scene.layout.BorderPane
-import javafx.scene.layout.HBox
-import javafx.scene.layout.VBox
+import javafx.scene.layout.*
 import javafx.scene.paint.Color
 import javafx.scene.text.Font
 import javafx.scene.text.FontWeight
+import javafx.util.Duration
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.util.EntityUtils
@@ -23,7 +24,7 @@ import org.jsoup.nodes.Document
 import java.net.URLEncoder
 import kotlin.concurrent.thread
 
-class TaskPane(timetableDoc: Document?): BorderPane() {
+class TaskPane(mainStackPane: StackPane, timetableDoc: Document?): BorderPane() {
 
     private val progressBar: ProgressBar
     private val progressText: Label
@@ -42,6 +43,10 @@ class TaskPane(timetableDoc: Document?): BorderPane() {
 
     private var showingFilter = false
     private var updatingTask = false
+
+    private val filterFadeInAnim: FadeTransition
+    private val filterFadeOutAnim: FadeTransition
+    private var playingFilterAnim = false
 
     private var endedInitialize = false
 
@@ -63,7 +68,9 @@ class TaskPane(timetableDoc: Document?): BorderPane() {
                 }
             }
         }
-        filterBox = TaskFilterContent(this)
+        filterBox = TaskFilterContent(this).apply {
+            minWidth = 800.0
+        }
 
         this.style = "-fx-background-color: white;"
 
@@ -97,20 +104,47 @@ class TaskPane(timetableDoc: Document?): BorderPane() {
             }
         }
 
+        val filterBackground = AnchorPane().apply {
+            style = "-fx-background-color: rgba(150,150,150,0.8)"
+            children.add(filterBox)
+            filterBox.translateXProperty().bind(this.widthProperty().divide(2).subtract(filterBox.widthProperty().divide(2)))
+            filterBox.translateYProperty().bind(this.heightProperty().divide(2).subtract(filterBox.heightProperty().divide(2)))
+            filterBox.prefWidthProperty().bind(this.widthProperty().multiply(0.8))
+            filterFadeInAnim = FadeTransition(Duration.seconds(0.1), this).apply {
+                fromValue = 0.0
+                toValue = 1.0
+            }
+            filterFadeInAnim.setOnFinished {
+                playingFilterAnim = false
+                showingFilter = true
+            }
+            filterFadeOutAnim = FadeTransition(Duration.seconds(0.1), this).apply {
+                fromValue = 1.0
+                toValue = 0.0
+            }
+            filterFadeOutAnim.setOnFinished {
+                Platform.runLater {
+                    mainStackPane.children.remove(this)
+                    filterBox.undoFilter()
+                }
+                playingFilterAnim = false
+                showingFilter = false
+            }
+            setOnMouseClicked {
+                filterFadeOutAnim.play()
+            }
+        }
+
         filterButton = Button("").apply {
             styleClass.add("filter-button")
             setOnAction {
+                if (playingFilterAnim) return@setOnAction
                 if (showingFilter) {
-                    Platform.runLater {
-                        listView.children.remove(filterBox)
-                        filterBox.undoFilter()
-                    }
+                    filterFadeOutAnim.play()
                 } else {
-                    Platform.runLater {
-                        listView.children.add(0, filterBox)
-                    }
+                    mainStackPane.children.add(filterBackground)
+                    filterFadeInAnim.play()
                 }
-                showingFilter = !showingFilter
             }
         }
 
@@ -196,6 +230,9 @@ class TaskPane(timetableDoc: Document?): BorderPane() {
                 progressBar.progress = -1.0
             }
 
+            val googleCalendar = GoogleCalendar()
+
+            listView.children.clear()
             listView = VBox().apply {
                 spacing = 5.0
                 prefWidthProperty().bind(this@TaskPane.widthProperty())

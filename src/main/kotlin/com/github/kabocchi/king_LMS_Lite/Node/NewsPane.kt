@@ -1,33 +1,34 @@
 package com.github.kabocchi.kingLmsLite.Node
 
 import com.eclipsesource.json.Json
+import com.eclipsesource.json.ParseException
+import com.fasterxml.jackson.core.JsonParseException
 import com.github.kabocchi.king_LMS_Lite.NewsCategory
 import com.github.kabocchi.king_LMS_Lite.Node.NewsFilterContent
 import com.github.kabocchi.king_LMS_Lite.Utility.createHttpClient
-import com.github.kabocchi.king_LMS_Lite.Utility.getDocumentWithJsoup
-import com.github.kabocchi.king_LMS_Lite.Utility.toMap
-import com.github.kabocchi.king_LMS_Lite.connection
 import com.github.kabocchi.king_LMS_Lite.context
+import javafx.animation.FadeTransition
 import javafx.application.Platform
 import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.control.*
-import javafx.scene.layout.BorderPane
-import javafx.scene.layout.HBox
-import javafx.scene.layout.VBox
+import javafx.scene.layout.*
 import javafx.scene.paint.Color
+import javafx.util.Duration
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.util.EntityUtils
 import kotlin.concurrent.thread
 
-class NewsPane: BorderPane() {
+class NewsPane(mainStackPane: StackPane): BorderPane() {
 
     private val progressBar: ProgressBar
     private val progressText: Label
     private val searchBox: TextField
     private val filterButton: Button
-    private val filterBox = NewsFilterContent(this)
+    private val filterBox = NewsFilterContent(this).apply {
+        minWidth = 800.0
+    }
     private val listViewButton: ToggleButton
     private val gridViewButton: ToggleButton
     private val scrollPane: ScrollPane
@@ -39,6 +40,10 @@ class NewsPane: BorderPane() {
 
     private var showingFilter = false
     private var updatingNews = false
+
+    private val filterFadeInAnim: FadeTransition
+    private val filterFadeOutAnim: FadeTransition
+    private var playingFilterAnim = false
 
     private val newsCategoryMap = mutableMapOf<Int, NewsCategory>()
 
@@ -67,7 +72,6 @@ class NewsPane: BorderPane() {
 
         progressText = Label().apply {
             prefWidthProperty().bind(this@NewsPane.widthProperty().subtract(360))
-//            minWidth = 200.0
             style = "-fx-font-weight: bold; -fx-font-size: 14px;"
         }
 
@@ -80,20 +84,47 @@ class NewsPane: BorderPane() {
             }
         }
 
+        val filterBackground = AnchorPane().apply {
+            style = "-fx-background-color: rgba(150,150,150,0.8)"
+            children.add(filterBox)
+            filterBox.translateXProperty().bind(this.widthProperty().divide(2).subtract(filterBox.widthProperty().divide(2)))
+            filterBox.translateYProperty().bind(this.heightProperty().divide(2).subtract(filterBox.heightProperty().divide(2)))
+            filterBox.prefWidthProperty().bind(this.widthProperty().multiply(0.8))
+            filterFadeInAnim = FadeTransition(Duration.seconds(0.1), this).apply {
+                fromValue = 0.0
+                toValue = 1.0
+            }
+            filterFadeInAnim.setOnFinished {
+                playingFilterAnim = false
+                showingFilter = true
+            }
+            filterFadeOutAnim = FadeTransition(Duration.seconds(0.1), this).apply {
+                fromValue = 1.0
+                toValue = 0.0
+            }
+            filterFadeOutAnim.setOnFinished {
+                Platform.runLater {
+                    mainStackPane.children.remove(this)
+                    filterBox.undoFilter()
+                }
+                playingFilterAnim = false
+                showingFilter = false
+            }
+            setOnMouseClicked {
+                filterFadeOutAnim.play()
+            }
+        }
+
         filterButton = Button("").apply {
             styleClass.add("filter-button")
             setOnAction {
+                if (playingFilterAnim) return@setOnAction
                 if (showingFilter) {
-                    Platform.runLater {
-                        listView.children.remove(filterBox)
-                        filterBox.undoFilter()
-                    }
+                    filterFadeOutAnim.play()
                 } else {
-                    Platform.runLater {
-                        listView.children.add(0, filterBox)
-                    }
+                    mainStackPane.children.add(filterBackground)
+                    filterFadeInAnim.play()
                 }
-                showingFilter = !showingFilter
             }
         }
 
@@ -186,6 +217,7 @@ class NewsPane: BorderPane() {
                 progressBar.progress = -1.0
             }
 
+            listView.children.clear()
             listView = VBox().apply {
                 spacing = 5.0
                 progressBar.prefWidthProperty().bind(this@NewsPane.widthProperty())
@@ -197,46 +229,56 @@ class NewsPane: BorderPane() {
             createHttpClient().use { httpClient ->
                 val httpGet = HttpGet("https://king.kcg.kyoto/campus/Portal/TryAnnouncement/GetAnnouncements?categoryId=0&passdaysId=0&isCustomSearch=false")
                 httpClient.execute(httpGet, context).use { newsListDoc ->
+                    println("News List StatusCode: " + newsListDoc.statusLine.statusCode)
                     if (newsListDoc.statusLine.statusCode == HttpStatus.SC_OK) {
-                        val jsonArray = Json.parse(EntityUtils.toString(newsListDoc.entity)).asObject().get("data").asArray()
+                        try {
+                            val jsonArray = Json.parse(EntityUtils.toString(newsListDoc.entity)).asObject().get("data").asArray()
 
-                        val newsAmount = jsonArray.size()
+                            val newsAmount = jsonArray.size()
 
-                        var failAmount = 0
+                            var failAmount = 0
 
-                        for ((index, value) in jsonArray.withIndex()) {
+                            for ((index, value) in jsonArray.withIndex()) {
 
-                            changeProgressText("お知らせの詳細を取得しています... [${index + 1}/$newsAmount]")
+                                changeProgressText("お知らせの詳細を取得しています... [${index + 1}/$newsAmount]")
 
-                            val json = value.asObject()
+                                val json = value.asObject()
 
-                            httpClient.execute(HttpGet("https://king.kcg.kyoto/campus/Portal/TryAnnouncement/GetAnnouncement?aId=" + json.getInt("Id", 0)), context).use { newsDetailDoc ->
-                                if (newsDetailDoc.statusLine.statusCode == HttpStatus.SC_OK) {
-                                    val newsContent = NewsContent(EntityUtils.toString(newsDetailDoc.entity), !json.getBoolean("IsRead", false), json.getString("Published", ""), newsCategoryMap)
-                                    newsList.add(newsContent)
-                                } else {
-                                    failAmount++
+                                httpClient.execute(HttpGet("https://king.kcg.kyoto/campus/Portal/TryAnnouncement/GetAnnouncement?aId=" + json.getInt("Id", 0)), context).use { newsDetailDoc ->
+                                    println("News Content StatusCode [${index + 1}/$newsAmount]: " + newsDetailDoc.statusLine.statusCode)
+                                    try {
+                                        if (newsDetailDoc.statusLine.statusCode == HttpStatus.SC_OK) {
+                                            val newsContent = NewsContent(EntityUtils.toString(newsDetailDoc.entity), !json.getBoolean("IsRead", false), json.getString("Published", ""), newsCategoryMap)
+                                            newsList.add(newsContent)
+                                        } else {
+                                            failAmount++
+                                        }
+                                    } catch (e2: ParseException) {
+                                        failAmount++
+                                    }
+                                    newsDetailDoc.close()
                                 }
-                                newsDetailDoc.close()
                             }
-                        }
 
-                        filterApply()
+                            filterApply()
 
-                        if (listViewButton.isSelected) {
-                            println("List view Selected")
-                            showListView()
-                        } else {
-                            showGridView()
-                        }
+                            if (listViewButton.isSelected) {
+                                println("List view Selected")
+                                showListView()
+                            } else {
+                                showGridView()
+                            }
 
-                        val end2 = System.currentTimeMillis()
-                        println("GetNews: " + (end2 - start).toString() + "ms")
-                        endUpdate()
-                        if (failAmount == 0) {
-                            changeProgressText("お知らせの取得が完了しました [${newsAmount}件]")
-                        } else {
-                            changeProgressText("${newsAmount}件中${failAmount}件のお知らせの取得に失敗しました", true)
+                            val end2 = System.currentTimeMillis()
+                            println("GetNews: " + (end2 - start).toString() + "ms")
+                            endUpdate()
+                            if (failAmount == 0) {
+                                changeProgressText("お知らせの取得が完了しました [${newsAmount}件]")
+                            } else {
+                                changeProgressText("${newsAmount}件中${failAmount}件のお知らせの取得に失敗しました", true)
+                            }
+                        } catch (e: ParseException) {
+                            changeProgressText("お知らせ一覧の取得に失敗しました", true)
                         }
                     } else {
                         endUpdate()
@@ -266,7 +308,6 @@ class NewsPane: BorderPane() {
     fun filterApply(msg: Boolean = false, title: String = "") {
         Platform.runLater {
             listView.children.clear()
-            if (showingFilter) listView.children.add(filterBox)
             val unreadOnly = filterBox.isUnreadOnly()
             val emergency = filterBox.showEmergency()
             val important = filterBox.showImportant()

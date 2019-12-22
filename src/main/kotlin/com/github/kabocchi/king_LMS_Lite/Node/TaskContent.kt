@@ -2,6 +2,7 @@ package com.github.kabocchi.kingLmsLite.Node
 
 import com.eclipsesource.json.JsonArray
 import com.eclipsesource.json.JsonObject
+import com.github.kabocchi.king_LMS_Lite.Event
 import com.github.kabocchi.king_LMS_Lite.TaskType
 import com.github.kabocchi.king_LMS_Lite.Utility.cleanDescription
 import com.github.kabocchi.king_LMS_Lite.Utility.cleanDescriptionVer2
@@ -28,21 +29,13 @@ import org.apache.http.HttpStatus
 import org.apache.http.client.entity.UrlEncodedFormEntity
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
-import org.apache.http.entity.ContentType
-import org.apache.http.entity.StringEntity
-import org.apache.http.entity.mime.HttpMultipartMode
-import org.apache.http.entity.mime.MultipartEntityBuilder
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
-import org.apache.tika.Tika
 import java.io.File
 import java.io.FileOutputStream
-import java.nio.charset.Charset
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import kotlin.random.Random
-import kotlin.random.nextInt
 
 class TaskContent(json: JsonObject, _description: String, _groupName: String, groupId: Int, requestVerToken: String, groupAccessToken: String, userId: String): VBox() {
     private val separator = Separator()
@@ -230,9 +223,43 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
                         setAnimation()
                     }
                 }
-//                val submitButton = Button("提出").apply {
-//                    styleClass.add("border-button")
-//                    setOnAction {
+                val submitButton = Button("提出").apply {
+                    styleClass.add("border-button")
+                    setOnAction {
+                        createHttpClient().use {
+                            val validateSession = HttpPost("https://king.kcg.kyoto/campus/Mvc/MasterPage/ValidateSession")
+                            it.execute(validateSession, context).use {
+                                if (it.statusLine.statusCode == HttpStatus.SC_OK) {
+                                    println(EntityUtils.toString(it.entity))
+                                    context.cookieStore.cookies.forEach {
+                                        println("${it.name} : ${it.value}")
+                                    }
+                                }
+                            }
+
+//                            val postText = HttpPost("https://king.kcg.kyoto/campus/Mvc/Manavi/SaveTextReport").apply {
+//                                addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:72.0) Gecko/20100101 Firefox/72.0")
+//                                addHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+//                                addHeader("RequestVerToken", requestVerToken)
+//                                addHeader("Referer", "https://king.kcg.kyoto/campus/Course/$groupId/21/")
+//                            }
+//
+//                            val formParams = mutableListOf(
+//                                    BasicNameValuePair("taskId", taskId.toString()),
+//                                    BasicNameValuePair("resubmitId", "0"),
+//                                    BasicNameValuePair("text", "test"),
+//                                    BasicNameValuePair("gToken", groupAccessToken)
+//                            )
+//                            postText.entity = UrlEncodedFormEntity(formParams, "UTF-8")
+//                            println(EntityUtils.toString(postText.entity))
+//
+//                            it.execute(postText, context).use {
+//                                println(it.statusLine.statusCode)
+//                                if (it.statusLine.statusCode == HttpStatus.SC_OK) {
+//                                    println(EntityUtils.toString(it.entity))
+//                                }
+//                            }
+                        }
 //                        val fileChooser = FileChooser()
 //                        fileChooser.title = "提出ファイルを選択"
 //                        fileChooser.showOpenDialog(null)?.let { file ->
@@ -285,9 +312,9 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
 //                                }
 //                            }
 //                        }
-//                    }
-//                }
-//                children.add(submitButton)
+                    }
+                }
+                children.add(submitButton)
             }
 
             if (files.size() > 0) {
@@ -298,6 +325,8 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
                     val hyperlink = Hyperlink(fileName).apply {
                         setOnAction {
                             val chooser = FileChooser()
+                            chooser.extensionFilters.add(FileChooser.ExtensionFilter("All", "*.*"))
+                            chooser.initialDirectory = File(System.getProperty("user.home"))
                             chooser.initialFileName = fileName
                             val file = chooser.showSaveDialog(null) ?: return@setOnAction
                             createHttpClient().use { httpClient ->

@@ -2,7 +2,6 @@ package com.github.kabocchi.king_LMS_Lite
 
 import com.github.kabocchi.king_LMS_Lite.Controller.MainController
 import com.github.kabocchi.king_LMS_Lite.Utility.AppUtil
-import com.github.kabocchi.king_LMS_Lite.Utility.newLoginTest
 import javafx.application.Application
 import javafx.application.Platform
 import javafx.scene.image.Image
@@ -21,8 +20,9 @@ val FOLDER_PATH = System.getenv("APPDATA") + File.separator + "King-lms Lite" + 
 val ACCOUNT_FILE_PATH = FOLDER_PATH + "account.klite"
 val EVENTS_FILE_PATH = FOLDER_PATH + "events.klite"
 val SETTING_FILE_PATH = FOLDER_PATH + "setting.klite"
-val PROJECT_FODLER = File(FOLDER_PATH)
+val PROJECT_FOLDER = File(FOLDER_PATH)
 val ACCOUNT_FILE = File(ACCOUNT_FILE_PATH)
+val SETTING_FILE = File(SETTING_FILE_PATH)
 var connection: Connection = Jsoup.connect("https://king.kcg.kyoto/campus/Secure/Login.aspx?ReturnUrl=%2Fcampus%2FCommunity%2FMySetting")
 var context = HttpClientContext.create()
 val os = System.getProperty("os.name").toLowerCase()
@@ -35,13 +35,13 @@ fun main(args: Array<String>) {
 
 class Main: Application() {
 
-    private val VERSION = "v0.1.0"
+    private val VERSION = "v1.0.2"
     val appUtil: AppUtil
 
     var primaryStage: Stage? = null
     var mainController: MainController? = null
     private val systemTrayImage = Toolkit.getDefaultToolkit().createImage(ClassLoader.getSystemResource("logo.png"))
-    private val trayIcon = TrayIcon(systemTrayImage, "King-lms Lite $VERSION")
+    private val trayIcon = TrayIcon(systemTrayImage, "KING-LMS Lite $VERSION")
 
     init {
         appUtil = AppUtil(VERSION, this)
