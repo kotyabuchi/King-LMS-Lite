@@ -2,7 +2,6 @@ package com.github.kabocchi.kingLmsLite.Node
 
 import com.eclipsesource.json.JsonArray
 import com.eclipsesource.json.JsonObject
-import com.github.kabocchi.king_LMS_Lite.Event
 import com.github.kabocchi.king_LMS_Lite.TaskType
 import com.github.kabocchi.king_LMS_Lite.Utility.cleanDescription
 import com.github.kabocchi.king_LMS_Lite.Utility.cleanDescriptionVer2
@@ -20,16 +19,12 @@ import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
 import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
-import javafx.scene.text.Font
-import javafx.scene.text.FontWeight
 import javafx.scene.text.Text
 import javafx.stage.FileChooser
 import javafx.util.Duration
 import org.apache.http.HttpStatus
-import org.apache.http.client.entity.UrlEncodedFormEntity
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
-import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import java.io.File
 import java.io.FileOutputStream
@@ -99,7 +94,7 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
 
         this.spacing = 4.0
         this.cursor = Cursor.HAND
-        this.padding = Insets(10.0, 30.0, 10.0, 30.0)
+        this.padding = Insets(10.0, 30.0, 10.0, 10.0)
         this.styleClass.add("task-content-box")
 
         if (submissionEnd != null) {
@@ -149,7 +144,7 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
         separator.prefWidth = this.prefWidth / 40
 
         val titleText = Text(title).apply {
-            font = Font.font(Font(14.0).family, FontWeight.BOLD, 14.0)
+            style = "-fx-font-weight: bold;"
         }
         titleBox.children.add(titleText)
 
@@ -165,7 +160,7 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
                 }
                 "期限: $limit"
             }
-            font = Font.font(Font(13.0).family, FontWeight.BOLD, 13.0)
+            style = "-fx-font-size: 13px; -fx-font-weight: bold;"
             styleClass.add("taskLimitDay")
         }
         topBorderPane.right = dateText

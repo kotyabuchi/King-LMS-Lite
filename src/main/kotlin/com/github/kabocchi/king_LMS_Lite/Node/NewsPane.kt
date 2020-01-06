@@ -215,11 +215,13 @@ class NewsPane(mainStackPane: StackPane): BorderPane() {
             val start = System.currentTimeMillis()
             Platform.runLater {
                 progressBar.progress = -1.0
+                listView.children.clear()
             }
+            newsList.clear()
 
-            listView.children.clear()
             listView = VBox().apply {
                 spacing = 5.0
+                padding = Insets(0.0, 0.0, 0.0, 10.0)
                 progressBar.prefWidthProperty().bind(this@NewsPane.widthProperty())
                 style = "-fx-background-color: #fff;"
             }

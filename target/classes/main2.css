@@ -48,6 +48,14 @@
 	-fx-background-image: url('settingIcon.png');
 }
 
+.label {
+    -fx-font-size: 14px;
+}
+
+.text-field {
+    -fx-font-size: 14px;
+}
+
 .h1 {
     -fx-font-size: 16px;
 }
@@ -186,7 +194,7 @@
 /* News Tab CSS */
 .news-content-box {
     -fx-background-color: #fff;
-    -fx-border-width: 2px;
+    -fx-border-width: 0 0 0 3px;
     -fx-border-color: #757575;
 }
 

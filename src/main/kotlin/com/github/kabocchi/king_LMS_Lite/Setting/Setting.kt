@@ -10,6 +10,11 @@ class Setting {
     @set:JsonProperty("saveFileSetting")
     @JsonProperty("saveFileSetting")
     var saveFileSetting: SaveFileSetting = SaveFileSetting()
+    
+    @get:JsonProperty("notificationSetting")
+    @set:JsonProperty("notificationSetting")
+    @JsonProperty("notificationSetting")
+    var notificationSetting: NotificationSetting = NotificationSetting()
 
     @JsonIgnore
     private val additionalProperties: MutableMap<String, Any> = HashMap()

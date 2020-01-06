@@ -14,8 +14,6 @@ import javafx.geometry.Pos
 import javafx.scene.control.*
 import javafx.scene.layout.*
 import javafx.scene.paint.Color
-import javafx.scene.text.Font
-import javafx.scene.text.FontWeight
 import javafx.util.Duration
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpGet
@@ -92,7 +90,7 @@ class TaskPane(mainStackPane: StackPane, timetableDoc: Document?): BorderPane() 
 
         progressText = Label().apply {
             prefWidthProperty().bind(this@TaskPane.widthProperty().subtract(360))
-            font = Font.font(Font(14.0).family, FontWeight.BOLD, 14.0)
+            style = "-fx-font-weight: bold;"
         }
 
         searchBox = TextField().apply {
@@ -225,14 +223,16 @@ class TaskPane(mainStackPane: StackPane, timetableDoc: Document?): BorderPane() 
         thread {
             if (updatingTask) return@thread
             updatingTask = true
+            
             val start = System.currentTimeMillis()
             Platform.runLater {
                 progressBar.progress = -1.0
+                listView.children.clear()
             }
-
+            taskList.clear()
+    
             val googleCalendar = GoogleCalendar()
 
-            listView.children.clear()
             listView = VBox().apply {
                 spacing = 5.0
                 prefWidthProperty().bind(this@TaskPane.widthProperty())
@@ -295,6 +295,7 @@ class TaskPane(mainStackPane: StackPane, timetableDoc: Document?): BorderPane() 
                                                     unlimitedTaskContents.add(listTaskContent)
                                                 } else {
                                                     taskContents.add(listTaskContent)
+                                                    
                                                 }
                                             } else {
                                                 failAmount++
@@ -366,7 +367,6 @@ class TaskPane(mainStackPane: StackPane, timetableDoc: Document?): BorderPane() 
     fun filterApply(msg: Boolean = false, title: String = "") {
         Platform.runLater {
             listView.children.clear()
-            if (showingFilter) listView.children.add(filterBox)
             var count = 0
             for (it in taskList) {
                 if (title != "" && (!it.title.contains(title, true) && !it.getDecription().contains(title, true))) continue

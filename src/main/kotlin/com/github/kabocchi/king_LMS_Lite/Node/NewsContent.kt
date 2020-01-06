@@ -63,7 +63,7 @@ class NewsContent(doc: String, _unread: Boolean, published: String, newsCategory
     init {
         this.spacing = 4.0
         this.cursor = Cursor.HAND
-        this.padding = Insets(10.0, 30.0, 10.0, 30.0)
+        this.padding = Insets(10.0, 30.0, 10.0, 10.0)
         this.styleClass.add("news-content-box")
 
         tagBox = HBox().apply {
@@ -108,7 +108,7 @@ class NewsContent(doc: String, _unread: Boolean, published: String, newsCategory
         separator.prefWidth = this.prefWidth / 40
 
         val titleText = Text(title).apply {
-            style = "-fx-font-size: 14px; -fx-font-weight: bold;"
+            style = "-fx-font-weight: bold;"
         }
         topBorderPane.left = titleText
 

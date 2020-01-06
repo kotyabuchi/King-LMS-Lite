@@ -2,30 +2,37 @@ package com.github.kabocchi.king_LMS_Lite.Node
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.kabocchi.king_LMS_Lite.*
-import com.github.kabocchi.king_LMS_Lite.Setting.NewsSaveSetting
-import com.github.kabocchi.king_LMS_Lite.Setting.Setting
-import com.github.kabocchi.king_LMS_Lite.Setting.TaskSaveSetting
+import com.github.kabocchi.king_LMS_Lite.Setting.*
 import com.github.kabocchi.king_LMS_Lite.Utility.decryptFile2
 import com.github.kabocchi.king_LMS_Lite.Utility.encryptFile2
 import com.github.kabocchi.king_LMS_Lite.Utility.getDocumentWithJsoup
 import com.github.kabocchi.king_LMS_Lite.Utility.toMap
+import javafx.animation.KeyFrame
+import javafx.animation.KeyValue
+import javafx.animation.Timeline
+import javafx.application.Platform
 import javafx.collections.FXCollections
 import javafx.geometry.Insets
+import javafx.geometry.Pos
+import javafx.scene.Cursor
 import javafx.scene.control.*
-import javafx.scene.layout.AnchorPane
-import javafx.scene.layout.BorderPane
-import javafx.scene.layout.HBox
-import javafx.scene.layout.VBox
+import javafx.scene.layout.*
+import javafx.scene.shape.Rectangle
 import javafx.stage.Stage
+import javafx.util.Duration
 
 
-class SettingPane: VBox() {
+class SettingPane: BorderPane() {
     private val mapper = ObjectMapper()
 
     private lateinit var setting: Setting
+    private lateinit var popupNotificationSetting: PopupNotificationSetting
+    private lateinit var mailNotificationSetting: MailNotificationSetting
     private lateinit var newsSaveSetting: NewsSaveSetting
     private lateinit var taskSaveSetting: TaskSaveSetting
 
+    
+    
     private val newsSaveFolderPath: TextField
     private val newsSelectFilePath: Button
     private val newsAskingEachTime: CheckBox
@@ -34,117 +41,213 @@ class SettingPane: VBox() {
     private val taskSelectFilePath: Button
     private val taskAskingEachTime: CheckBox
     private val taskSaveToGroupFolder: CheckBox
+    
+    private var notificationOpen = false
+    private var notificationHeight = 0.0
+    private var saveFileOpen = false
+    private var saveFileHeight = 0.0
 
     init {
-        this.apply {
+        val scrollPane = ScrollPane().apply {
+            isPannable = true
+            isFitToWidth = true
+            prefWidthProperty().bind(this@SettingPane.widthProperty())
+        }
+        this.center = scrollPane
+        
+        val mainVBox = VBox().apply {
             style = "-fx-background-color: white;"
             padding = Insets(40.0)
-            spacing = 20.0
+            spacing = 10.0
+            scrollPane.content = this
         }
-
-        val notificationSettingLabel = Label("通知設定").apply {
-            styleClass.add("h1")
-        }
-        val notificationSettingTab = VBox().apply {
-            spacing = 16.0
-            val notificationPopupLabel = Label("ポップアップ通知").apply {
-                styleClass.add("h2")
+        
+        val notificationSettingLabelBox = BorderPane().apply {
+            cursor = Cursor.HAND
+            left = Label("通知設定").apply {
+                style = "-fx-font-weight: bold;"
+                styleClass.add("h1")
             }
-            val notificationPopupContainer = HBox().apply {
-                spacing = 4.0
-                val dayText = TextField().apply {
-                    prefWidth = 40.0
-                }
-                val dayLabel = Label("日前の")
-                val timeList = FXCollections.observableArrayList<String>()
-                for (i in 0..11) {
-                    val time = if (i < 10) "0$i" else "$i"
-                    timeList.addAll("午前 $time:00", "午前 $time:30")
-                }
-                for (i in 0..11) {
-                    val time = if (i < 10) "0$i" else "$i"
-                    timeList.addAll("午後 $time:00", "午後 $time:30")
-                }
-                val timeText = ChoiceBox(timeList)
-                timeText.selectionModel.select(18)
-                children.addAll(dayText, dayLabel, timeText)
-            }
-
-            val notificationMailLabel = Label("メール通知")
-            val notificationMailContainer = HBox().apply {
-                spacing = 4.0
-                val dayText = TextField().apply {
-                    prefWidth = 64.0
-                }
-                val dayLabel = Label("日前の")
-                val timeList = FXCollections.observableArrayList<String>()
-                for (i in 0..11) {
-                    val time = if (i < 10) "0$i" else "$i"
-                    timeList.addAll("午前 $time:00", "午前 $time:30")
-                }
-                for (i in 0..11) {
-                    val time = if (i < 10) "0$i" else "$i"
-                    timeList.addAll("午後 $time:00", "午後 $time:30")
-                }
-                val timeText = ChoiceBox(timeList)
-                timeText.selectionModel.select(18)
-                children.addAll(dayText, dayLabel, timeText)
-            }
-            children.addAll(notificationPopupLabel, notificationPopupContainer, notificationMailLabel, notificationMailContainer)
+            
         }
-
-        val saveFileSettingLabel = Label("ファイル保存設定").apply {
-            style = "-fx-font-size: 16px; "
-        }
-        val saveFileSettingTab = VBox().apply {
-            spacing = 16.0
-            val newsSection = VBox().apply {
-                spacing = 10.0
-                val newsSectionLabel = Label("お知らせ")
-                newsSaveFolderPath = TextField().apply {
-                    minWidth = 600.0
-                }
-                newsSelectFilePath = Button("フォルダを選択").apply {
-                    styleClass.add("border-button")
-                }
-                newsAskingEachTime = CheckBox("ファイルごとに保存先を指定する").apply {
-                    setOnAction {
-                        newsSelectFilePath.isDisable = isSelected
-                        newsSaveFolderPath.isDisable = isSelected
+        
+        val notificationSettingTab = AnchorPane().apply {
+            minHeight = 0.0
+            children.add(VBox().apply {
+                spacing = 12.0
+                AnchorPane.setRightAnchor(this, 0.0)
+                AnchorPane.setBottomAnchor(this, 0.0)
+                AnchorPane.setLeftAnchor(this, 0.0)
+                val notificationPopupLabel = Label("ポップアップ通知")
+                val notificationPopupContainer = HBox().apply {
+                    spacing = 4.0
+                    alignment = Pos.BOTTOM_LEFT
+                    val dayText = TextField().apply {
+                        prefWidth = 64.0
                     }
+                    val dayLabel = Label("日前の")
+                    val timeList = FXCollections.observableArrayList<String>()
+                    for (i in 0..11) {
+                        val time = if (i < 10) "0$i" else "$i"
+                        timeList.addAll("午前 $time:00", "午前 $time:30")
+                    }
+                    for (i in 0..11) {
+                        val time = if (i < 10) "0$i" else "$i"
+                        timeList.addAll("午後 $time:00", "午後 $time:30")
+                    }
+                    val timeText = ChoiceBox(timeList)
+                    timeText.selectionModel.select(18)
+                    children.addAll(dayText, dayLabel, timeText)
                 }
-                children.addAll(newsSectionLabel, newsAskingEachTime, HBox(newsSaveFolderPath, newsSelectFilePath))
+    
+                val notificationMailLabel = Label("メール通知")
+                val notificationMailContainer = HBox().apply {
+                    spacing = 4.0
+                    alignment = Pos.BOTTOM_LEFT
+                    val dayText = TextField().apply {
+                        prefWidth = 64.0
+                    }
+                    val dayLabel = Label("日前の")
+                    val timeList = FXCollections.observableArrayList<String>()
+                    for (i in 0..11) {
+                        val time = if (i < 10) "0$i" else "$i"
+                        timeList.addAll("午前 $time:00", "午前 $time:30")
+                    }
+                    for (i in 0..11) {
+                        val time = if (i < 10) "0$i" else "$i"
+                        timeList.addAll("午後 $time:00", "午後 $time:30")
+                    }
+                    val timeText = ChoiceBox(timeList)
+                    timeText.selectionModel.select(18)
+                    children.addAll(dayText, dayLabel, timeText)
+                }
+                children.addAll(notificationPopupLabel, notificationPopupContainer, notificationMailLabel, notificationMailContainer)
+            })
+        }
+        Rectangle().apply {
+            widthProperty().bind(notificationSettingTab.widthProperty())
+            heightProperty().bind(notificationSettingTab.maxHeightProperty())
+            notificationSettingTab.clip = this
+        }
+        notificationSettingTab.layoutBoundsProperty().addListener { _, _, bounds2 ->
+            if (notificationHeight == 0.0 && bounds2.height > 0) {
+                notificationHeight = bounds2.height
+                val openAnim = Timeline(KeyFrame(Duration.seconds(0.2), KeyValue(notificationSettingTab.maxHeightProperty(), notificationHeight))).apply {
+                    cycleCount = 1
+                }
+                val closeAnim = Timeline(KeyFrame(Duration.seconds(0.2), KeyValue(notificationSettingTab.maxHeightProperty(), 0.0))).apply {
+                    cycleCount = 1
+                }
+                notificationSettingLabelBox.setOnMouseClicked {
+                    if (notificationOpen) {
+                        closeAnim.play()
+                    } else {
+                        openAnim.play()
+                    }
+                    notificationOpen = !notificationOpen
+                }
+                Platform.runLater {
+                    notificationSettingTab.maxHeight = 0.0
+                }
             }
-            val taskSection = VBox().apply {
-                spacing = 10.0
-                val taskSectionLabel = Label("課題")
-                taskSaveFolderPath = TextField().apply {
-                    minWidth = 600.0
-                }
-                taskSelectFilePath = Button("フォルダを選択").apply {
-                    styleClass.add("border-button")
-                }
-                taskAskingEachTime = CheckBox("ファイルごとに保存先を指定する")
-                taskSaveToGroupFolder = CheckBox("講義ごとにフォルダを生成し、保存する")
-                taskAskingEachTime.setOnAction {
-                    taskSelectFilePath.isDisable = taskAskingEachTime.isSelected
-                    taskSaveFolderPath.isDisable = taskAskingEachTime.isSelected
-                    taskSaveToGroupFolder.isSelected = false
-                }
-                taskSaveToGroupFolder.setOnAction {
-                    taskSelectFilePath.isDisable = false
-                    taskSaveFolderPath.isDisable = false
-                    taskAskingEachTime.isSelected = false
-                }
-                children.addAll(taskSectionLabel, taskAskingEachTime, taskSaveToGroupFolder, HBox(taskSaveFolderPath, taskSelectFilePath))
-            }
-            children.addAll(newsSection, taskSection)
         }
 
-        val logoutBorder = BorderPane()
+        val saveFileSettingLabelBox = BorderPane().apply {
+            cursor = Cursor.HAND
+            left = Label("ファイル保存設定").apply {
+                style = "-fx-font-weight: bold;"
+                styleClass.add("h1")
+            }
+        }
+        val saveFileSettingTab = AnchorPane().apply {
+            minHeight = 0.0
+            children.add(VBox().apply {
+                spacing = 12.0
+                AnchorPane.setRightAnchor(this, 0.0)
+                AnchorPane.setBottomAnchor(this, 0.0)
+                AnchorPane.setLeftAnchor(this, 0.0)
+                val newsSection = VBox().apply {
+                    spacing = 10.0
+                    val newsSectionLabel = Label("お知らせ")
+                    newsSaveFolderPath = TextField().apply {
+                        minWidth = 600.0
+                    }
+                    newsSelectFilePath = Button("フォルダを選択").apply {
+                        styleClass.add("border-button")
+                    }
+                    newsAskingEachTime = CheckBox("ファイルごとに保存先を指定する").apply {
+                        setOnAction {
+                            newsSelectFilePath.isDisable = isSelected
+                            newsSaveFolderPath.isDisable = isSelected
+                        }
+                    }
+                    children.addAll(newsSectionLabel, newsAskingEachTime, HBox(newsSaveFolderPath, newsSelectFilePath))
+                }
+                val taskSection = VBox().apply {
+                    spacing = 10.0
+                    val taskSectionLabel = Label("課題")
+                    taskSaveFolderPath = TextField().apply {
+                        minWidth = 600.0
+                    }
+                    taskSelectFilePath = Button("フォルダを選択").apply {
+                        styleClass.add("border-button")
+                    }
+                    taskAskingEachTime = CheckBox("ファイルごとに保存先を指定する")
+                    taskSaveToGroupFolder = CheckBox("講義ごとにフォルダを生成し、保存する")
+                    taskAskingEachTime.setOnAction {
+                        taskSelectFilePath.isDisable = taskAskingEachTime.isSelected
+                        taskSaveFolderPath.isDisable = taskAskingEachTime.isSelected
+                        taskSaveToGroupFolder.isSelected = false
+                    }
+                    taskSaveToGroupFolder.setOnAction {
+                        taskSelectFilePath.isDisable = false
+                        taskSaveFolderPath.isDisable = false
+                        taskAskingEachTime.isSelected = false
+                    }
+                    children.addAll(taskSectionLabel, taskAskingEachTime, taskSaveToGroupFolder, HBox(taskSaveFolderPath, taskSelectFilePath))
+                }
+                children.addAll(newsSection, taskSection)
+            })
+        }
+        Rectangle().apply {
+            widthProperty().bind(saveFileSettingTab.widthProperty())
+            heightProperty().bind(saveFileSettingTab.maxHeightProperty())
+            saveFileSettingTab.clip = this
+        }
+        saveFileSettingTab.layoutBoundsProperty().addListener { _, _, bounds2 ->
+            if (saveFileHeight == 0.0 && bounds2.height > 0) {
+                saveFileHeight = bounds2.height
+                val openAnim = Timeline(KeyFrame(Duration.seconds(0.2), KeyValue(saveFileSettingTab.maxHeightProperty(), saveFileHeight))).apply {
+                    cycleCount = 1
+                }
+                val closeAnim = Timeline(KeyFrame(Duration.seconds(0.2), KeyValue(saveFileSettingTab.maxHeightProperty(), 0.0))).apply {
+                    cycleCount = 1
+                }
+                saveFileSettingLabelBox.setOnMouseClicked {
+                    if (saveFileOpen) {
+                        closeAnim.play()
+                    } else {
+                        openAnim.play()
+                    }
+                    saveFileOpen = !saveFileOpen
+                }
+                Platform.runLater {
+                    saveFileSettingTab.maxHeight = 0.0
+                }
+            }
+        }
+        
+        mainVBox.children.addAll(notificationSettingLabelBox, notificationSettingTab, Separator(), saveFileSettingLabelBox, saveFileSettingTab, Separator())
+        
+        val bottomContainer = HBox().apply {
+            style = "-fx-background-color: #fff;"
+            spacing = 20.0
+            alignment = Pos.CENTER_RIGHT
+            padding = Insets(8.0)
+        }
         Button("ログアウト").apply {
             styleClass.add("border-button")
-            logoutBorder.center = this
+            bottomContainer.children.add(this)
             setOnAction {
                 getDocumentWithJsoup(context.cookieStore.toMap(), "https://king.kcg.kyoto/campus/Secure/Logoff.aspx")
                 ACCOUNT_FILE.delete()
@@ -154,19 +257,17 @@ class SettingPane: VBox() {
                 }
             }
         }
-        val bottomAnchorPane = AnchorPane()
         Button("保存").apply {
             styleClass.add("apply-button")
-            bottomAnchorPane.children.add(this)
+            bottomContainer.children.add(this)
             AnchorPane.setBottomAnchor(this, 0.0)
             AnchorPane.setRightAnchor(this, 0.0)
             setOnAction {
                 saveSetting()
             }
         }
-
-        this.children.addAll(notificationSettingLabel, notificationSettingTab, Separator(), saveFileSettingLabel, saveFileSettingTab, Separator(), logoutBorder, bottomAnchorPane)
-
+        this.bottom = bottomContainer
+        
         loadSetting()
     }
 
@@ -177,8 +278,12 @@ class SettingPane: VBox() {
         } else {
             Setting()
         }
+        popupNotificationSetting = setting.notificationSetting.popupNotificationSetting
+        mailNotificationSetting = setting.notificationSetting.mailNotificationSetting
         newsSaveSetting = setting.saveFileSetting.newsSaveSetting
         taskSaveSetting = setting.saveFileSetting.taskSaveSetting
+        
+        
 
         newsSaveFolderPath.text = newsSaveSetting.folderPath ?: "news/"
         newsSaveFolderPath.isDisable = newsSaveSetting.askingEachTime ?: true
