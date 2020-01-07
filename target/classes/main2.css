@@ -191,6 +191,10 @@
     -fx-background-radius: 5em;
 }
 
+.tag-box .label {
+    -fx-font-size: 12px;
+}
+
 /* News Tab CSS */
 .news-content-box {
     -fx-background-color: #fff;

@@ -143,7 +143,7 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
 
         separator.prefWidth = this.prefWidth / 40
 
-        val titleText = Text(title).apply {
+        val titleText = Label(title).apply {
             style = "-fx-font-weight: bold;"
         }
         titleBox.children.add(titleText)

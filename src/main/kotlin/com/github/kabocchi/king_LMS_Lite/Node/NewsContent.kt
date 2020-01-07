@@ -107,12 +107,12 @@ class NewsContent(doc: String, _unread: Boolean, published: String, newsCategory
 
         separator.prefWidth = this.prefWidth / 40
 
-        val titleText = Text(title).apply {
+        val titleText = Label(title).apply {
             style = "-fx-font-weight: bold;"
         }
         topBorderPane.left = titleText
 
-        val dateText = Text("掲載日: $published").apply {
+        val dateText = Label("掲載日: $published").apply {
             style = "-fx-font-size: 13px; -fx-font-weight: bold;"
         }
         topBorderPane.right = dateText

@@ -21,6 +21,8 @@ import org.apache.http.impl.client.LaxRedirectStrategy
 import org.apache.http.message.BasicNameValuePair
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import javax.net.ssl.SSLHandshakeException
 
 class Login {
@@ -37,9 +39,19 @@ class Login {
             val json = Json.parse(decryptFile2(ACCOUNT_FILE_PATH)).asObject()
             idField.text = json.getString("id", "")
             passField.text = json.getString("pass", "")
-            Thread(Runnable {
-                login()
-            }).start()
+            val lastLogin = json.getString("lastLogin", "")
+            if (lastLogin != "" && ChronoUnit.WEEKS.between(LocalDateTime.now(), LocalDateTime.parse(lastLogin)) >= 1) {
+                idField.text = ""
+                passField.text = ""
+                val newJson = JsonObject()
+                newJson.add("id", "").add("pass", "").add("lastLogin", lastLogin)
+                encryptFile2(ACCOUNT_FILE_PATH, newJson)
+                showError("最終ログインから１週間が経過しました。\n再度IDとパスワードを入力してください。")
+            } else {
+                Thread(Runnable {
+                    login()
+                }).start()
+            }
         }
     }
     
@@ -89,7 +101,7 @@ class Login {
                     LoginResult.SUCCESS -> {
                         error.isVisible = false
                         val json = JsonObject()
-                        json.add("id", idField.text).add("pass", passField.text)
+                        json.add("id", idField.text).add("pass", passField.text).add("lastLogin", LocalDateTime.now().toString())
                         encryptFile2(ACCOUNT_FILE_PATH, json)
                         println("ログインしました。")
                         main?.let {

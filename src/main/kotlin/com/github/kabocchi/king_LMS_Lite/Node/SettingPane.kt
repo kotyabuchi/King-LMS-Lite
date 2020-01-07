@@ -9,6 +9,7 @@ import com.github.kabocchi.king_LMS_Lite.Utility.getDocumentWithJsoup
 import com.github.kabocchi.king_LMS_Lite.Utility.toMap
 import javafx.animation.KeyFrame
 import javafx.animation.KeyValue
+import javafx.animation.RotateTransition
 import javafx.animation.Timeline
 import javafx.application.Platform
 import javafx.collections.FXCollections
@@ -31,8 +32,15 @@ class SettingPane: BorderPane() {
     private lateinit var newsSaveSetting: NewsSaveSetting
     private lateinit var taskSaveSetting: TaskSaveSetting
 
-    
-    
+    private val notificationTabMark: Label
+    private val saveFileTabMark: Label
+
+    private val popupDayText: TextField
+    private val popupTimeText: ChoiceBox<String>
+
+    private val mailDayText: TextField
+    private val mailTimeText: ChoiceBox<String>
+
     private val newsSaveFolderPath: TextField
     private val newsSelectFilePath: Button
     private val newsAskingEachTime: CheckBox
@@ -64,11 +72,16 @@ class SettingPane: BorderPane() {
         
         val notificationSettingLabelBox = BorderPane().apply {
             cursor = Cursor.HAND
+            padding = Insets(0.0, 20.0, 0.0, 10.0)
             left = Label("通知設定").apply {
                 style = "-fx-font-weight: bold;"
                 styleClass.add("h1")
             }
-            
+            notificationTabMark = Label("▼").apply {
+                style = "-fx-font-weight: bold;"
+                styleClass.add("h1")
+            }
+            right = notificationTabMark
         }
         
         val notificationSettingTab = AnchorPane().apply {
@@ -82,7 +95,7 @@ class SettingPane: BorderPane() {
                 val notificationPopupContainer = HBox().apply {
                     spacing = 4.0
                     alignment = Pos.BOTTOM_LEFT
-                    val dayText = TextField().apply {
+                    popupDayText = TextField().apply {
                         prefWidth = 64.0
                     }
                     val dayLabel = Label("日前の")
@@ -95,16 +108,16 @@ class SettingPane: BorderPane() {
                         val time = if (i < 10) "0$i" else "$i"
                         timeList.addAll("午後 $time:00", "午後 $time:30")
                     }
-                    val timeText = ChoiceBox(timeList)
-                    timeText.selectionModel.select(18)
-                    children.addAll(dayText, dayLabel, timeText)
+                    popupTimeText = ChoiceBox(timeList)
+                    popupTimeText.selectionModel.select(18)
+                    children.addAll(popupDayText, dayLabel, popupTimeText)
                 }
     
                 val notificationMailLabel = Label("メール通知")
                 val notificationMailContainer = HBox().apply {
                     spacing = 4.0
                     alignment = Pos.BOTTOM_LEFT
-                    val dayText = TextField().apply {
+                    mailDayText = TextField().apply {
                         prefWidth = 64.0
                     }
                     val dayLabel = Label("日前の")
@@ -117,9 +130,9 @@ class SettingPane: BorderPane() {
                         val time = if (i < 10) "0$i" else "$i"
                         timeList.addAll("午後 $time:00", "午後 $time:30")
                     }
-                    val timeText = ChoiceBox(timeList)
-                    timeText.selectionModel.select(18)
-                    children.addAll(dayText, dayLabel, timeText)
+                    mailTimeText = ChoiceBox(timeList)
+                    mailTimeText.selectionModel.select(18)
+                    children.addAll(mailDayText, dayLabel, mailTimeText)
                 }
                 children.addAll(notificationPopupLabel, notificationPopupContainer, notificationMailLabel, notificationMailContainer)
             })
@@ -132,10 +145,14 @@ class SettingPane: BorderPane() {
         notificationSettingTab.layoutBoundsProperty().addListener { _, _, bounds2 ->
             if (notificationHeight == 0.0 && bounds2.height > 0) {
                 notificationHeight = bounds2.height
-                val openAnim = Timeline(KeyFrame(Duration.seconds(0.2), KeyValue(notificationSettingTab.maxHeightProperty(), notificationHeight))).apply {
+                val openAnim = Timeline(
+                        KeyFrame(Duration.seconds(0.2), KeyValue(notificationSettingTab.maxHeightProperty(), notificationHeight)),
+                        KeyFrame(Duration.seconds(0.2), KeyValue(notificationTabMark.rotateProperty(), 180.0))).apply {
                     cycleCount = 1
                 }
-                val closeAnim = Timeline(KeyFrame(Duration.seconds(0.2), KeyValue(notificationSettingTab.maxHeightProperty(), 0.0))).apply {
+                val closeAnim = Timeline(
+                        KeyFrame(Duration.seconds(0.2), KeyValue(notificationSettingTab.maxHeightProperty(), 0.0)),
+                        KeyFrame(Duration.seconds(0.2), KeyValue(notificationTabMark.rotateProperty(), 0.0))).apply {
                     cycleCount = 1
                 }
                 notificationSettingLabelBox.setOnMouseClicked {
@@ -154,10 +171,16 @@ class SettingPane: BorderPane() {
 
         val saveFileSettingLabelBox = BorderPane().apply {
             cursor = Cursor.HAND
+            padding = Insets(0.0, 20.0, 0.0, 10.0)
             left = Label("ファイル保存設定").apply {
                 style = "-fx-font-weight: bold;"
                 styleClass.add("h1")
             }
+            saveFileTabMark = Label("▼").apply {
+                style = "-fx-font-weight: bold;"
+                styleClass.add("h1")
+            }
+            right = saveFileTabMark
         }
         val saveFileSettingTab = AnchorPane().apply {
             minHeight = 0.0
@@ -217,13 +240,25 @@ class SettingPane: BorderPane() {
         saveFileSettingTab.layoutBoundsProperty().addListener { _, _, bounds2 ->
             if (saveFileHeight == 0.0 && bounds2.height > 0) {
                 saveFileHeight = bounds2.height
-                val openAnim = Timeline(KeyFrame(Duration.seconds(0.2), KeyValue(saveFileSettingTab.maxHeightProperty(), saveFileHeight))).apply {
+                var animating = false
+                val openAnim = Timeline(
+                        KeyFrame(Duration.seconds(0.2), KeyValue(saveFileSettingTab.maxHeightProperty(), saveFileHeight)),
+                        KeyFrame(Duration.seconds(0.2), KeyValue(saveFileTabMark.rotateProperty(), 180.0))).apply {
                     cycleCount = 1
+                    setOnFinished {
+                        animating = false
+                    }
                 }
-                val closeAnim = Timeline(KeyFrame(Duration.seconds(0.2), KeyValue(saveFileSettingTab.maxHeightProperty(), 0.0))).apply {
+                val closeAnim = Timeline(
+                        KeyFrame(Duration.seconds(0.2), KeyValue(saveFileSettingTab.maxHeightProperty(), 0.0)),
+                        KeyFrame(Duration.seconds(0.2), KeyValue(saveFileTabMark.rotateProperty(), 0.0))).apply {
                     cycleCount = 1
+                    setOnFinished {
+                        animating = false
+                    }
                 }
                 saveFileSettingLabelBox.setOnMouseClicked {
+                    if (animating) return@setOnMouseClicked
                     if (saveFileOpen) {
                         closeAnim.play()
                     } else {
@@ -283,7 +318,11 @@ class SettingPane: BorderPane() {
         newsSaveSetting = setting.saveFileSetting.newsSaveSetting
         taskSaveSetting = setting.saveFileSetting.taskSaveSetting
         
-        
+        popupDayText.text = popupNotificationSetting.day ?: "1"
+        popupTimeText.selectionModel.select(popupNotificationSetting.time ?: "午前 09:00")
+
+        mailDayText.text = mailNotificationSetting.day ?: "1"
+        mailTimeText.selectionModel.select(mailNotificationSetting.time ?: "午前 09:00")
 
         newsSaveFolderPath.text = newsSaveSetting.folderPath ?: "news/"
         newsSaveFolderPath.isDisable = newsSaveSetting.askingEachTime ?: true
@@ -298,6 +337,16 @@ class SettingPane: BorderPane() {
     }
 
     private fun saveSetting() {
+        popupNotificationSetting.apply {
+            day = popupDayText.text
+            time = popupTimeText.value
+        }
+
+        mailNotificationSetting.apply {
+            day = mailDayText.text
+            time = mailTimeText.value
+        }
+
         newsSaveSetting.apply {
             folderPath = newsSaveFolderPath.text
             askingEachTime = newsAskingEachTime.isSelected
