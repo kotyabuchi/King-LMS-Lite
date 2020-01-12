@@ -2,7 +2,6 @@ package com.github.kabocchi.kingLmsLite.Node
 
 import com.eclipsesource.json.Json
 import com.eclipsesource.json.ParseException
-import com.fasterxml.jackson.core.JsonParseException
 import com.github.kabocchi.king_LMS_Lite.NewsCategory
 import com.github.kabocchi.king_LMS_Lite.Node.NewsFilterContent
 import com.github.kabocchi.king_LMS_Lite.Utility.createHttpClient
@@ -26,9 +25,7 @@ class NewsPane(mainStackPane: StackPane): BorderPane() {
     private val progressText: Label
     private val searchBox: TextField
     private val filterButton: Button
-    private val filterBox = NewsFilterContent(this).apply {
-        minWidth = 800.0
-    }
+    private val filterBox = NewsFilterContent(this)
     private val listViewButton: ToggleButton
     private val gridViewButton: ToggleButton
     private val scrollPane: ScrollPane
@@ -220,9 +217,8 @@ class NewsPane(mainStackPane: StackPane): BorderPane() {
             newsList.clear()
 
             listView = VBox().apply {
-                spacing = 5.0
+                spacing = 8.0
                 padding = Insets(0.0, 0.0, 0.0, 10.0)
-                progressBar.prefWidthProperty().bind(this@NewsPane.widthProperty())
                 style = "-fx-background-color: #fff;"
             }
 
@@ -315,7 +311,7 @@ class NewsPane(mainStackPane: StackPane): BorderPane() {
             val important = filterBox.showImportant()
             var count = 0
             for (it in newsList) {
-                if (title != "" && (!it.title.contains(title, true) && !it.getDecription().contains(title, true))) continue
+                if (title != "" && (!it.title.contains(title, true) && !it.getDescription().contains(title, true))) continue
                 if (unreadOnly && !it.unread) continue
                 if ((emergency && it.emergency) || (important && it.important) && filterBox.categoryFilter(it.category)) {
                     listView.children.add(it)

@@ -1,4 +1,8 @@
 /* JavaFX CSS - Leave this comment until you have at least create one rule which uses -fx-Property */
+.root {
+    -fx-background-insets: 24;
+    -fx-padding: 24;
+}
 
 #mainPane {
     -fx-background-color: linear-gradient(to bottom right, #FFC778, #F89174);
@@ -54,6 +58,18 @@
 
 .text-field {
     -fx-font-size: 14px;
+    -fx-background-color: #a9a9a9, white;
+    -fx-background-insets: 0 0 0 0, 0 0 1 0;
+    -fx-background-radius: 0;
+}
+
+.text-field.error {
+    -fx-background-color: #d63031, #ffdcdb;
+}
+
+.text-field:focused {
+    -fx-background-color: #F89174 , white;
+    -fx-background-insets: 0 0 -1 0, 0 0 1 0;
 }
 
 .h1 {
@@ -91,17 +107,6 @@
    	-fx-background-image: url('reload.png');
 }
 
-.text-field {
-    -fx-background-color: #a9a9a9 , white;
-    -fx-background-insets: 0 0 0 0, 0 0 1 0;
-    -fx-background-radius: 0;
-}
-
-.text-field:focused {
-    -fx-background-color: #F89174 , white;
-    -fx-background-insets: 0 0 -1 0, 0 0 1 0;
-}
-
 .choice-box {
     -fx-background-color: #fff;
     -fx-border-color: #F0A470;
@@ -109,6 +114,14 @@
     -fx-cursor: hand;
     -fx-mark-color: #F0A470;
     -fx-pref-width: 100px;
+}
+
+.choice-box:focused {
+    -fx-background-color: #F0A470;
+}
+
+.choice-box:focused > .label {
+    -fx-text-fill: #fff;
 }
 
 .choice-box .context-menu {
@@ -195,13 +208,13 @@
     -fx-font-size: 12px;
 }
 
-/* News Tab CSS */
-.news-content-box {
+.content-box {
     -fx-background-color: #fff;
     -fx-border-width: 0 0 0 3px;
     -fx-border-color: #757575;
 }
 
+/* News Tab CSS */
 .filter-box {
     -fx-background-color: #fff;
 }
@@ -228,11 +241,11 @@
     -fx-cursor: hand;
 }
 
-.news-content-box.alreadyRead {
+.content-box.alreadyRead {
     -fx-border-color: #a9d18e;
 }
 
-.news-content-box.unread {
+.content-box.unread {
     -fx-border-color: #FFC778;
 }
 
@@ -251,59 +264,55 @@
 }
 
 /* Task Tab CSS */
-.task-content-box {
-    -fx-border-width: 2px;
-}
-
-.task-content-box.task-before-one {
+.content-box.task-before-one {
     -fx-border-color: #ff4500;
 }
 
-.task-content-box.task-before-three {
+.content-box.task-before-three {
     -fx-border-color: #FFC778;
 }
 
-.task-content-box.task-before-seven {
+.content-box.task-before-seven {
     -fx-border-color: #e6e600;
 }
 
-.task-content-box.task-after-seven {
+.content-box.task-after-seven {
     -fx-border-color: #a9d18e;
 }
 
-.task-content-box.task-before-one .taskLimitDay {
+.content-box.task-before-one .taskLimitDay {
     -fx-text-fill: #b33000;
 }
 
-.task-content-box.task-before-three .taskLimitDay {
+.content-box.task-before-three .taskLimitDay {
         -fx-text-fill: #b38b54;
 }
 
-.task-content-box.task-before-seven .taskLimitDay {
+.content-box.task-before-seven .taskLimitDay {
     -fx-text-fill: #b3b300;
 }
 
-.task-content-box.task-after-seven .taskLimitDay {
+.content-box.task-after-seven .taskLimitDay {
     -fx-text-fill: #90b379;
 }
 
-.task-content-box .separator .line {
+.content-box .separator .line {
     -fx-border-width: 1 0 0 0 ;
 }
 
-.task-content-box.task-before-one .separator .line {
+.content-box.task-before-one .separator .line {
     -fx-border-color: #ff4500;
 }
 
-.task-content-box.task-before-three .separator .line {
+.content-box.task-before-three .separator .line {
     -fx-border-color: #FFC778;
 }
 
-.task-content-box.task-before-seven .separator .line {
+.content-box.task-before-seven .separator .line {
     -fx-border-color: #e6e600;
 }
 
-.task-content-box.task-after-seven .separator .line {
+.content-box.task-after-seven .separator .line {
     -fx-border-color: #a9d18e;
 }
 

@@ -28,6 +28,7 @@ class NewsFilterContent(newsPane: NewsPane): VBox() {
 
     init {
         this.apply {
+            minWidth = 800.0
             spacing = 6.0
             padding = Insets(10.0, 30.0, 10.0, 30.0)
             styleClass.addAll("filter-box")

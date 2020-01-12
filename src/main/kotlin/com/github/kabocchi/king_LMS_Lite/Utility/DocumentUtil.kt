@@ -4,6 +4,7 @@ import com.github.kabocchi.king_LMS_Lite.context
 import com.github.kabocchi.king_LMS_Lite.os
 import javafx.scene.control.Hyperlink
 import javafx.scene.control.Label
+import javafx.scene.control.Separator
 import javafx.scene.layout.VBox
 import javafx.scene.text.TextFlow
 import org.apache.http.HttpEntity

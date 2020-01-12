@@ -29,20 +29,17 @@ class MainController {
     private lateinit var newsPane: NewsPane
     private lateinit var taskPane: TaskPane
     private lateinit var timeTablePane: TimeTablePane
-    private lateinit var settingPane: SettingPane
+    private val settingPane: SettingPane = SettingPane
 
     private var timeTableDoc: Document? = null
 
-    private var userId = ""
-
     @FXML
     fun initialize() {
-        timeTableDoc = getDocumentWithJsoup(context.cookieStore.toMap(), "https://king.kcg.kyoto/campus/Portal/Home")
+        timeTableDoc = getDocumentWithJsoup(context.cookieStore.toMap(), "https://king.kcg.kyoto/campus/Portal/Home") ?: return
         newsPane = NewsPane(mainStackPane)
         mainPane.center = newsPane
         taskPane = TaskPane(mainStackPane, timeTableDoc)
         timeTablePane = TimeTablePane(timeTableDoc)
-        settingPane = SettingPane()
         getNews()
         getTask()
     }

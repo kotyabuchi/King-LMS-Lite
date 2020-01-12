@@ -18,12 +18,16 @@ import javafx.geometry.Pos
 import javafx.scene.Cursor
 import javafx.scene.control.*
 import javafx.scene.layout.*
+import javafx.scene.paint.Color
 import javafx.scene.shape.Rectangle
+import javafx.stage.DirectoryChooser
 import javafx.stage.Stage
 import javafx.util.Duration
+import java.io.File
+import java.lang.Exception
 
 
-class SettingPane: BorderPane() {
+object SettingPane: BorderPane() {
     private val mapper = ObjectMapper()
 
     private lateinit var setting: Setting
@@ -37,9 +41,11 @@ class SettingPane: BorderPane() {
 
     private val popupDayText: TextField
     private val popupTimeText: ChoiceBox<String>
+    private val popupNotificationError: Label
 
     private val mailDayText: TextField
     private val mailTimeText: ChoiceBox<String>
+    private val mailNotificationError: Label
 
     private val newsSaveFolderPath: TextField
     private val newsSelectFilePath: Button
@@ -49,6 +55,8 @@ class SettingPane: BorderPane() {
     private val taskSelectFilePath: Button
     private val taskAskingEachTime: CheckBox
     private val taskSaveToGroupFolder: CheckBox
+
+    private val progressText: Label
     
     private var notificationOpen = false
     private var notificationHeight = 0.0
@@ -65,7 +73,7 @@ class SettingPane: BorderPane() {
         
         val mainVBox = VBox().apply {
             style = "-fx-background-color: white;"
-            padding = Insets(40.0)
+            padding = Insets(30.0, 20.0, 30.0, 20.0)
             spacing = 10.0
             scrollPane.content = this
         }
@@ -86,6 +94,7 @@ class SettingPane: BorderPane() {
         
         val notificationSettingTab = AnchorPane().apply {
             minHeight = 0.0
+            padding = Insets(0.0, 15.0, 0.0, 15.0)
             children.add(VBox().apply {
                 spacing = 12.0
                 AnchorPane.setRightAnchor(this, 0.0)
@@ -112,6 +121,11 @@ class SettingPane: BorderPane() {
                     popupTimeText.selectionModel.select(18)
                     children.addAll(popupDayText, dayLabel, popupTimeText)
                 }
+                popupNotificationError = Label().apply {
+                    isVisible = false
+                    style = "-fx-font-size: 12px;"
+                    textFill = Color.web("#d63031")
+                }
     
                 val notificationMailLabel = Label("メール通知")
                 val notificationMailContainer = HBox().apply {
@@ -134,7 +148,12 @@ class SettingPane: BorderPane() {
                     mailTimeText.selectionModel.select(18)
                     children.addAll(mailDayText, dayLabel, mailTimeText)
                 }
-                children.addAll(notificationPopupLabel, notificationPopupContainer, notificationMailLabel, notificationMailContainer)
+                mailNotificationError = Label().apply {
+                    isVisible = false
+                    style = "-fx-font-size: 12px;"
+                    textFill = Color.web("#d63031")
+                }
+                children.addAll(notificationPopupLabel, notificationPopupContainer, popupNotificationError, notificationMailLabel, notificationMailContainer, mailNotificationError)
             })
         }
         Rectangle().apply {
@@ -184,6 +203,7 @@ class SettingPane: BorderPane() {
         }
         val saveFileSettingTab = AnchorPane().apply {
             minHeight = 0.0
+            padding = Insets(0.0, 15.0, 0.0, 15.0)
             children.add(VBox().apply {
                 spacing = 12.0
                 AnchorPane.setRightAnchor(this, 0.0)
@@ -197,6 +217,12 @@ class SettingPane: BorderPane() {
                     }
                     newsSelectFilePath = Button("フォルダを選択").apply {
                         styleClass.add("border-button")
+                        setOnAction {
+                            val directoryChooser = DirectoryChooser()
+                            directoryChooser.initialDirectory = File(System.getProperty("user.home"))
+                            val choosePath = directoryChooser.showDialog(null) ?: return@setOnAction
+                            newsSaveFolderPath.text = choosePath.path + File.separator
+                        }
                     }
                     newsAskingEachTime = CheckBox("ファイルごとに保存先を指定する").apply {
                         setOnAction {
@@ -214,6 +240,12 @@ class SettingPane: BorderPane() {
                     }
                     taskSelectFilePath = Button("フォルダを選択").apply {
                         styleClass.add("border-button")
+                        setOnAction {
+                            val directoryChooser = DirectoryChooser()
+                            directoryChooser.initialDirectory = File(System.getProperty("user.home"))
+                            val choosePath = directoryChooser.showDialog(null) ?: return@setOnAction
+                            newsSaveFolderPath.text = choosePath.path + File.separator
+                        }
                     }
                     taskAskingEachTime = CheckBox("ファイルごとに保存先を指定する")
                     taskSaveToGroupFolder = CheckBox("講義ごとにフォルダを生成し、保存する")
@@ -276,9 +308,13 @@ class SettingPane: BorderPane() {
         
         val bottomContainer = HBox().apply {
             style = "-fx-background-color: #fff;"
-            spacing = 20.0
+            spacing = 10.0
             alignment = Pos.CENTER_RIGHT
-            padding = Insets(8.0)
+            padding = Insets(8.0, 10.0, 8.0, 10.0)
+        }
+        progressText = Label().apply {
+            style = "-fx-font-weight: bold; -fx-font-size: 14px;"
+            bottomContainer.children.add(this)
         }
         Button("ログアウト").apply {
             styleClass.add("border-button")
@@ -337,26 +373,95 @@ class SettingPane: BorderPane() {
     }
 
     private fun saveSetting() {
-        popupNotificationSetting.apply {
-            day = popupDayText.text
-            time = popupTimeText.value
-        }
+        try {
+            var digitCheck = true
+            popupDayText.styleClass.remove("error")
+            Platform.runLater {
+                popupNotificationError.isVisible = false
+            }
+            if (popupDayText.text == "") {
+                errorPopupNotification("入力してください")
+                popupDayText.styleClass.add("error")
+            } else {
+                popupDayText.text.forEach {
+                    if (!it.isDigit()) digitCheck = false
+                }
+                if (digitCheck) {
+                    popupNotificationSetting.apply {
+                        day = popupDayText.text
+                        time = popupTimeText.value
+                    }
+                } else {
+                    errorPopupNotification("入力出来るのは数字のみです")
+                    popupDayText.styleClass.add("error")
+                }
+            }
+            digitCheck = true
 
-        mailNotificationSetting.apply {
-            day = mailDayText.text
-            time = mailTimeText.value
-        }
+            mailDayText.styleClass.remove("error")
+            Platform.runLater {
+                mailNotificationError.isVisible = false
+            }
+            if (mailDayText.text == "") {
+                errorMailNotification("入力してください")
+                mailDayText.styleClass.add("error")
+            } else {
+                mailDayText.text.forEach {
+                    if (!it.isDigit()) digitCheck = false
+                }
+                if (digitCheck) {
+                    mailNotificationSetting.apply {
+                        day = mailDayText.text
+                        time = mailTimeText.value
+                    }
+                } else {
+                    errorMailNotification("入力出来るのは数字のみです")
+                    mailDayText.styleClass.add("error")
+                }
+            }
 
-        newsSaveSetting.apply {
-            folderPath = newsSaveFolderPath.text
-            askingEachTime = newsAskingEachTime.isSelected
-        }
+            newsSaveSetting.apply {
+                folderPath = newsSaveFolderPath.text
+                askingEachTime = newsAskingEachTime.isSelected
+            }
 
-        taskSaveSetting.apply {
-            folderPath = taskSaveFolderPath.text
-            askingEachTime = taskAskingEachTime.isSelected
-            saveToGroupFolder = taskSaveToGroupFolder.isSelected
+            taskSaveSetting.apply {
+                folderPath = taskSaveFolderPath.text
+                askingEachTime = taskAskingEachTime.isSelected
+                saveToGroupFolder = taskSaveToGroupFolder.isSelected
+            }
+            encryptFile2(SETTING_FILE_PATH, mapper.writeValueAsString(setting))
+            changeProgressText("設定を保存しました")
+        } catch (e: Exception) {
+            changeProgressText("設定の保存に失敗しました")
         }
-        encryptFile2(SETTING_FILE_PATH, mapper.writeValueAsString(setting))
+    }
+
+    private fun errorPopupNotification(text: String) {
+        Platform.runLater {
+            popupNotificationError.isVisible = true
+            popupNotificationError.text = text
+        }
+    }
+
+    private fun errorMailNotification(text: String) {
+        Platform.runLater {
+            mailNotificationError.isVisible = true
+            mailNotificationError.text = text
+        }
+    }
+
+    private fun changeProgressText(text: String) {
+        Platform.runLater {
+            progressText.text = text
+        }
+    }
+
+    fun getNewsSaveSetting(): NewsSaveSetting {
+        return newsSaveSetting
+    }
+
+    fun getTaskSaveSetting(): TaskSaveSetting {
+        return taskSaveSetting
     }
 }

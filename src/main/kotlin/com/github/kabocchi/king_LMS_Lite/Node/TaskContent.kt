@@ -2,6 +2,7 @@ package com.github.kabocchi.kingLmsLite.Node
 
 import com.eclipsesource.json.JsonArray
 import com.eclipsesource.json.JsonObject
+import com.github.kabocchi.king_LMS_Lite.Node.SettingPane
 import com.github.kabocchi.king_LMS_Lite.TaskType
 import com.github.kabocchi.king_LMS_Lite.Utility.cleanDescription
 import com.github.kabocchi.king_LMS_Lite.Utility.cleanDescriptionVer2
@@ -14,18 +15,17 @@ import javafx.application.Platform
 import javafx.beans.value.ChangeListener
 import javafx.geometry.Insets
 import javafx.scene.Cursor
-import javafx.scene.control.*
+import javafx.scene.control.Hyperlink
+import javafx.scene.control.Label
+import javafx.scene.control.Separator
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
 import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
-import javafx.scene.text.Text
+import javafx.scene.shape.Rectangle
 import javafx.stage.FileChooser
 import javafx.util.Duration
-import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpGet
-import org.apache.http.client.methods.HttpPost
-import org.apache.http.util.EntityUtils
 import java.io.File
 import java.io.FileOutputStream
 import java.time.LocalDateTime
@@ -33,10 +33,6 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
 class TaskContent(json: JsonObject, _description: String, _groupName: String, groupId: Int, requestVerToken: String, groupAccessToken: String, userId: String): VBox() {
-    private val separator = Separator()
-
-    private var showingDescription = false
-
     val title: String = json.getString("Title", "")
     private val contentId = json.getString("ContentID", "")
     private val taskId = json.getInt("TaskID", 0)
@@ -51,15 +47,8 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
 
     private val simpleDescription: String
     private var longDescription: VBox
-    private var shortDescription: Label
 
-    private var shortHeight = 0.0
-    private var longHeight = 0.0
-
-    private var shortAnimation: Timeline? = null
-    private var longAnimation: Timeline? = null
-
-    private var animating = true
+    private var openMark: Label
 
     val groupName = _groupName
     var resubmission = false
@@ -83,9 +72,9 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
         taskType = when (json.getInt("TaskType", 14)) {
             14 -> {
                 if (json.getBoolean("IsTextReport", false)) {
-                    TaskType.REPORT
-                } else {
                     TaskType.TEXT_REPORT
+                } else {
+                    TaskType.REPORT
                 }
             }
             10 -> TaskType.TEST
@@ -95,7 +84,7 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
         this.spacing = 4.0
         this.cursor = Cursor.HAND
         this.padding = Insets(10.0, 30.0, 10.0, 10.0)
-        this.styleClass.add("task-content-box")
+        this.styleClass.add("content-box")
 
         if (submissionEnd != null) {
             val today = LocalDateTime.now()
@@ -132,7 +121,6 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
             val groupLabel = Label(groupName)
             val taskTypeLabel = Label(taskType.typeName)
             children.addAll(groupLabel, taskTypeLabel)
-
         }
 
         val topBorderPane = BorderPane()
@@ -140,8 +128,6 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
             spacing = 10.0
         }
         topBorderPane.left = titleBox
-
-        separator.prefWidth = this.prefWidth / 40
 
         val titleText = Label(title).apply {
             style = "-fx-font-weight: bold;"
@@ -165,73 +151,74 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
         }
         topBorderPane.right = dateText
 
+        openMark = Label("▼").apply {
+            style = "-fx-font-size: 10px;"
+        }
+
         var description = _description
         if (description.trim().isBlank()) {
-            description = "このタスクには詳細文が設定されていません"
+            description = "このタスクには詳細文がありません"
             simpleDescription = ""
-            shortDescription = Label(description).apply {
-                isWrapText = false
-                ellipsisString = "..."
-                textOverrun = OverrunStyle.ELLIPSIS
-                textFill = Color.GRAY
-                if (files.size() > 0) {
-                    layoutBoundsProperty().addListener { observableValue, oldValue, newValue ->
-                        if (newValue.height > 0) {
-                            shortHeight = this@TaskContent.height
-                            this@TaskContent.prefHeight = shortHeight
-                        }
-                    }
-                }
-            }
             longDescription = VBox().apply {
-                if (files.size() > 0) {
-                    val descriptionLabel = Label(description).apply {
-                        isWrapText = true
-                        textFill = Color.GRAY
-                    }
-                    children.add(descriptionLabel)
-                    layoutBoundsProperty().addListener(ChangeListener { _, oldValue, newValue ->
-                        if (newValue.height > oldValue.height) {
-                            longHeight = this@TaskContent.prefHeight - shortDescription.height + newValue.height
-                            setAnimation()
-                        }
-                    })
+                val descriptionLabel = Label(description).apply {
+                    isWrapText = true
+                    textFill = Color.GRAY
                 }
+                children.add(descriptionLabel)
             }
         } else {
             simpleDescription = cleanDescription(description)
-            shortDescription = Label(simpleDescription).apply {
-                isWrapText = false
-                ellipsisString = "..."
-                textOverrun = OverrunStyle.ELLIPSIS
-                layoutBoundsProperty().addListener { observableValue, oldValue, newValue ->
-                    if (newValue.height > 0) {
-                        shortHeight = this@TaskContent.height
-                        this@TaskContent.prefHeight = shortHeight
-                    }
-                }
-            }
             longDescription = cleanDescriptionVer2(description).apply {
-                layoutBoundsProperty().addListener { _, oldValue, newValue ->
-                    if (newValue.height > oldValue.height) {
-                        longHeight = this@TaskContent.prefHeight - shortDescription.height + newValue.height
-                        setAnimation()
-                    }
-                }
-                val submitButton = Button("提出").apply {
-                    styleClass.add("border-button")
-                    setOnAction {
-                        createHttpClient().use {
-                            val validateSession = HttpPost("https://king.kcg.kyoto/campus/Mvc/MasterPage/ValidateSession")
-                            it.execute(validateSession, context).use {
-                                if (it.statusLine.statusCode == HttpStatus.SC_OK) {
-                                    println(EntityUtils.toString(it.entity))
-                                    context.cookieStore.cookies.forEach {
-                                        println("${it.name} : ${it.value}")
-                                    }
-                                }
+                minHeight = 0.0
+                var descHeight = 0.0
+                var open = false
+                var animating = false
+                layoutBoundsProperty().addListener(ChangeListener { _, _, newValue ->
+                    if (descHeight == 0.0 && newValue.height > 0.0) {
+                        descHeight = newValue.height
+                        val openAnim = Timeline(KeyFrame(Duration.seconds(0.2), KeyValue(maxHeightProperty(), descHeight)),
+                                KeyFrame(Duration.seconds(0.2), KeyValue(openMark.rotateProperty(), 180.0))).apply {
+                            cycleCount = 1
+                            setOnFinished {
+                                animating = false
                             }
-
+                        }
+                        val closeAnim = Timeline(KeyFrame(Duration.seconds(0.2), KeyValue(maxHeightProperty(), 0.0)),
+                                KeyFrame(Duration.seconds(0.2), KeyValue(openMark.rotateProperty(), 0.0))).apply {
+                            cycleCount = 1
+                            setOnFinished {
+                                animating = false
+                            }
+                        }
+                        this@TaskContent.setOnMouseClicked {
+                            if (animating) return@setOnMouseClicked
+                            animating = true
+                            if (open) {
+                                closeAnim.play()
+                            } else {
+                                openAnim.play()
+                            }
+                            open = !open
+                        }
+                        Platform.runLater {
+                            maxHeight = 0.0
+                        }
+                    }
+                })
+//                val submitButton = Button("提出").apply {
+//                    styleClass.add("border-button")
+//                    setOnAction {
+//                        createHttpClient().use {
+//                            val validateSession = HttpPost("https://king.kcg.kyoto/campus/Mvc/MasterPage/ValidateSession")
+//                            it.execute(validateSession, context).use {
+//                                if (it.statusLine.statusCode == HttpStatus.SC_OK) {
+//                                    println(EntityUtils.toString(it.entity))
+//                                    context.cookieStore.cookies.forEach {
+//                                        println("${it.name} : ${it.value}")
+//                                    }
+//                                }
+//                            }
+//
 //                            val postText = HttpPost("https://king.kcg.kyoto/campus/Mvc/Manavi/SaveTextReport").apply {
 //                                addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:72.0) Gecko/20100101 Firefox/72.0")
 //                                addHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
@@ -254,7 +241,7 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
 //                                    println(EntityUtils.toString(it.entity))
 //                                }
 //                            }
-                        }
+//                        }
 //                        val fileChooser = FileChooser()
 //                        fileChooser.title = "提出ファイルを選択"
 //                        fileChooser.showOpenDialog(null)?.let { file ->
@@ -307,104 +294,84 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
 //                                }
 //                            }
 //                        }
-                    }
-                }
-                children.add(submitButton)
+//                    }
+//                }
+//                children.add(submitButton)
             }
-
-            if (files.size() > 0) {
-                longDescription.children.addAll(Separator(), Label("添付ファイル"))
-                files.forEach { fileJson ->
-                    fileJson as JsonObject
-                    val fileName = fileJson.getString("FileName", "")
-                    val hyperlink = Hyperlink(fileName).apply {
-                        setOnAction {
+            Rectangle().apply {
+                widthProperty().bind(longDescription.widthProperty())
+                heightProperty().bind(longDescription.maxHeightProperty())
+                longDescription.clip = this
+            }
+        }
+        if (files.size() > 0) {
+            longDescription.children.add(0, Separator())
+            this.children.addAll(tagBox, topBorderPane, longDescription, Separator(),
+                    BorderPane().apply {
+                        padding = Insets(0.0, 8.0, 0.0, 0.0)
+                        left = Label("添付ファイル").apply {
+                            style = "-fx-font-size: 12px;"
+                        }
+                        right = openMark
+                    }
+            )
+            files.forEach { fileJson ->
+                fileJson as JsonObject
+                val fileName = fileJson.getString("FileName", "")
+                val hyperlink = Hyperlink(fileName).apply {
+                    setOnAction {
+                        val file = if (SettingPane.getTaskSaveSetting().askingEachTime != false) {
                             val chooser = FileChooser()
                             chooser.extensionFilters.add(FileChooser.ExtensionFilter("All", "*.*"))
                             chooser.initialDirectory = File(System.getProperty("user.home"))
                             chooser.initialFileName = fileName
-                            val file = chooser.showSaveDialog(null) ?: return@setOnAction
-                            createHttpClient().use { httpClient ->
-                                val httpGet = HttpGet("https://king.kcg.kyoto/campus/Download/DownloadHandler.aspx?cid=$contentId&docid=${fileJson.getInt("Id", 0)}")
-                                try {
-                                    httpClient.execute(httpGet, context).use {
-                                        val inputStream = it.entity.content
-                                        val fileOutputStream = FileOutputStream(file)
+                            chooser.showSaveDialog(null)
+                        } else {
+                            var saveFolder = File(SettingPane.getTaskSaveSetting().folderPath ?: "task/")
+                            if (SettingPane.getTaskSaveSetting().saveToGroupFolder != false) {
+                                saveFolder = File(saveFolder.path + File.separator + groupName + File.separator)
+                            }
+                            if (!saveFolder.exists()) saveFolder.mkdirs()
+                            File(saveFolder.path + File.separator + fileName)
+                        } ?: return@setOnAction
+                        println("Save file($fileName) to ${file.path}")
 
-                                        var inByte = inputStream.read()
-                                        while (inByte != -1) {
-                                            fileOutputStream.write(inByte)
-                                            inByte = inputStream.read()
-                                        }
-                                        inputStream.close()
-                                        fileOutputStream.close()
+                        createHttpClient().use { httpClient ->
+                            val httpGet = HttpGet("https://king.kcg.kyoto/campus/Download/DownloadHandler.aspx?cid=$contentId&docid=${fileJson.getInt("Id", 0)}")
+                            try {
+                                httpClient.execute(httpGet, context).use {
+                                    val inputStream = it.entity.content
+                                    val fileOutputStream = FileOutputStream(file)
+
+                                    var inByte = inputStream.read()
+                                    while (inByte != -1) {
+                                        fileOutputStream.write(inByte)
+                                        inByte = inputStream.read()
                                     }
-                                }catch (exception: Exception) {
-                                    throw exception
+                                    inputStream.close()
+                                    fileOutputStream.close()
                                 }
+                            }catch (exception: Exception) {
+                                throw exception
                             }
                         }
                     }
-                    longDescription.children.add(hyperlink)
                 }
+                this.children.add(hyperlink)
             }
+        } else {
+            this.children.addAll(tagBox, topBorderPane, Separator(), longDescription, BorderPane().apply {
+                padding = Insets(0.0, 8.0, 0.0, 0.0)
+                right = openMark
+            })
         }
-
-        this.setOnMouseClicked {
-            if (!showingDescription) {
-                this.children.remove(shortDescription)
-                this.children.add(longDescription)
-                showingDescription = true
-            }
-        }
-
-        this.children.addAll(tagBox, topBorderPane, separator, shortDescription)
     }
 
     fun getSubmissionEnd(): LocalDateTime? {
         return submissionEnd
     }
-
-    private fun setAnimation() {
-        this.children.remove(longDescription)
-        this.children.add(shortDescription)
-        showingDescription = false
-        longAnimation = Timeline(KeyFrame(Duration.seconds(0.2), KeyValue(this.prefHeightProperty(), longHeight))).apply {
-            cycleCount = 1
-            setOnFinished {
-                this@TaskContent.children.remove(shortDescription)
-                this@TaskContent.children.add(longDescription)
-                animating = false
-            }
-        }
-        longAnimation?.play()
-        showingDescription = true
-        this.setOnMouseClicked {
-            if (animating) return@setOnMouseClicked
-            animating = true
-            showingDescription = if (showingDescription) {
-                if (shortAnimation == null) {
-                    shortAnimation = Timeline(KeyFrame(Duration.seconds(0.2), KeyValue(this.prefHeightProperty(), shortHeight))).apply {
-                        cycleCount = 1
-                        setOnFinished {
-                            animating = false
-                        }
-                    }
-                }
-                shortAnimation?.play()
-                Platform.runLater {
-                    this.children.remove(longDescription)
-                    this.children.add(shortDescription)
-                }
-                !showingDescription
-            } else {
-                longAnimation?.play()
-                !showingDescription
-            }
-        }
-    }
     
-    fun getDecription(): String {
+    fun getDescription(): String {
         return simpleDescription
     }
 }

@@ -19,6 +19,7 @@ import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.util.EntityUtils
 import org.jsoup.nodes.Document
+import java.net.SocketException
 import java.net.URLEncoder
 import kotlin.concurrent.thread
 
@@ -66,9 +67,7 @@ class TaskPane(mainStackPane: StackPane, timetableDoc: Document?): BorderPane() 
                 }
             }
         }
-        filterBox = TaskFilterContent(this).apply {
-            minWidth = 800.0
-        }
+        filterBox = TaskFilterContent(this)
 
         this.style = "-fx-background-color: white;"
 
@@ -234,8 +233,8 @@ class TaskPane(mainStackPane: StackPane, timetableDoc: Document?): BorderPane() 
             val googleCalendar = GoogleCalendar()
 
             listView = VBox().apply {
-                spacing = 5.0
-                prefWidthProperty().bind(this@TaskPane.widthProperty())
+                spacing = 8.0
+                padding = Insets(0.0, 0.0, 0.0, 10.0)
                 style = "-fx-background-color: #fff;"
             }
 
@@ -277,33 +276,46 @@ class TaskPane(mainStackPane: StackPane, timetableDoc: Document?): BorderPane() 
                                     val encodedToken = URLEncoder.encode(groupAccessToken, "UTF-8")
                                     val taskDetailUrl = "https://king.kcg.kyoto/campus/Mvc/Manavi/GetTask?tId=$taskId&gToken=$encodedToken"
 
-                                    createHttpClient().use {  httpClient2 ->
-                                        httpClient2.execute(HttpGet(taskDetailUrl), context).use { taskDetailDoc ->
-                                            if (taskDetailDoc.statusLine.statusCode == HttpStatus.SC_OK) {
-                                                var description = ""
-                                                val docString = EntityUtils.toString(taskDetailDoc.entity)
-                                                if (docString.split("\"Description\": \"").size >= 2) description = docString.split("\"Description\": \"")[1].split("\"TaskBlockID\":")[0].trim().removeSuffix("\",")
-                                                val listTaskContent = TaskContent(
-                                                        Json.parse(docString).asObject(),
-                                                        description,
-                                                        json.getString("GroupName", ""),
-                                                        groupId,
-                                                        requestVerToken,
-                                                        groupAccessToken,
-                                                        userId)
-                                                if (listTaskContent.getSubmissionEnd() == null) {
-                                                    unlimitedTaskContents.add(listTaskContent)
-                                                } else {
-                                                    taskContents.add(listTaskContent)
-                                                    
+                                    var retry = false
+                                    var retryCount = 0
+                                    do {
+                                        createHttpClient().use {  httpClient2 ->
+                                            try {
+                                                println("Getting task details [${index}/$taskCount]")
+                                                httpClient2.execute(HttpGet(taskDetailUrl), context).use { taskDetailDoc ->
+                                                    println("Task details statusCode [${index}/$taskCount]: " + taskDetailDoc.statusLine.statusCode)
+                                                    if (taskDetailDoc.statusLine.statusCode == HttpStatus.SC_OK) {
+                                                        var description = ""
+                                                        val docString = EntityUtils.toString(taskDetailDoc.entity)
+                                                        if (docString.split("\"Description\": \"").size >= 2) description = docString.split("\"Description\": \"")[1].split("\"TaskBlockID\":")[0].trim().removeSuffix("\",")
+                                                        val listTaskContent = TaskContent(
+                                                                Json.parse(docString).asObject(),
+                                                                description,
+                                                                json.getString("GroupName", ""),
+                                                                groupId,
+                                                                requestVerToken,
+                                                                groupAccessToken,
+                                                                userId)
+                                                        if (listTaskContent.getSubmissionEnd() == null) {
+                                                            unlimitedTaskContents.add(listTaskContent)
+                                                        } else {
+                                                            taskContents.add(listTaskContent)
+                                                        }
+                                                    } else {
+                                                        failAmount++
+                                                    }
+                                                    taskDetailDoc.close()
                                                 }
-                                            } else {
-                                                failAmount++
+                                            } catch (e: SocketException) {
+                                                println("Fails to get task details [${index}/$taskCount]")
+                                                if (e.message == "Connection reset") {
+                                                    retry = true
+                                                    retryCount++
+                                                    println("Try to get task details again [${index}/$taskCount]")
+                                                }
                                             }
-                                            taskDetailDoc.close()
                                         }
-                                        httpClient2.close()
-                                    }
+                                    } while (retry && retryCount <= 5)
                                 }
                             }
 
@@ -369,7 +381,7 @@ class TaskPane(mainStackPane: StackPane, timetableDoc: Document?): BorderPane() 
             listView.children.clear()
             var count = 0
             for (it in taskList) {
-                if (title != "" && (!it.title.contains(title, true) && !it.getDecription().contains(title, true))) continue
+                if (title != "" && (!it.title.contains(title, true) && !it.getDescription().contains(title, true))) continue
                 if (filterBox.isResubmissionOnly() && !it.resubmission) continue
                 if (filterBox.getTypeFilter()[it.taskType]?.isSelected == false) continue
                 if (filterBox.getGroupFilter()[it.groupName]?.isSelected == false) continue

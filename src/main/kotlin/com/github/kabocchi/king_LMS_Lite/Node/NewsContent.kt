@@ -3,6 +3,7 @@ package com.github.kabocchi.kingLmsLite.Node
 import com.eclipsesource.json.Json
 import com.eclipsesource.json.JsonObject
 import com.github.kabocchi.king_LMS_Lite.NewsCategory
+import com.github.kabocchi.king_LMS_Lite.Node.SettingPane
 import com.github.kabocchi.king_LMS_Lite.Utility.cleanDescription
 import com.github.kabocchi.king_LMS_Lite.Utility.cleanDescriptionVer2
 import com.github.kabocchi.king_LMS_Lite.Utility.createHttpClient
@@ -16,16 +17,19 @@ import javafx.geometry.Insets
 import javafx.scene.Cursor
 import javafx.scene.control.Hyperlink
 import javafx.scene.control.Label
-import javafx.scene.control.OverrunStyle
 import javafx.scene.control.Separator
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
 import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
-import javafx.scene.text.Text
+import javafx.scene.shape.Rectangle
 import javafx.stage.FileChooser
 import javafx.util.Duration
+import org.apache.http.HttpStatus
+import org.apache.http.client.entity.UrlEncodedFormEntity
 import org.apache.http.client.methods.HttpGet
+import org.apache.http.client.methods.HttpPost
+import org.apache.http.message.BasicNameValuePair
 import java.io.File
 import java.io.FileOutputStream
 
@@ -37,9 +41,6 @@ class NewsContent(doc: String, _unread: Boolean, published: String, newsCategory
 
     private val tagBox: HBox
     private var unreadLabel: Label? = null
-    private val separator = Separator()
-
-    private var showingDescription = false
 
     var unread = _unread
     var emergency = false
@@ -48,23 +49,16 @@ class NewsContent(doc: String, _unread: Boolean, published: String, newsCategory
 
     val title: String = json.getString("Title", "")
 
-    private val simpleDescription: String
+    private var simpleDescription = ""
     private var longDescription: VBox
-    private var shortDescription: Label
 
-    private var shortHeight = 0.0
-    private var longHeight = 0.0
-
-    private var shortAnimation: Timeline? = null
-    private var longAnimation: Timeline? = null
-
-    private var animating = true
+    private var openMark: Label
 
     init {
         this.spacing = 4.0
         this.cursor = Cursor.HAND
         this.padding = Insets(10.0, 30.0, 10.0, 10.0)
-        this.styleClass.add("news-content-box")
+        this.styleClass.add("content-box")
 
         tagBox = HBox().apply {
             styleClass.add("tag-box")
@@ -105,8 +99,6 @@ class NewsContent(doc: String, _unread: Boolean, published: String, newsCategory
 
         val topBorderPane = BorderPane()
 
-        separator.prefWidth = this.prefWidth / 40
-
         val titleText = Label(title).apply {
             style = "-fx-font-weight: bold;"
         }
@@ -117,72 +109,98 @@ class NewsContent(doc: String, _unread: Boolean, published: String, newsCategory
         }
         topBorderPane.right = dateText
 
+        openMark = Label("▼").apply {
+            style = "-fx-font-size: 10px;"
+        }
+
         if (description.trim().isBlank()) {
-            description = "このタスクには詳細文が設定されていません"
-            simpleDescription = ""
-            shortDescription = Label(description).apply {
-                isWrapText = false
-                ellipsisString = "..."
-                textOverrun = OverrunStyle.ELLIPSIS
-                textFill = Color.GRAY
-                if (files.size() > 0) {
-                    layoutBoundsProperty().addListener { observableValue, oldValue, newValue ->
-                        if (newValue.height > 0) {
-                            shortHeight = this@NewsContent.height
-                            this@NewsContent.prefHeight = shortHeight
-                        }
-                    }
-                }
-            }
+            description = "このお知らせには詳細文がありません"
             longDescription = VBox().apply {
-                if (files.size() > 0) {
-                    val descriptionLabel = Label(description).apply {
-                        isWrapText = true
-                        textFill = Color.GRAY
-                    }
-                    children.add(descriptionLabel)
-                    layoutBoundsProperty().addListener(ChangeListener { _, oldValue, newValue ->
-                        if (newValue.height > oldValue.height) {
-                            longHeight = this@NewsContent.prefHeight - shortDescription.height + newValue.height
-                            setAnimation()
-                        }
-                    })
+                val descriptionLabel = Label(description).apply {
+                    isWrapText = true
+                    textFill = Color.GRAY
                 }
+                children.add(descriptionLabel)
             }
         } else {
             simpleDescription = cleanDescription(description)
-            shortDescription = Label(simpleDescription).apply {
-                isWrapText = false
-                ellipsisString = "..."
-                textOverrun = OverrunStyle.ELLIPSIS
-                layoutBoundsProperty().addListener { observableValue, oldValue, newValue ->
-                    if (newValue.height > 0) {
-                        shortHeight = this@NewsContent.height
-                        this@NewsContent.prefHeight = shortHeight
-                    }
-                }
-            }
             longDescription = cleanDescriptionVer2(description).apply {
+                minHeight = 0.0
+                var descHeight = 0.0
+                var open = false
+                var animating = false
                 layoutBoundsProperty().addListener(ChangeListener { _, oldValue, newValue ->
-                    if (newValue.height > oldValue.height) {
-                        longHeight = this@NewsContent.prefHeight - shortDescription.height + newValue.height
-                        setAnimation()
+                    if (descHeight == 0.0 && newValue.height > 0.0) {
+                        descHeight = newValue.height
+                        val openAnim = Timeline(
+                                KeyFrame(Duration.seconds(0.2), KeyValue(maxHeightProperty(), descHeight)),
+                                KeyFrame(Duration.seconds(0.2), KeyValue(openMark.rotateProperty(), 180.0))).apply {
+                            cycleCount = 1
+                            setOnFinished {
+                                animating = false
+                            }
+                        }
+                        val closeAnim = Timeline(
+                                KeyFrame(Duration.seconds(0.2), KeyValue(maxHeightProperty(), 0.0)),
+                                KeyFrame(Duration.seconds(0.2), KeyValue(openMark.rotateProperty(), 0.0))).apply {
+                            cycleCount = 1
+                            setOnFinished {
+                                animating = false
+                            }
+                        }
+                        this@NewsContent.setOnMouseClicked {
+                            if (animating) return@setOnMouseClicked
+                            animating = true
+                            if (open) {
+                                closeAnim.play()
+                            } else {
+                                setRead()
+                                openAnim.play()
+                            }
+                            open = !open
+                        }
+                        Platform.runLater {
+                            maxHeight = 0.0
+                        }
                     }
                 })
             }
+            Rectangle().apply {
+                widthProperty().bind(longDescription.widthProperty())
+                heightProperty().bind(longDescription.maxHeightProperty())
+                longDescription.clip = this
+            }
         }
+
         if (files.size() > 0) {
-            longDescription.children.addAll(Separator(), Label("添付ファイル"))
+            longDescription.children.add(0, Separator())
+            this.children.addAll(tagBox, topBorderPane, longDescription, Separator(),
+                    BorderPane().apply {
+                        padding = Insets(0.0, 8.0, 0.0, 0.0)
+                        left = Label("添付ファイル").apply {
+                            style = "-fx-font-size: 12px;"
+                        }
+                        right = openMark
+                    }
+            )
             files.forEach { json ->
                 json as JsonObject
                 val fileName = json.getString("FileName", "")
                 val hyperlink = Hyperlink(fileName).apply {
                     setOnAction {
-                        val chooser = FileChooser()
-                        chooser.extensionFilters.add(FileChooser.ExtensionFilter("All", "*.*"))
-                        chooser.initialDirectory = File(System.getProperty("user.home"))
-                        chooser.initialFileName = fileName
-                        val file = chooser.showSaveDialog(null) ?: return@setOnAction
+                        val file = if (SettingPane.getNewsSaveSetting().askingEachTime != false) {
+                            val chooser = FileChooser()
+                            chooser.extensionFilters.add(FileChooser.ExtensionFilter("All", "*.*"))
+                            chooser.initialDirectory = File(System.getProperty("user.home"))
+                            chooser.initialFileName = fileName
+                            chooser.showSaveDialog(null)
+                        } else {
+                            val saveFolder = File(SettingPane.getNewsSaveSetting().folderPath ?: "news/")
+                            if (!saveFolder.exists()) saveFolder.mkdirs()
+                            File(saveFolder.path + File.separator + fileName)
+                        } ?: return@setOnAction
+                        println("Save file($fileName) to ${file.path}")
+
                         createHttpClient().use { httpClient ->
                             val httpGet = HttpGet("https://king.kcg.kyoto/campus/Portal/TryAnnouncement/GetFileAttachment/${json.getInt("Id", 0)}")
                             try {
@@ -204,79 +222,40 @@ class NewsContent(doc: String, _unread: Boolean, published: String, newsCategory
                         }
                     }
                 }
-                longDescription.children.add(hyperlink)
+                this.children.add(hyperlink)
             }
-        }
-
-        this.setOnMouseClicked {
-            if (!showingDescription) {
-                if (unread) setRead()
-                this.children.remove(shortDescription)
-                this.children.add(longDescription)
-                showingDescription = true
-            }
-        }
-
-        this.children.addAll(tagBox, topBorderPane, separator, shortDescription)
-    }
-
-    private fun setAnimation() {
-        this.children.remove(longDescription)
-        this.children.add(shortDescription)
-        showingDescription = false
-        longAnimation = Timeline(KeyFrame(Duration.seconds(0.2), KeyValue(this.prefHeightProperty(), longHeight))).apply {
-            cycleCount = 1
-            setOnFinished {
-                this@NewsContent.children.remove(shortDescription)
-                this@NewsContent.children.add(longDescription)
-                animating = false
-            }
-        }
-        longAnimation?.play()
-        showingDescription = true
-        this.setOnMouseClicked {
-            if (animating) return@setOnMouseClicked
-            animating = true
-            showingDescription = if (showingDescription) {
-                if (shortAnimation == null) {
-                    shortAnimation = Timeline(KeyFrame(Duration.seconds(0.2), KeyValue(this.prefHeightProperty(), shortHeight))).apply {
-                        cycleCount = 1
-                        setOnFinished {
-                            animating = false
-                        }
-                    }
-                }
-                shortAnimation?.play()
-                Platform.runLater {
-                    this.children.remove(longDescription)
-                    this.children.add(shortDescription)
-                }
-                !showingDescription
-            } else {
-                if (unread) setRead()
-                longAnimation?.play()
-                !showingDescription
-            }
+        } else {
+            this.children.addAll(tagBox, topBorderPane, Separator(), longDescription, BorderPane().apply {
+                padding = Insets(0.0, 8.0, 0.0, 0.0)
+                right = openMark
+            })
         }
     }
 
     private fun setRead() {
         if (unread) {
-            unread = false
-            this.styleClass.remove("unread")
-            this.styleClass.add("alreadyRead")
-            Platform.runLater {
-                tagBox.children.remove(unreadLabel)
+            createHttpClient().use { httpClient ->
+                val httpPost = HttpPost("https://king.kcg.kyoto/campus/Portal/TryAnnouncement/SetReadStateAnnouncement")
+                val formParams = mutableListOf<BasicNameValuePair>()
+                formParams.add(BasicNameValuePair("id", json.getInt("Id", 0).toString()))
+                httpPost.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:72.0) Gecko/20100101 Firefox/72.0")
+                httpPost.entity = UrlEncodedFormEntity(formParams, "UTF-8")
+
+                httpClient.execute(httpPost, context).use { httpResponse ->
+                    if (httpResponse.statusLine.statusCode == HttpStatus.SC_OK) {
+                        unread = false
+                        this.styleClass.remove("unread")
+                        this.styleClass.add("alreadyRead")
+                        Platform.runLater {
+                            tagBox.children.remove(unreadLabel)
+                        }
+                    }
+                }
             }
         }
     }
 
-    enum class DescriptionType {
-        SHORT,
-        LONG
-    }
-    
-    fun getDecription(): String {
+    fun getDescription(): String {
         return simpleDescription
     }
 }
