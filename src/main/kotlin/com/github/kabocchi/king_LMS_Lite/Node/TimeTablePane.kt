@@ -14,8 +14,7 @@ class TimeTablePane(timeTableDoc: Document?): ScrollPane() {
             isFitToWidth = true
         }
 
-        val mainVBox = VBox().apply {
-            spacing = 10.0
+        val mainVBox = VBox(10.0).apply {
             this@TimeTablePane.content = this
             styleClass.add("time-table")
         }
@@ -25,9 +24,7 @@ class TimeTablePane(timeTableDoc: Document?): ScrollPane() {
                 val timeLabel = Label(index.toString()).apply {
                     prefWidth = 16.0
                 }
-                val hBox = HBox(timeLabel).apply {
-                    spacing = 10.0
-                }
+                val hBox = HBox(10.0, timeLabel)
                 element.select("td").forEach {
                     val label = Label(it.selectFirst("span.tag-timetable")?.text() ?: "").apply {
                         isWrapText = true

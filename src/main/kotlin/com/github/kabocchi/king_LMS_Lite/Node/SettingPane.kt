@@ -9,7 +9,6 @@ import com.github.kabocchi.king_LMS_Lite.Utility.getDocumentWithJsoup
 import com.github.kabocchi.king_LMS_Lite.Utility.toMap
 import javafx.animation.KeyFrame
 import javafx.animation.KeyValue
-import javafx.animation.RotateTransition
 import javafx.animation.Timeline
 import javafx.application.Platform
 import javafx.collections.FXCollections
@@ -17,15 +16,16 @@ import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.Cursor
 import javafx.scene.control.*
-import javafx.scene.layout.*
+import javafx.scene.layout.AnchorPane
+import javafx.scene.layout.BorderPane
+import javafx.scene.layout.HBox
+import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
 import javafx.scene.shape.Rectangle
 import javafx.stage.DirectoryChooser
 import javafx.stage.Stage
 import javafx.util.Duration
 import java.io.File
-import java.lang.Exception
-
 
 object SettingPane: BorderPane() {
     private val mapper = ObjectMapper()
@@ -39,11 +39,11 @@ object SettingPane: BorderPane() {
     private val notificationTabMark: Label
     private val saveFileTabMark: Label
 
-    private val popupDayText: TextField
+    private val popupDayText: ChoiceBox<String>
     private val popupTimeText: ChoiceBox<String>
     private val popupNotificationError: Label
 
-    private val mailDayText: TextField
+    private val mailDayText: ChoiceBox<String>
     private val mailTimeText: ChoiceBox<String>
     private val mailNotificationError: Label
 
@@ -71,10 +71,9 @@ object SettingPane: BorderPane() {
         }
         this.center = scrollPane
         
-        val mainVBox = VBox().apply {
+        val mainVBox = VBox(10.0).apply {
             style = "-fx-background-color: white;"
             padding = Insets(30.0, 20.0, 30.0, 20.0)
-            spacing = 10.0
             scrollPane.content = this
         }
         
@@ -95,17 +94,20 @@ object SettingPane: BorderPane() {
         val notificationSettingTab = AnchorPane().apply {
             minHeight = 0.0
             padding = Insets(0.0, 15.0, 0.0, 15.0)
-            children.add(VBox().apply {
-                spacing = 12.0
+            children.add(VBox(12.0).apply {
                 AnchorPane.setRightAnchor(this, 0.0)
                 AnchorPane.setBottomAnchor(this, 0.0)
                 AnchorPane.setLeftAnchor(this, 0.0)
                 val notificationPopupLabel = Label("ポップアップ通知")
-                val notificationPopupContainer = HBox().apply {
-                    spacing = 4.0
+                val notificationPopupContainer = HBox(4.0).apply {
+                    val dayList = FXCollections.observableArrayList<String>()
+                    for (i in 0..27) {
+                        dayList.add(i.toString())
+                    }
                     alignment = Pos.BOTTOM_LEFT
-                    popupDayText = TextField().apply {
-                        prefWidth = 64.0
+                    popupDayText =  ChoiceBox(dayList).apply {
+                        minWidth = 60.0
+                        selectionModel.select(4)
                     }
                     val dayLabel = Label("日前の")
                     val timeList = FXCollections.observableArrayList<String>()
@@ -128,11 +130,16 @@ object SettingPane: BorderPane() {
                 }
     
                 val notificationMailLabel = Label("メール通知")
-                val notificationMailContainer = HBox().apply {
-                    spacing = 4.0
+                val notificationMailContainer = HBox(4.0).apply {
                     alignment = Pos.BOTTOM_LEFT
-                    mailDayText = TextField().apply {
-                        prefWidth = 64.0
+                    val dayList = FXCollections.observableArrayList<String>()
+                    for (i in 0..27) {
+                        dayList.add(i.toString())
+                    }
+                    alignment = Pos.BOTTOM_LEFT
+                    mailDayText =  ChoiceBox(dayList).apply {
+                        minWidth = 60.0
+                        selectionModel.select(4)
                     }
                     val dayLabel = Label("日前の")
                     val timeList = FXCollections.observableArrayList<String>()
@@ -204,13 +211,11 @@ object SettingPane: BorderPane() {
         val saveFileSettingTab = AnchorPane().apply {
             minHeight = 0.0
             padding = Insets(0.0, 15.0, 0.0, 15.0)
-            children.add(VBox().apply {
-                spacing = 12.0
+            children.add(VBox(12.0).apply {
                 AnchorPane.setRightAnchor(this, 0.0)
                 AnchorPane.setBottomAnchor(this, 0.0)
                 AnchorPane.setLeftAnchor(this, 0.0)
-                val newsSection = VBox().apply {
-                    spacing = 10.0
+                val newsSection = VBox(10.0).apply {
                     val newsSectionLabel = Label("お知らせ")
                     newsSaveFolderPath = TextField().apply {
                         minWidth = 600.0
@@ -232,8 +237,7 @@ object SettingPane: BorderPane() {
                     }
                     children.addAll(newsSectionLabel, newsAskingEachTime, HBox(newsSaveFolderPath, newsSelectFilePath))
                 }
-                val taskSection = VBox().apply {
-                    spacing = 10.0
+                val taskSection = VBox(10.0).apply {
                     val taskSectionLabel = Label("課題")
                     taskSaveFolderPath = TextField().apply {
                         minWidth = 600.0
@@ -306,9 +310,8 @@ object SettingPane: BorderPane() {
         
         mainVBox.children.addAll(notificationSettingLabelBox, notificationSettingTab, Separator(), saveFileSettingLabelBox, saveFileSettingTab, Separator())
         
-        val bottomContainer = HBox().apply {
+        val bottomContainer = HBox(10.0).apply {
             style = "-fx-background-color: #fff;"
-            spacing = 10.0
             alignment = Pos.CENTER_RIGHT
             padding = Insets(8.0, 10.0, 8.0, 10.0)
         }
@@ -354,10 +357,10 @@ object SettingPane: BorderPane() {
         newsSaveSetting = setting.saveFileSetting.newsSaveSetting
         taskSaveSetting = setting.saveFileSetting.taskSaveSetting
         
-        popupDayText.text = popupNotificationSetting.day ?: "1"
+        popupDayText.selectionModel.select(popupNotificationSetting.day ?: "3")
         popupTimeText.selectionModel.select(popupNotificationSetting.time ?: "午前 09:00")
 
-        mailDayText.text = mailNotificationSetting.day ?: "1"
+        mailDayText.selectionModel.select(mailNotificationSetting.day ?: "3")
         mailTimeText.selectionModel.select(mailNotificationSetting.time ?: "午前 09:00")
 
         newsSaveFolderPath.text = newsSaveSetting.folderPath ?: "news/"
@@ -374,50 +377,22 @@ object SettingPane: BorderPane() {
 
     private fun saveSetting() {
         try {
-            var digitCheck = true
             popupDayText.styleClass.remove("error")
             Platform.runLater {
                 popupNotificationError.isVisible = false
             }
-            if (popupDayText.text == "") {
-                errorPopupNotification("入力してください")
-                popupDayText.styleClass.add("error")
-            } else {
-                popupDayText.text.forEach {
-                    if (!it.isDigit()) digitCheck = false
-                }
-                if (digitCheck) {
-                    popupNotificationSetting.apply {
-                        day = popupDayText.text
-                        time = popupTimeText.value
-                    }
-                } else {
-                    errorPopupNotification("入力出来るのは数字のみです")
-                    popupDayText.styleClass.add("error")
-                }
+            popupNotificationSetting.apply {
+                day = popupDayText.value
+                time = popupTimeText.value
             }
-            digitCheck = true
 
             mailDayText.styleClass.remove("error")
             Platform.runLater {
                 mailNotificationError.isVisible = false
             }
-            if (mailDayText.text == "") {
-                errorMailNotification("入力してください")
-                mailDayText.styleClass.add("error")
-            } else {
-                mailDayText.text.forEach {
-                    if (!it.isDigit()) digitCheck = false
-                }
-                if (digitCheck) {
-                    mailNotificationSetting.apply {
-                        day = mailDayText.text
-                        time = mailTimeText.value
-                    }
-                } else {
-                    errorMailNotification("入力出来るのは数字のみです")
-                    mailDayText.styleClass.add("error")
-                }
+            mailNotificationSetting.apply {
+                day = mailDayText.value
+                time = mailTimeText.value
             }
 
             newsSaveSetting.apply {

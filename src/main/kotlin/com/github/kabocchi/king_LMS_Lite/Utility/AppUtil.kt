@@ -39,6 +39,7 @@ class AppUtil(private val version: String, private val main: Main) {
             val scene = Scene(fxmlLoader.load(), 1328.0, 768.0)
 //            val scene = Scene(fxmlLoader.load(), 1280.0, 720.0)
             scene.fill = Color.TRANSPARENT
+            scene.stylesheets.add("https://fonts.googleapis.com/css?family=Kosugi+Maru")
             scene.stylesheets.add(javaClass.getResource("/main2.css").toExternalForm())
             scene.root.effect = DropShadow()
             stage.title = "King-lms Lite $version"

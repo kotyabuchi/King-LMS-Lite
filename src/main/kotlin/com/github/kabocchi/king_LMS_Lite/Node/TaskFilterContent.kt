@@ -148,9 +148,7 @@ class TaskFilterContent(taskPane: TaskPane): VBox() {
                 }
             }
         }
-        val applyHBox = HBox(clearButton, applyButton).apply {
-            spacing = 10.0
-        }
+        val applyHBox = HBox(10.0, clearButton, applyButton)
         applyBorder.right = applyHBox
 
         this.children.addAll(tagFilterLabel, tagFilter, Separator(), typeFilterLabel, typeFilter, Separator(), groupFilterLabel, groupFilter, applyBorder)

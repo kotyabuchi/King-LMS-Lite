@@ -3,6 +3,7 @@ package com.github.kabocchi.kingLmsLite.Node
 import com.eclipsesource.json.Json
 import com.github.kabocchi.king_LMS_Lite.GoogleCalendar
 import com.github.kabocchi.king_LMS_Lite.Node.TaskFilterContent
+import com.github.kabocchi.king_LMS_Lite.ReminderType
 import com.github.kabocchi.king_LMS_Lite.Utility.createHttpClient
 import com.github.kabocchi.king_LMS_Lite.Utility.getDocumentWithJsoup
 import com.github.kabocchi.king_LMS_Lite.Utility.toMap
@@ -77,9 +78,8 @@ class TaskPane(mainStackPane: StackPane, timetableDoc: Document?): BorderPane() 
         val toolBoxTopV = VBox()
         toolBoxTopV.children.add(progressBar)
 
-        val toolBoxTopH = HBox().apply {
+        val toolBoxTopH = HBox(10.0).apply {
             id = "toolBoxTop"
-            spacing = 10.0
             alignment = Pos.CENTER_LEFT
             padding = Insets(10.0, 30.0, 10.0, 30.0)
         }
@@ -183,7 +183,9 @@ class TaskPane(mainStackPane: StackPane, timetableDoc: Document?): BorderPane() 
             prefWidth = 26.0
             prefHeight = 26.0
             setOnAction {
-                updateTask()
+                thread {
+                    updateTask()
+                }
             }
         }
         
@@ -219,140 +221,138 @@ class TaskPane(mainStackPane: StackPane, timetableDoc: Document?): BorderPane() 
     }
 
     fun updateTask() {
-        thread {
-            if (updatingTask) return@thread
-            updatingTask = true
-            
-            val start = System.currentTimeMillis()
-            Platform.runLater {
-                progressBar.progress = -1.0
-                listView.children.clear()
-            }
-            taskList.clear()
+        if (updatingTask) return
+        updatingTask = true
     
-            val googleCalendar = GoogleCalendar()
-
-            listView = VBox().apply {
-                spacing = 8.0
-                padding = Insets(0.0, 0.0, 0.0, 10.0)
-                style = "-fx-background-color: #fff;"
-            }
-
-            changeProgressText("課題の一覧を取得しています...")
-
-            createHttpClient().use { httpClient ->
-                val httpGet = HttpGet("https://king.kcg.kyoto/campus/Mvc/Home/GetDeliverables")
-                httpClient.execute(httpGet, context).use { taskListDoc ->
-                    if (taskListDoc.statusLine.statusCode == HttpStatus.SC_OK) {
-                        val taskArray = Json.parse(EntityUtils.toString(taskListDoc.entity)).asArray()
-
-                        var taskCount = 0
-                        for (task in taskArray) {
-                            taskCount += task.asObject().getInt("Count", 0)
-                        }
-
-                        var failAmount = 0
-
-                        if (taskCount > 0) {
-                            val taskContents = mutableListOf<TaskContent>()
-                            val unlimitedTaskContents = mutableListOf<TaskContent>()
-                            var index = 0
-                            for (jsonValue in taskArray) {
-                                for (task in jsonValue.asObject().get("Items").asArray()) {
-                                    index++
-                                    changeProgressText("課題の詳細を取得しています... [$index / $taskCount]")
-
-                                    val json = task.asObject()
-
-                                    val taskId = json.getInt("TaskID", 0)
-                                    val groupId = json.getInt("GroupID", 0)
-                                    val tokenGetUrl = getDocumentWithJsoup(context.cookieStore.toMap(), "https://king.kcg.kyoto/campus/Course/$groupId/18/")
-                                    if (tokenGetUrl == null) {
-                                        failAmount++
-                                        continue
-                                    }
-                                    val requestVerToken = tokenGetUrl.select("input[name=RequestVerToken]").`val`()
-                                    val groupAccessToken = tokenGetUrl.select("input[name=__GroupAccessToken]").`val`()
-                                    val encodedToken = URLEncoder.encode(groupAccessToken, "UTF-8")
-                                    val taskDetailUrl = "https://king.kcg.kyoto/campus/Mvc/Manavi/GetTask?tId=$taskId&gToken=$encodedToken"
-
-                                    var retry = false
-                                    var retryCount = 0
-                                    do {
-                                        createHttpClient().use {  httpClient2 ->
-                                            try {
-                                                println("Getting task details [${index}/$taskCount]")
-                                                httpClient2.execute(HttpGet(taskDetailUrl), context).use { taskDetailDoc ->
-                                                    println("Task details statusCode [${index}/$taskCount]: " + taskDetailDoc.statusLine.statusCode)
-                                                    if (taskDetailDoc.statusLine.statusCode == HttpStatus.SC_OK) {
-                                                        var description = ""
-                                                        val docString = EntityUtils.toString(taskDetailDoc.entity)
-                                                        if (docString.split("\"Description\": \"").size >= 2) description = docString.split("\"Description\": \"")[1].split("\"TaskBlockID\":")[0].trim().removeSuffix("\",")
-                                                        val listTaskContent = TaskContent(
-                                                                Json.parse(docString).asObject(),
-                                                                description,
-                                                                json.getString("GroupName", ""),
-                                                                groupId,
-                                                                requestVerToken,
-                                                                groupAccessToken,
-                                                                userId)
-                                                        if (listTaskContent.getSubmissionEnd() == null) {
-                                                            unlimitedTaskContents.add(listTaskContent)
-                                                        } else {
-                                                            taskContents.add(listTaskContent)
-                                                        }
+        val googleCalendar = GoogleCalendar()
+        
+        val start = System.currentTimeMillis()
+        Platform.runLater {
+            progressBar.progress = -1.0
+            listView.children.clear()
+        }
+        taskList.clear()
+    
+        listView = VBox(8.0).apply {
+            padding = Insets(0.0, 0.0, 0.0, 10.0)
+            style = "-fx-background-color: #fff;"
+        }
+        
+        changeProgressText("課題の一覧を取得しています...")
+    
+        createHttpClient().use { httpClient ->
+            val httpGet = HttpGet("https://king.kcg.kyoto/campus/Mvc/Home/GetDeliverables")
+            httpClient.execute(httpGet, context).use { taskListDoc ->
+                if (taskListDoc.statusLine.statusCode == HttpStatus.SC_OK) {
+                    val taskArray = Json.parse(EntityUtils.toString(taskListDoc.entity)).asArray()
+                
+                    var taskCount = 0
+                    for (task in taskArray) {
+                        taskCount += task.asObject().getInt("Count", 0)
+                    }
+                
+                    var failAmount = 0
+                
+                    if (taskCount > 0) {
+                        val taskContents = mutableListOf<TaskContent>()
+                        val unlimitedTaskContents = mutableListOf<TaskContent>()
+                        var index = 0
+                        for (jsonValue in taskArray) {
+                            for (task in jsonValue.asObject().get("Items").asArray()) {
+                                index++
+                                changeProgressText("課題の詳細を取得しています... [$index / $taskCount]")
+                            
+                                val json = task.asObject()
+                            
+                                val taskId = json.getInt("TaskID", 0)
+                                val groupId = json.getInt("GroupID", 0)
+                                val tokenGetUrl = getDocumentWithJsoup(context.cookieStore.toMap(), "https://king.kcg.kyoto/campus/Course/$groupId/18/")
+                                if (tokenGetUrl == null) {
+                                    failAmount++
+                                    continue
+                                }
+                                val requestVerToken = tokenGetUrl.select("input[name=RequestVerToken]").`val`()
+                                val groupAccessToken = tokenGetUrl.select("input[name=__GroupAccessToken]").`val`()
+                                val encodedToken = URLEncoder.encode(groupAccessToken, "UTF-8")
+                                val taskDetailUrl = "https://king.kcg.kyoto/campus/Mvc/Manavi/GetTask?tId=$taskId&gToken=$encodedToken"
+                            
+                                var retry = false
+                                var retryCount = 0
+                                do {
+                                    createHttpClient().use {  httpClient2 ->
+                                        try {
+                                            println("Getting task details [${index}/$taskCount]")
+                                            httpClient2.execute(HttpGet(taskDetailUrl), context).use { taskDetailDoc ->
+                                                println("Task details statusCode [${index}/$taskCount]: " + taskDetailDoc.statusLine.statusCode)
+                                                if (taskDetailDoc.statusLine.statusCode == HttpStatus.SC_OK) {
+                                                    var description = ""
+                                                    val docString = EntityUtils.toString(taskDetailDoc.entity)
+                                                    if (docString.split("\"Description\": \"").size >= 2) description = docString.split("\"Description\": \"")[1].split("\"TaskBlockID\":")[0].trim().removeSuffix("\",")
+                                                    val listTaskContent = TaskContent(
+                                                            Json.parse(docString).asObject(),
+                                                            description,
+                                                            json.getString("GroupName", ""),
+                                                            groupId,
+                                                            requestVerToken,
+                                                            groupAccessToken,
+                                                            userId,
+                                                            googleCalendar)
+                                                    if (listTaskContent.getSubmissionEnd() == null) {
+                                                        unlimitedTaskContents.add(listTaskContent)
                                                     } else {
-                                                        failAmount++
+                                                        taskContents.add(listTaskContent)
                                                     }
-                                                    taskDetailDoc.close()
+                                                } else {
+                                                    failAmount++
                                                 }
-                                            } catch (e: SocketException) {
-                                                println("Fails to get task details [${index}/$taskCount]")
-                                                if (e.message == "Connection reset") {
-                                                    retry = true
-                                                    retryCount++
-                                                    println("Try to get task details again [${index}/$taskCount]")
-                                                }
+                                                taskDetailDoc.close()
+                                            }
+                                        } catch (e: SocketException) {
+                                            println("Fails to get task details [${index}/$taskCount]")
+                                            if (e.message == "Connection reset") {
+                                                retry = true
+                                                retryCount++
+                                                println("Try to get task details again [${index}/$taskCount]")
                                             }
                                         }
-                                    } while (retry && retryCount <= 5)
-                                }
+                                    }
+                                } while (retry && retryCount <= 5)
                             }
-
-                            val comparator = Comparator.comparing(TaskContent::getSubmissionEnd)
-                            Platform.runLater {
-                                for (taskContent in taskContents.stream().sorted(comparator)) {
-                                    taskList.add(taskContent)
-                                }
-                                for (taskContent in unlimitedTaskContents) {
-                                    taskList.add(taskContent)
-                                }
+                        }
+                    
+                        val comparator = Comparator.comparing(TaskContent::getSubmissionEnd)
+                        Platform.runLater {
+                            for (taskContent in taskContents.stream().sorted(comparator)) {
+                                taskList.add(taskContent)
                             }
-
-                            filterApply()
+                            for (taskContent in unlimitedTaskContents) {
+                                taskList.add(taskContent)
+                            }
                         }
-
-
-                        if (listViewButton.isSelected) {
-                            showListView()
-                        } else {
-                            showGridView()
-                        }
-
-
-                        val end = System.currentTimeMillis()
-                        println("GetTasks: " + (end - start).toString() + "ms")
-                        endUpdate()
-                        if (failAmount == 0) {
-                            changeProgressText("課題の取得が完了しました [${taskCount}件]")
-                        } else {
-                            changeProgressText("${taskCount}件中${failAmount}件の課題の取得に失敗しました", true)
-                        }
-                    } else {
-                        changeProgressText("課題の一覧の取得に失敗しました", true)
-                        endUpdate()
-                        return@thread
+                    
+                        filterApply()
                     }
+                
+                
+                    if (listViewButton.isSelected) {
+                        showListView()
+                    } else {
+                        showGridView()
+                    }
+                
+                
+                    val end = System.currentTimeMillis()
+                    println("GetTasks: " + (end - start).toString() + "ms")
+                    endUpdate()
+                    if (failAmount == 0) {
+                        changeProgressText("課題の取得が完了しました [${taskCount}件]")
+                    } else {
+                        changeProgressText("${taskCount}件中${failAmount}件の課題の取得に失敗しました", true)
+                    }
+                } else {
+                    changeProgressText("課題の一覧の取得に失敗しました", true)
+                    endUpdate()
+                    return
                 }
             }
         }

@@ -1,4 +1,8 @@
 /* JavaFX CSS - Leave this comment until you have at least create one rule which uses -fx-Property */
+@font-face {
+    src: url("fonts/KosugiMaru-Regular.ttf");
+}
+
 .root {
     -fx-background-insets: 24;
     -fx-padding: 24;
@@ -53,10 +57,16 @@
 }
 
 .label {
+    -fx-font-family: 'Kosugi Maru', sans-serif;
     -fx-font-size: 14px;
 }
 
+.hyper-link {
+    -fx-font-family: 'Kosugi Maru', sans-serif;
+}
+
 .text-field {
+    -fx-font-family: 'Kosugi Maru', sans-serif;
     -fx-font-size: 14px;
     -fx-background-color: #a9a9a9, white;
     -fx-background-insets: 0 0 0 0, 0 0 1 0;
@@ -205,7 +215,7 @@
 }
 
 .tag-box .label {
-    -fx-font-size: 12px;
+    -fx-font-size: 11px;
 }
 
 .content-box {

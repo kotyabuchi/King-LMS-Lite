@@ -27,7 +27,7 @@ import java.util.*
 
 class GoogleCalendar {
 
-    private val APPLICATION_NAME = "King-LMS Lite"
+    private val APPLICATION_NAME = "KING-LMS Lite"
     private val JSON_FACTORY = JacksonFactory.getDefaultInstance()
     private val TOKENS_DIRECTORY_PATH = "tokens"
 
@@ -39,7 +39,7 @@ class GoogleCalendar {
     private var registeredEvents: JsonObject
 
     init {
-        println("GoogleCalendar Init")
+        println("GoogleCalendar init")
         registeredEvents = if (File(EVENTS_FILE_PATH).exists()) {
             Json.parse(decryptFile2(EVENTS_FILE_PATH)).asObject()
         } else {
@@ -55,7 +55,7 @@ class GoogleCalendar {
         } catch (e: GeneralSecurityException) {
             e.printStackTrace()
         }
-        getAllEvents("KCG Reports", "KCG Reports 通知用")
+        getAllEvents(CalendarType.MAIN, CalendarType.NOTIFICATION)
     }
     
     @Throws(IOException::class)
@@ -78,7 +78,7 @@ class GoogleCalendar {
     }
     
     @Throws(IOException::class, GeneralSecurityException::class)
-    fun registerEvent(calendarName: String, eventName: String, start: DateTime, end: DateTime, reminderMap: Map<ReminderType, Int>) {
+    fun registerEvent(calendarType: CalendarType, eventName: String, start: DateTime, end: DateTime, reminderMap: Map<ReminderType, Int>) {
         val startDateTime = EventDateTime().setDateTime(start).setTimeZone("Asia/Tokyo")
         val endDateTime = EventDateTime().setDateTime(end).setTimeZone("Asia/Tokyo")
         val reminders = ArrayList<EventReminder>()
@@ -89,7 +89,7 @@ class GoogleCalendar {
         report.start = startDateTime
         report.end = endDateTime
         if (reminderMap.isNotEmpty()) report.reminders = Event.Reminders().setUseDefault(false).setOverrides(reminders)
-        val calendarId = getCalendarId(calendarName, true)
+        val calendarId = getCalendarId(calendarType.calenderName, true)
         if (calendarId == null) {
             println("CalendarId is null")
         } else {
@@ -99,8 +99,8 @@ class GoogleCalendar {
     }
     
     @Throws(IOException::class, GeneralSecurityException::class)
-    fun registerEvent(calendarName: String, event: com.github.kabocchi.king_LMS_Lite.Event) {
-        registerEvent(calendarName, event.summary, event.startTime, event.endTime, event.reminders)
+    fun registerEvent(calendarType: CalendarType, event: com.github.kabocchi.king_LMS_Lite.Event) {
+        registerEvent(calendarType, event.summary, event.startTime, event.endTime, event.reminders)
     }
     
     @Throws(IOException::class)
@@ -138,19 +138,25 @@ class GoogleCalendar {
         return registeredEvents.getString(summary, "") != ""
     }
     
-    private fun getAllEvents(vararg calendarNames: String) {
+    private fun getAllEvents(vararg calendarTypes: CalendarType) {
         var pageToken: String? = null
-        for (calendarName in calendarNames) {
-            val calendarId = getCalendarId(calendarName, true)
+        for (calendarName in calendarTypes) {
+            val calendarId = getCalendarId(calendarName.calenderName, true)
             do {
                 val events = service.events().list(calendarId).setPageToken(pageToken).execute()
                 val items = events.items
                 for (event in items) {
                     registeredEvents[event.summary] = event.id
                     println("Google Registered Event: " + event.summary)
+                    println(event.end.dateTime)
                 }
                 pageToken = events.nextPageToken
             } while (pageToken != null)
         }
     }
+}
+
+enum class CalendarType(val calenderName: String) {
+    MAIN("KCG Reports"),
+    NOTIFICATION("KCG Reports 通知用")
 }

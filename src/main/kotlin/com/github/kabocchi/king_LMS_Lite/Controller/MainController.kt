@@ -14,6 +14,7 @@ import javafx.scene.control.Button
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.StackPane
 import org.jsoup.nodes.Document
+import kotlin.concurrent.thread
 
 class MainController {
 
@@ -75,10 +76,14 @@ class MainController {
     }
 
     fun getNews() {
-        newsPane.updateNews()
+        thread {
+            newsPane.updateNews()
+        }
     }
 
     fun getTask() {
-        taskPane.updateTask()
+        thread {
+            taskPane.updateTask()
+        }
     }
 }

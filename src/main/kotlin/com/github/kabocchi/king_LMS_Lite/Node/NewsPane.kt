@@ -57,9 +57,8 @@ class NewsPane(mainStackPane: StackPane): BorderPane() {
         progressBar.prefWidthProperty().bind(this.widthProperty())
         toolBoxTopV.children.add(progressBar)
 
-        val toolBoxTopH = HBox().apply {
+        val toolBoxTopH = HBox(10.0).apply {
             id = "toolBoxTop"
-            spacing = 10.0
             alignment = Pos.CENTER_LEFT
             padding = Insets(10.0, 30.0, 10.0, 30.0)
         }
@@ -163,7 +162,9 @@ class NewsPane(mainStackPane: StackPane): BorderPane() {
             prefWidth = 26.0
             prefHeight = 26.0
             setOnAction {
-                updateNews()
+                thread {
+                    updateNews()
+                }
             }
         }
 
@@ -205,87 +206,85 @@ class NewsPane(mainStackPane: StackPane): BorderPane() {
     }
 
     fun updateNews() {
-        thread {
-            if (updatingNews) return@thread
-            updatingNews = true
-
-            val start = System.currentTimeMillis()
-            Platform.runLater {
-                progressBar.progress = -1.0
-                listView.children.clear()
-            }
-            newsList.clear()
-
-            listView = VBox().apply {
-                spacing = 8.0
-                padding = Insets(0.0, 0.0, 0.0, 10.0)
-                style = "-fx-background-color: #fff;"
-            }
-
-            changeProgressText("お知らせの一覧を取得しています...")
-
-            createHttpClient().use { httpClient ->
-                val httpGet = HttpGet("https://king.kcg.kyoto/campus/Portal/TryAnnouncement/GetAnnouncements?categoryId=0&passdaysId=0&isCustomSearch=false")
-                httpClient.execute(httpGet, context).use { newsListDoc ->
-                    println("News List StatusCode: " + newsListDoc.statusLine.statusCode)
-                    if (newsListDoc.statusLine.statusCode == HttpStatus.SC_OK) {
-                        try {
-                            val jsonArray = Json.parse(EntityUtils.toString(newsListDoc.entity)).asObject().get("data").asArray()
-
-                            val newsAmount = jsonArray.size()
-
-                            var failAmount = 0
-
-                            for ((index, value) in jsonArray.withIndex()) {
-
-                                changeProgressText("お知らせの詳細を取得しています... [${index + 1}/$newsAmount]")
-
-                                val json = value.asObject()
-
-                                httpClient.execute(HttpGet("https://king.kcg.kyoto/campus/Portal/TryAnnouncement/GetAnnouncement?aId=" + json.getInt("Id", 0)), context).use { newsDetailDoc ->
-                                    println("News Content StatusCode [${index + 1}/$newsAmount]: " + newsDetailDoc.statusLine.statusCode)
-                                    try {
-                                        if (newsDetailDoc.statusLine.statusCode == HttpStatus.SC_OK) {
-                                            val newsContent = NewsContent(EntityUtils.toString(newsDetailDoc.entity), !json.getBoolean("IsRead", false), json.getString("Published", ""), newsCategoryMap)
-                                            newsList.add(newsContent)
-                                        } else {
-                                            failAmount++
-                                        }
-                                    } catch (e2: ParseException) {
+        if (updatingNews) return
+        updatingNews = true
+    
+        val start = System.currentTimeMillis()
+        Platform.runLater {
+            progressBar.progress = -1.0
+            listView.children.clear()
+        }
+        newsList.clear()
+    
+        listView = VBox(8.0).apply {
+            padding = Insets(0.0, 0.0, 0.0, 10.0)
+            style = "-fx-background-color: #fff;"
+        }
+    
+        changeProgressText("お知らせの一覧を取得しています...")
+    
+        createHttpClient().use { httpClient ->
+            val httpGet = HttpGet("https://king.kcg.kyoto/campus/Portal/TryAnnouncement/GetAnnouncements?categoryId=0&passdaysId=0&isCustomSearch=false")
+            httpClient.execute(httpGet, context).use { newsListDoc ->
+                println("News List StatusCode: " + newsListDoc.statusLine.statusCode)
+                if (newsListDoc.statusLine.statusCode == HttpStatus.SC_OK) {
+                    try {
+                        val jsonArray = Json.parse(EntityUtils.toString(newsListDoc.entity)).asObject().get("data").asArray()
+                    
+                        val newsAmount = jsonArray.size()
+                    
+                        var failAmount = 0
+                    
+                        for ((index, value) in jsonArray.withIndex()) {
+                        
+                            changeProgressText("お知らせの詳細を取得しています... [${index + 1}/$newsAmount]")
+                        
+                            val json = value.asObject()
+                        
+                            httpClient.execute(HttpGet("https://king.kcg.kyoto/campus/Portal/TryAnnouncement/GetAnnouncement?aId=" + json.getInt("Id", 0)), context).use { newsDetailDoc ->
+                                println("News Content StatusCode [${index + 1}/$newsAmount]: " + newsDetailDoc.statusLine.statusCode)
+                                try {
+                                    if (newsDetailDoc.statusLine.statusCode == HttpStatus.SC_OK) {
+                                        val newsContent = NewsContent(EntityUtils.toString(newsDetailDoc.entity), !json.getBoolean("IsRead", false), json.getString("Published", ""), newsCategoryMap)
+                                        newsList.add(newsContent)
+                                    } else {
                                         failAmount++
                                     }
-                                    newsDetailDoc.close()
+                                } catch (e2: ParseException) {
+                                    failAmount++
                                 }
+                                newsDetailDoc.close()
                             }
-
-                            filterApply()
-
-                            if (listViewButton.isSelected) {
-                                println("List view Selected")
-                                showListView()
-                            } else {
-                                showGridView()
-                            }
-
-                            val end2 = System.currentTimeMillis()
-                            println("GetNews: " + (end2 - start).toString() + "ms")
-                            endUpdate()
-                            if (failAmount == 0) {
-                                changeProgressText("お知らせの取得が完了しました [${newsAmount}件]")
-                            } else {
-                                changeProgressText("${newsAmount}件中${failAmount}件のお知らせの取得に失敗しました", true)
-                            }
-                        } catch (e: ParseException) {
-                            changeProgressText("お知らせ一覧の取得に失敗しました", true)
                         }
-                    } else {
+                    
+                        filterApply()
+                    
+                        if (listViewButton.isSelected) {
+                            println("List view Selected")
+                            showListView()
+                        } else {
+                            showGridView()
+                        }
+                    
+                        val end2 = System.currentTimeMillis()
+                        println("GetNews: " + (end2 - start).toString() + "ms")
                         endUpdate()
-                        showError()
-                        return@thread
+                        if (failAmount == 0) {
+                            changeProgressText("お知らせの取得が完了しました [${newsAmount}件]")
+                        } else {
+                            changeProgressText("${newsAmount}件中${failAmount}件のお知らせの取得に失敗しました", true)
+                        }
+                    } catch (e: ParseException) {
+                        changeProgressText("お知らせ一覧の取得に失敗しました", true)
+                        e.printStackTrace()
                     }
+                } else {
+                    endUpdate()
+                    showError()
+                    return
                 }
-                httpClient.close()
             }
+            httpClient.close()
         }
     }
 

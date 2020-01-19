@@ -2,12 +2,12 @@ package com.github.kabocchi.kingLmsLite.Node
 
 import com.eclipsesource.json.JsonArray
 import com.eclipsesource.json.JsonObject
+import com.github.kabocchi.king_LMS_Lite.*
 import com.github.kabocchi.king_LMS_Lite.Node.SettingPane
-import com.github.kabocchi.king_LMS_Lite.TaskType
 import com.github.kabocchi.king_LMS_Lite.Utility.cleanDescription
 import com.github.kabocchi.king_LMS_Lite.Utility.cleanDescriptionVer2
 import com.github.kabocchi.king_LMS_Lite.Utility.createHttpClient
-import com.github.kabocchi.king_LMS_Lite.context
+import com.google.api.client.util.DateTime
 import javafx.animation.KeyFrame
 import javafx.animation.KeyValue
 import javafx.animation.Timeline
@@ -29,10 +29,11 @@ import org.apache.http.client.methods.HttpGet
 import java.io.File
 import java.io.FileOutputStream
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
-class TaskContent(json: JsonObject, _description: String, _groupName: String, groupId: Int, requestVerToken: String, groupAccessToken: String, userId: String): VBox() {
+class TaskContent(json: JsonObject, _description: String, _groupName: String, groupId: Int, requestVerToken: String, groupAccessToken: String, userId: String, googleCalendar: GoogleCalendar): VBox() {
     val title: String = json.getString("Title", "")
     private val contentId = json.getString("ContentID", "")
     private val taskId = json.getInt("TaskID", 0)
@@ -45,6 +46,8 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
     private var submissionEnd: LocalDateTime? = null
     private var limitHours: Long = 0
 
+    private var hasDescription = false
+    
     private val simpleDescription: String
     private var longDescription: VBox
 
@@ -55,6 +58,13 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
     val taskType: TaskType
 
     init {
+        this.apply {
+            spacing = 4.0
+            cursor = Cursor.HAND
+            padding = Insets(10.0, 30.0, 10.0, 10.0)
+            styleClass.add("content-box")
+        }
+        
         if (json.toString().split("\"SubmissionStart\":\"").size >= 2) {
             strSubmissionStart = json.getString("SubmissionStart", "")
             submissionStart = LocalDateTime.parse(strSubmissionStart, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")).plusHours(9)
@@ -67,6 +77,17 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
         } else if (json.toString().split("\"SubmissionEnd\":\"").size >= 2) {
             strSubmissionEnd = json.getString("SubmissionEnd", "")
             submissionEnd = LocalDateTime.parse(strSubmissionEnd, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")).plusHours(9)
+            val start = DateTime(submissionStart!!.atZone(ZoneOffset.UTC).toInstant().toEpochMilli())
+            val end = DateTime(submissionEnd!!.atZone(ZoneOffset.UTC).toInstant().toEpochMilli())
+            val end2 = DateTime(submissionEnd!!.minusMinutes(15).atZone(ZoneOffset.UTC).toInstant().toEpochMilli())
+            if (!googleCalendar.hasEvent(title)) {
+                googleCalendar.registerEvent(CalendarType.MAIN, title, start, end, mutableMapOf())
+            }
+            if (!googleCalendar.hasEvent("$title 通知用")) {
+                val reminder = mutableMapOf<ReminderType, Int>()
+                
+                googleCalendar.registerEvent(CalendarType.NOTIFICATION, "$title 通知用", end2, end, reminder)
+            }
         }
 
         taskType = when (json.getInt("TaskType", 14)) {
@@ -80,11 +101,6 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
             10 -> TaskType.TEST
             else -> TaskType.REPORT
         }
-
-        this.spacing = 4.0
-        this.cursor = Cursor.HAND
-        this.padding = Insets(10.0, 30.0, 10.0, 10.0)
-        this.styleClass.add("content-box")
 
         if (submissionEnd != null) {
             val today = LocalDateTime.now()
@@ -106,9 +122,8 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
             this.styleClass.add("task-after-seven")
         }
 
-        val tagBox = HBox().apply {
+        val tagBox = HBox(10.0).apply {
             styleClass.add("tag-box")
-            spacing = 10.0
             padding = Insets(0.0)
             setMargin(this, Insets(-2.0, 0.0, -4.0, 0.0))
 
@@ -124,9 +139,7 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
         }
 
         val topBorderPane = BorderPane()
-        val titleBox = HBox().apply {
-            spacing = 10.0
-        }
+        val titleBox = HBox(10.0)
         topBorderPane.left = titleBox
 
         val titleText = Label(title).apply {
@@ -167,6 +180,7 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
                 children.add(descriptionLabel)
             }
         } else {
+            hasDescription = true
             simpleDescription = cleanDescription(description)
             longDescription = cleanDescriptionVer2(description).apply {
                 minHeight = 0.0
@@ -312,7 +326,7 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
                         left = Label("添付ファイル").apply {
                             style = "-fx-font-size: 12px;"
                         }
-                        right = openMark
+                        if (hasDescription) right = openMark
                     }
             )
             files.forEach { fileJson ->
@@ -362,7 +376,7 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
         } else {
             this.children.addAll(tagBox, topBorderPane, Separator(), longDescription, BorderPane().apply {
                 padding = Insets(0.0, 8.0, 0.0, 0.0)
-                right = openMark
+                if (hasDescription) right = openMark
             })
         }
     }

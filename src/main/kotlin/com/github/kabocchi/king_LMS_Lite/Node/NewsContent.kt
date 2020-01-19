@@ -23,6 +23,7 @@ import javafx.scene.layout.HBox
 import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
 import javafx.scene.shape.Rectangle
+import javafx.scene.text.Font
 import javafx.stage.FileChooser
 import javafx.util.Duration
 import org.apache.http.HttpStatus
@@ -49,20 +50,23 @@ class NewsContent(doc: String, _unread: Boolean, published: String, newsCategory
 
     val title: String = json.getString("Title", "")
 
+    private var hasDescription = false
+    
     private var simpleDescription = ""
     private var longDescription: VBox
 
     private var openMark: Label
 
     init {
-        this.spacing = 4.0
-        this.cursor = Cursor.HAND
-        this.padding = Insets(10.0, 30.0, 10.0, 10.0)
-        this.styleClass.add("content-box")
+        this.apply {
+            spacing = 4.0
+            cursor = Cursor.HAND
+            padding = Insets(10.0, 30.0, 10.0, 10.0)
+            styleClass.add("content-box")
+        }
 
-        tagBox = HBox().apply {
+        tagBox = HBox(10.0).apply {
             styleClass.add("tag-box")
-            spacing = 10.0
             padding = Insets(0.0)
             setMargin(this, Insets(-2.0, 0.0, -4.0, 0.0))
 
@@ -123,6 +127,7 @@ class NewsContent(doc: String, _unread: Boolean, published: String, newsCategory
                 children.add(descriptionLabel)
             }
         } else {
+            hasDescription = true
             simpleDescription = cleanDescription(description)
             longDescription = cleanDescriptionVer2(description).apply {
                 minHeight = 0.0
@@ -180,7 +185,7 @@ class NewsContent(doc: String, _unread: Boolean, published: String, newsCategory
                         left = Label("添付ファイル").apply {
                             style = "-fx-font-size: 12px;"
                         }
-                        right = openMark
+                        if (hasDescription) right = openMark
                     }
             )
             files.forEach { json ->
@@ -227,7 +232,7 @@ class NewsContent(doc: String, _unread: Boolean, published: String, newsCategory
         } else {
             this.children.addAll(tagBox, topBorderPane, Separator(), longDescription, BorderPane().apply {
                 padding = Insets(0.0, 8.0, 0.0, 0.0)
-                right = openMark
+                if (hasDescription) right = openMark
             })
         }
     }

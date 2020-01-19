@@ -92,9 +92,7 @@ fun cleanDescriptionVer2(_text: String): VBox {
         maxWidth = 1200.0
         prefWidth = 1200.0
     }
-    val result = VBox(textFlow).apply {
-        spacing = 4.0
-    }
+    val result = VBox(4.0, textFlow)
 
     var text = _text.trim().replace("\n", "")
             .replace("<br />", "\n")

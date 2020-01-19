@@ -111,9 +111,7 @@ class NewsFilterContent(newsPane: NewsPane): VBox() {
                 }
             }
         }
-        val applyHBox = HBox(clearButton, applyButton).apply {
-            spacing = 10.0
-        }
+        val applyHBox = HBox(10.0, clearButton, applyButton)
         applyBorder.right = applyHBox
 
         this.children.addAll(tagFilterLabel, tagFilter, Separator(), Label("カテゴリー"), categoryFilter, Separator(), applyBorder)
