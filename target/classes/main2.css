@@ -1,12 +1,4 @@
 /* JavaFX CSS - Leave this comment until you have at least create one rule which uses -fx-Property */
-@font-face {
-    src: url("fonts/KosugiMaru-Regular.ttf");
-}
-
-.root {
-    -fx-background-insets: 24;
-    -fx-padding: 24;
-}
 
 #mainPane {
     -fx-background-color: linear-gradient(to bottom right, #FFC778, #F89174);
@@ -57,16 +49,13 @@
 }
 
 .label {
-    -fx-font-family: 'Kosugi Maru', sans-serif;
     -fx-font-size: 14px;
 }
 
 .hyper-link {
-    -fx-font-family: 'Kosugi Maru', sans-serif;
 }
 
 .text-field {
-    -fx-font-family: 'Kosugi Maru', sans-serif;
     -fx-font-size: 14px;
     -fx-background-color: #a9a9a9, white;
     -fx-background-insets: 0 0 0 0, 0 0 1 0;
@@ -251,6 +240,10 @@
     -fx-cursor: hand;
 }
 
+.apply-button:hover {
+    -fx-background-color: rgba(240, 164, 112, 0.5);
+}
+
 .content-box.alreadyRead {
     -fx-border-color: #a9d18e;
 }
@@ -326,6 +319,10 @@
     -fx-border-color: #a9d18e;
 }
 
+.check-box {
+    -fx-text-size: 14px;
+}
+
 .check-box .box {
     -fx-background-color: #fff;
     -fx-border-color: #F0A470;
@@ -360,4 +357,10 @@
     -fx-border-radius:3px;
     -fx-font-weight: bold;
     -fx-cursor: hand;
+}
+
+.border-button:hover {
+    -fx-background-color: rgba(240, 164, 112, 0.1);
+    -fx-border-color: rgba(240, 164, 112, 0.5);
+    -fx-text-fill: rgba(0, 0, 0, 0.5);
 }

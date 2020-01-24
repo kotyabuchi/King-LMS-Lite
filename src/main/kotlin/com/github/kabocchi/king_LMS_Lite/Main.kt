@@ -14,6 +14,7 @@ import java.awt.*
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.io.File
+import java.time.LocalDateTime
 import kotlin.system.exitProcess
 
 val FOLDER_PATH = System.getenv("APPDATA") + File.separator + "King-lms Lite" + File.separator
@@ -25,23 +26,27 @@ val ACCOUNT_FILE = File(ACCOUNT_FILE_PATH)
 val SETTING_FILE = File(SETTING_FILE_PATH)
 var connection: Connection = Jsoup.connect("https://king.kcg.kyoto/campus/Secure/Login.aspx?ReturnUrl=%2Fcampus%2FCommunity%2FMySetting")
 var context = HttpClientContext.create()
+var cookieStore = BasicCookieStore()
 val os = System.getProperty("os.name").toLowerCase()
 var main: Main? = null
 
 fun main(args: Array<String>) {
-    context.cookieStore = BasicCookieStore()
+    context.cookieStore = cookieStore
     Application.launch(Main::class.java, *args)
 }
 
 class Main: Application() {
 
-    private val VERSION = "v1.0.2"
+    private val VERSION = "v1.0.5"
     val appUtil: AppUtil
 
     var primaryStage: Stage? = null
     var mainController: MainController? = null
+
     private val systemTrayImage = Toolkit.getDefaultToolkit().createImage(ClassLoader.getSystemResource("logo.png"))
     private val trayIcon = TrayIcon(systemTrayImage, "KING-LMS Lite $VERSION")
+    private lateinit var updateNewsMenu: MenuItem
+    private lateinit var updateTaskMenu: MenuItem
 
     init {
         appUtil = AppUtil(VERSION, this)
@@ -63,14 +68,14 @@ class Main: Application() {
 
         val systemTray = SystemTray.getSystemTray()
 
-        val updateNewsMenu = MenuItem("お知らせを更新する").apply {
+        updateNewsMenu = MenuItem("お知らせを更新する").apply {
             addActionListener {
                 mainController?.getNews()
             }
             isEnabled = false
         }
 
-        val updateTaskMenu = MenuItem("課題を更新する").apply {
+        updateTaskMenu = MenuItem("課題を更新する").apply {
             addActionListener {
                 mainController?.getTask()
             }
@@ -121,5 +126,10 @@ class Main: Application() {
         SystemTray.getSystemTray().remove(trayIcon)
         Platform.exit()
         exitProcess(0)
+    }
+
+    fun changePopupMenu(change: Boolean, vararg categories: Category) {
+        if (categories.contains(Category.NEWS)) updateNewsMenu.isEnabled = change
+        if (categories.contains(Category.TASK)) updateTaskMenu.isEnabled = change
     }
 }

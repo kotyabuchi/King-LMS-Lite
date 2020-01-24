@@ -18,7 +18,7 @@ class NewsFilterContent(newsPane: NewsPane): VBox() {
     private val unreadOnly: CheckBox
     private val emergency: CheckBox
     private val important: CheckBox
-    private val categoryFilterMap = mutableMapOf<NewsCategory, CheckBox>()
+    private val categoryFilterMap = mutableMapOf<String, CheckBox>()
 
     private val tagFilter: FlowPane
     private val categoryFilter: FlowPane
@@ -66,8 +66,8 @@ class NewsFilterContent(newsPane: NewsPane): VBox() {
             }
         }
         categoryFilter.children.add(categoryAllCheck)
-        NewsCategory.values().forEach {
-            val categoryCheckBox = CheckBox(it.categoryName)
+        NewsCategory.getCategories().values.forEach {
+            val categoryCheckBox = CheckBox(it)
             categoryCheckBox.isSelected = true
             categoryFilterMap[it] = categoryCheckBox
             categoryFilter.children.add(categoryCheckBox)
@@ -129,7 +129,7 @@ class NewsFilterContent(newsPane: NewsPane): VBox() {
         return important.isSelected
     }
 
-    fun categoryFilter(category: NewsCategory): Boolean {
+    fun categoryFilter(category: String): Boolean {
         return categoryFilterMap[category]?.isSelected ?: false
     }
 

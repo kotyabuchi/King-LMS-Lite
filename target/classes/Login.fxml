@@ -11,7 +11,7 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<BorderPane prefHeight="350.0" prefWidth="500.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.kabocchi.king_LMS_Lite.Controller.Login">
+<BorderPane prefHeight="350.0" prefWidth="500.0" stylesheets="@baseStyle.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.kabocchi.king_LMS_Lite.Controller.Login">
    <center>
       <Pane style="-fx-background-color: linear-gradient(to bottom right, #FFC778, #F89174);;" BorderPane.alignment="CENTER">
          <children>
@@ -24,18 +24,14 @@
                         <Font size="25.0" />
                      </font>
                   </Text>
-                  <Text layoutY="229.0" strokeType="OUTSIDE" strokeWidth="0.0" text="このソフトウェアはアルファ版です。&#10;当アプリは、KingLmsの情報を利用した非公式アプリケーションであり、&#10;dotCampusとは一切関係がありません。&#10;当アプリの使用中に生じた、いかなる損害も一切の責任を負いかねます。" textAlignment="CENTER" wrappingWidth="400.46435546875">
-                     <font>
-                        <Font size="11.0" />
-                     </font>
-                  </Text>
+                  <Text layoutY="229.0" lineSpacing="4.0" strokeType="OUTSIDE" strokeWidth="0.0" text="当アプリは、KingLmsの情報を利用した非公式アプリケーションであり、&#10;dotCampusとは一切関係がありません。&#10;当アプリの使用中に生じた、いかなる損害も一切の責任を負いかねます。" textAlignment="CENTER" wrappingWidth="400.46435546875" />
                   <ImageView fitHeight="69.0" fitWidth="92.0" layoutX="75.0" pickOnBounds="true" preserveRatio="true">
                      <image>
                         <Image url="@logo.png" />
                      </image>
                   </ImageView>
                   <Label fx:id="error" alignment="CENTER" layoutX="19.0" layoutY="66.0" prefHeight="17.0" prefWidth="362.0" text="ここにエラー文が入ります" textFill="#ff2222" visible="false" />
-                  <Button fx:id="loginButton" layoutX="165.0" layoutY="175.0" mnemonicParsing="false" onAction="#clickLoginButton" prefHeight="27.0" prefWidth="70.0" style="-fx-background-color: #F89174;" text="ログイン" />
+                  <Button fx:id="loginButton" layoutX="165.0" layoutY="175.0" mnemonicParsing="false" onAction="#clickLoginButton" prefHeight="27.0" prefWidth="70.0" styleClass="apply-button" text="ログイン" />
                </children>
             </Pane>
          </children>

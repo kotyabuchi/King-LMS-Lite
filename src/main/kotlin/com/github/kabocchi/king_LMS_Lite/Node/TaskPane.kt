@@ -1,13 +1,11 @@
 package com.github.kabocchi.kingLmsLite.Node
 
 import com.eclipsesource.json.Json
-import com.github.kabocchi.king_LMS_Lite.GoogleCalendar
+import com.github.kabocchi.king_LMS_Lite.*
 import com.github.kabocchi.king_LMS_Lite.Node.TaskFilterContent
-import com.github.kabocchi.king_LMS_Lite.ReminderType
 import com.github.kabocchi.king_LMS_Lite.Utility.createHttpClient
 import com.github.kabocchi.king_LMS_Lite.Utility.getDocumentWithJsoup
 import com.github.kabocchi.king_LMS_Lite.Utility.toMap
-import com.github.kabocchi.king_LMS_Lite.context
 import javafx.animation.FadeTransition
 import javafx.application.Platform
 import javafx.geometry.Insets
@@ -223,142 +221,155 @@ class TaskPane(mainStackPane: StackPane, timetableDoc: Document?): BorderPane() 
     fun updateTask() {
         if (updatingTask) return
         updatingTask = true
-    
-        val googleCalendar = GoogleCalendar()
-        
-        val start = System.currentTimeMillis()
-        Platform.runLater {
-            progressBar.progress = -1.0
-            listView.children.clear()
-        }
-        taskList.clear()
-    
-        listView = VBox(8.0).apply {
-            padding = Insets(0.0, 0.0, 0.0, 10.0)
-            style = "-fx-background-color: #fff;"
-        }
-        
-        changeProgressText("課題の一覧を取得しています...")
-    
-        createHttpClient().use { httpClient ->
-            val httpGet = HttpGet("https://king.kcg.kyoto/campus/Mvc/Home/GetDeliverables")
-            httpClient.execute(httpGet, context).use { taskListDoc ->
-                if (taskListDoc.statusLine.statusCode == HttpStatus.SC_OK) {
-                    val taskArray = Json.parse(EntityUtils.toString(taskListDoc.entity)).asArray()
-                
-                    var taskCount = 0
-                    for (task in taskArray) {
-                        taskCount += task.asObject().getInt("Count", 0)
-                    }
-                
-                    var failAmount = 0
-                
-                    if (taskCount > 0) {
-                        val taskContents = mutableListOf<TaskContent>()
-                        val unlimitedTaskContents = mutableListOf<TaskContent>()
-                        var index = 0
-                        for (jsonValue in taskArray) {
-                            for (task in jsonValue.asObject().get("Items").asArray()) {
-                                index++
-                                changeProgressText("課題の詳細を取得しています... [$index / $taskCount]")
-                            
-                                val json = task.asObject()
-                            
-                                val taskId = json.getInt("TaskID", 0)
-                                val groupId = json.getInt("GroupID", 0)
-                                val tokenGetUrl = getDocumentWithJsoup(context.cookieStore.toMap(), "https://king.kcg.kyoto/campus/Course/$groupId/18/")
-                                if (tokenGetUrl == null) {
-                                    failAmount++
-                                    continue
-                                }
-                                val requestVerToken = tokenGetUrl.select("input[name=RequestVerToken]").`val`()
-                                val groupAccessToken = tokenGetUrl.select("input[name=__GroupAccessToken]").`val`()
-                                val encodedToken = URLEncoder.encode(groupAccessToken, "UTF-8")
-                                val taskDetailUrl = "https://king.kcg.kyoto/campus/Mvc/Manavi/GetTask?tId=$taskId&gToken=$encodedToken"
-                            
-                                var retry = false
-                                var retryCount = 0
-                                do {
-                                    createHttpClient().use {  httpClient2 ->
-                                        try {
-                                            println("Getting task details [${index}/$taskCount]")
-                                            httpClient2.execute(HttpGet(taskDetailUrl), context).use { taskDetailDoc ->
-                                                println("Task details statusCode [${index}/$taskCount]: " + taskDetailDoc.statusLine.statusCode)
-                                                if (taskDetailDoc.statusLine.statusCode == HttpStatus.SC_OK) {
-                                                    var description = ""
-                                                    val docString = EntityUtils.toString(taskDetailDoc.entity)
-                                                    if (docString.split("\"Description\": \"").size >= 2) description = docString.split("\"Description\": \"")[1].split("\"TaskBlockID\":")[0].trim().removeSuffix("\",")
-                                                    val listTaskContent = TaskContent(
-                                                            Json.parse(docString).asObject(),
-                                                            description,
-                                                            json.getString("GroupName", ""),
-                                                            groupId,
-                                                            requestVerToken,
-                                                            groupAccessToken,
-                                                            userId,
-                                                            googleCalendar)
-                                                    if (listTaskContent.getSubmissionEnd() == null) {
-                                                        unlimitedTaskContents.add(listTaskContent)
-                                                    } else {
-                                                        taskContents.add(listTaskContent)
-                                                    }
-                                                } else {
-                                                    failAmount++
-                                                }
-                                                taskDetailDoc.close()
-                                            }
-                                        } catch (e: SocketException) {
-                                            println("Fails to get task details [${index}/$taskCount]")
-                                            if (e.message == "Connection reset") {
-                                                retry = true
-                                                retryCount++
-                                                println("Try to get task details again [${index}/$taskCount]")
-                                            }
-                                        }
-                                    }
-                                } while (retry && retryCount <= 5)
-                            }
-                        }
-                    
-                        val comparator = Comparator.comparing(TaskContent::getSubmissionEnd)
-                        Platform.runLater {
-                            for (taskContent in taskContents.stream().sorted(comparator)) {
-                                taskList.add(taskContent)
-                            }
-                            for (taskContent in unlimitedTaskContents) {
-                                taskList.add(taskContent)
-                            }
-                        }
-                    
-                        filterApply()
-                    }
-                
-                
-                    if (listViewButton.isSelected) {
-                        showListView()
-                    } else {
-                        showGridView()
-                    }
-                
-                
-                    val end = System.currentTimeMillis()
-                    println("GetTasks: " + (end - start).toString() + "ms")
-                    endUpdate()
-                    if (failAmount == 0) {
-                        changeProgressText("課題の取得が完了しました [${taskCount}件]")
-                    } else {
-                        changeProgressText("${taskCount}件中${failAmount}件の課題の取得に失敗しました", true)
-                    }
-                } else {
-                    changeProgressText("課題の一覧の取得に失敗しました", true)
-                    endUpdate()
-                    return
+        main?.changePopupMenu(false, Category.TASK)
+
+        var doMore = false
+        var doCount = 0
+
+        do {
+            try {
+                doMore = false
+                doCount++
+
+                val start = System.currentTimeMillis()
+                Platform.runLater {
+                    progressBar.progress = -1.0
+                    listView.children.clear()
                 }
+                val googleCalendar = GoogleCalendar(this)
+                taskList.clear()
+
+                listView = VBox(8.0).apply {
+                    padding = Insets(0.0, 0.0, 0.0, 10.0)
+                    style = "-fx-background-color: #fff;"
+                }
+
+                changeProgressText("課題の一覧を取得しています...")
+
+                createHttpClient().use { httpClient ->
+                    val httpGet = HttpGet("https://king.kcg.kyoto/campus/Mvc/Home/GetDeliverables")
+                    httpClient.execute(httpGet, context).use { taskListDoc ->
+                        if (taskListDoc.statusLine.statusCode == HttpStatus.SC_OK) {
+                            val taskArray = Json.parse(EntityUtils.toString(taskListDoc.entity)).asArray()
+
+                            var taskCount = 0
+                            for (task in taskArray) {
+                                taskCount += task.asObject().getInt("Count", 0)
+                            }
+
+                            var failAmount = 0
+
+                            if (taskCount > 0) {
+                                val taskContents = mutableListOf<TaskContent>()
+                                val unlimitedTaskContents = mutableListOf<TaskContent>()
+                                var index = 0
+                                for (jsonValue in taskArray) {
+                                    for (task in jsonValue.asObject().get("Items").asArray()) {
+                                        index++
+                                        changeProgressText("課題の詳細を取得しています... [$index / $taskCount]")
+
+                                        val json = task.asObject()
+
+                                        val taskId = json.getInt("TaskID", 0)
+                                        val groupId = json.getInt("GroupID", 0)
+                                        val tokenGetUrl = getDocumentWithJsoup(context.cookieStore.toMap(), "https://king.kcg.kyoto/campus/Course/$groupId/18/")
+                                        if (tokenGetUrl == null) {
+                                            failAmount++
+                                            continue
+                                        }
+                                        val requestVerToken = tokenGetUrl.select("input[name=RequestVerToken]").`val`()
+                                        val groupAccessToken = tokenGetUrl.select("input[name=__GroupAccessToken]").`val`()
+                                        val encodedToken = URLEncoder.encode(groupAccessToken, "UTF-8")
+                                        val taskDetailUrl = "https://king.kcg.kyoto/campus/Mvc/Manavi/GetTask?tId=$taskId&gToken=$encodedToken"
+
+                                        var retry = false
+                                        var retryCount = 0
+                                        do {
+                                            createHttpClient().use {  httpClient2 ->
+                                                try {
+                                                    println("Getting task details [${index}/$taskCount]")
+                                                    httpClient2.execute(HttpGet(taskDetailUrl), context).use { taskDetailDoc ->
+                                                        println("Task details statusCode [${index}/$taskCount]: " + taskDetailDoc.statusLine.statusCode)
+                                                        if (taskDetailDoc.statusLine.statusCode == HttpStatus.SC_OK) {
+                                                            var description = ""
+                                                            val docString = EntityUtils.toString(taskDetailDoc.entity)
+                                                            if (docString.split("\"Description\": \"").size >= 2) description = docString.split("\"Description\": \"")[1].split("\"TaskBlockID\":")[0].trim().removeSuffix("\",")
+                                                            val listTaskContent = TaskContent(
+                                                                    this,
+                                                                    Json.parse(docString).asObject(),
+                                                                    description,
+                                                                    json.getString("GroupName", ""),
+                                                                    groupId,
+                                                                    requestVerToken,
+                                                                    groupAccessToken,
+                                                                    userId,
+                                                                    googleCalendar)
+                                                            if (listTaskContent.getSubmissionEnd() == null) {
+                                                                unlimitedTaskContents.add(listTaskContent)
+                                                            } else {
+                                                                taskContents.add(listTaskContent)
+                                                            }
+                                                        } else {
+                                                            failAmount++
+                                                        }
+                                                        taskDetailDoc.close()
+                                                    }
+                                                } catch (e: SocketException) {
+                                                    println("Fails to get task details [${index}/$taskCount]")
+                                                    if (e.message == "Connection reset") {
+                                                        retry = true
+                                                        retryCount++
+                                                        println("Try to get task details again [${index}/$taskCount]")
+                                                    }
+                                                }
+                                            }
+                                        } while (retry && retryCount <= 5)
+                                    }
+                                }
+
+                                val comparator = Comparator.comparing(TaskContent::getSubmissionEnd)
+                                Platform.runLater {
+                                    for (taskContent in taskContents.stream().sorted(comparator)) {
+                                        taskList.add(taskContent)
+                                    }
+                                    for (taskContent in unlimitedTaskContents) {
+                                        taskList.add(taskContent)
+                                    }
+                                }
+
+                                filterApply()
+                            }
+
+
+                            if (listViewButton.isSelected) {
+                                showListView()
+                            } else {
+                                showGridView()
+                            }
+
+
+                            val end = System.currentTimeMillis()
+                            println("GetTasks: " + (end - start).toString() + "ms")
+                            if (failAmount == 0) {
+                                changeProgressText("課題の取得が完了しました [${taskCount}件]")
+                            } else {
+                                changeProgressText("${taskCount}件中${failAmount}件の課題の取得に失敗しました", true)
+                            }
+                        } else {
+                            changeProgressText("課題の一覧の取得に失敗しました", true)
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                if (e.message?.startsWith("Connection reset") == true) doMore = true
+            } finally {
+                endUpdate()
             }
-        }
+        } while (doMore && doCount < 5)
     }
 
-    private fun changeProgressText(text: String, error: Boolean = false) {
+    fun changeProgressText(text: String, error: Boolean = false) {
         Platform.runLater {
             progressText.text = text
             if (error) progressText.textFill = Color.web("#e12929") else Color.BLACK
@@ -370,6 +381,7 @@ class TaskPane(mainStackPane: StackPane, timetableDoc: Document?): BorderPane() 
             progressBar.progress = 0.0
         }
         updatingTask = false
+        main?.changePopupMenu(true, Category.TASK)
     }
 
     fun getGroupList(): Set<String> {

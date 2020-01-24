@@ -2,10 +2,10 @@ package com.github.kabocchi.kingLmsLite.Node
 
 import com.eclipsesource.json.Json
 import com.eclipsesource.json.ParseException
-import com.github.kabocchi.king_LMS_Lite.NewsCategory
+import com.github.kabocchi.king_LMS_Lite.*
 import com.github.kabocchi.king_LMS_Lite.Node.NewsFilterContent
 import com.github.kabocchi.king_LMS_Lite.Utility.createHttpClient
-import com.github.kabocchi.king_LMS_Lite.context
+import com.github.kabocchi.king_LMS_Lite.Utility.loginToKINGLMS
 import javafx.animation.FadeTransition
 import javafx.application.Platform
 import javafx.geometry.Insets
@@ -16,6 +16,9 @@ import javafx.scene.paint.Color
 import javafx.util.Duration
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpGet
+import org.apache.http.impl.client.HttpClientBuilder
+import org.apache.http.impl.client.LaxRedirectStrategy
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.util.EntityUtils
 import kotlin.concurrent.thread
 
@@ -42,13 +45,7 @@ class NewsPane(mainStackPane: StackPane): BorderPane() {
     private val filterFadeOutAnim: FadeTransition
     private var playingFilterAnim = false
 
-    private val newsCategoryMap = mutableMapOf<Int, NewsCategory>()
-
     init {
-        NewsCategory.values().forEach {
-            newsCategoryMap[it.id] = it
-        }
-
         val start = System.currentTimeMillis()
         this.style = "-fx-background-color: white;"
 
@@ -206,89 +203,122 @@ class NewsPane(mainStackPane: StackPane): BorderPane() {
     }
 
     fun updateNews() {
+        val start = System.currentTimeMillis()
+
         if (updatingNews) return
         updatingNews = true
-    
-        val start = System.currentTimeMillis()
-        Platform.runLater {
-            progressBar.progress = -1.0
-            listView.children.clear()
-        }
-        newsList.clear()
-    
-        listView = VBox(8.0).apply {
-            padding = Insets(0.0, 0.0, 0.0, 10.0)
-            style = "-fx-background-color: #fff;"
-        }
-    
-        changeProgressText("お知らせの一覧を取得しています...")
-    
-        createHttpClient().use { httpClient ->
-            val httpGet = HttpGet("https://king.kcg.kyoto/campus/Portal/TryAnnouncement/GetAnnouncements?categoryId=0&passdaysId=0&isCustomSearch=false")
-            httpClient.execute(httpGet, context).use { newsListDoc ->
-                println("News List StatusCode: " + newsListDoc.statusLine.statusCode)
-                if (newsListDoc.statusLine.statusCode == HttpStatus.SC_OK) {
-                    try {
-                        val jsonArray = Json.parse(EntityUtils.toString(newsListDoc.entity)).asObject().get("data").asArray()
-                    
-                        val newsAmount = jsonArray.size()
-                    
-                        var failAmount = 0
-                    
-                        for ((index, value) in jsonArray.withIndex()) {
-                        
-                            changeProgressText("お知らせの詳細を取得しています... [${index + 1}/$newsAmount]")
-                        
-                            val json = value.asObject()
-                        
-                            httpClient.execute(HttpGet("https://king.kcg.kyoto/campus/Portal/TryAnnouncement/GetAnnouncement?aId=" + json.getInt("Id", 0)), context).use { newsDetailDoc ->
-                                println("News Content StatusCode [${index + 1}/$newsAmount]: " + newsDetailDoc.statusLine.statusCode)
-                                try {
-                                    if (newsDetailDoc.statusLine.statusCode == HttpStatus.SC_OK) {
-                                        val newsContent = NewsContent(EntityUtils.toString(newsDetailDoc.entity), !json.getBoolean("IsRead", false), json.getString("Published", ""), newsCategoryMap)
-                                        newsList.add(newsContent)
-                                    } else {
-                                        failAmount++
-                                    }
-                                } catch (e2: ParseException) {
-                                    failAmount++
-                                }
-                                newsDetailDoc.close()
-                            }
-                        }
-                    
-                        filterApply()
-                    
-                        if (listViewButton.isSelected) {
-                            println("List view Selected")
-                            showListView()
-                        } else {
-                            showGridView()
-                        }
-                    
-                        val end2 = System.currentTimeMillis()
-                        println("GetNews: " + (end2 - start).toString() + "ms")
-                        endUpdate()
-                        if (failAmount == 0) {
-                            changeProgressText("お知らせの取得が完了しました [${newsAmount}件]")
-                        } else {
-                            changeProgressText("${newsAmount}件中${failAmount}件のお知らせの取得に失敗しました", true)
-                        }
-                    } catch (e: ParseException) {
-                        changeProgressText("お知らせ一覧の取得に失敗しました", true)
-                        e.printStackTrace()
-                    }
-                } else {
-                    endUpdate()
-                    showError()
-                    return
+        main?.changePopupMenu(false, Category.NEWS)
+
+        var doMore = false
+        var doCount = 0
+
+        do {
+            try {
+                doMore = false
+                doCount++
+
+                Platform.runLater {
+                    progressBar.progress = -1.0
+                    listView.children.clear()
                 }
+                newsList.clear()
+
+                listView = VBox(8.0).apply {
+                    padding = Insets(0.0, 0.0, 0.0, 10.0)
+                    style = "-fx-background-color: #fff;"
+                }
+
+                changeProgressText("お知らせの一覧を取得しています...")
+
+                HttpClientBuilder.create().setDefaultCookieStore(cookieStore).setConnectionManager(PoolingHttpClientConnectionManager()).build().use { httpClient ->
+                    val httpGet = HttpGet("https://king.kcg.kyoto/campus/Portal/TryAnnouncement/GetAnnouncements?categoryId=0&passdaysId=0&isCustomSearch=false")
+                    httpClient.execute(httpGet, context).use { newsListDoc ->
+                        println("News List StatusCode: " + newsListDoc.statusLine.statusCode)
+                        if (newsListDoc.statusLine.statusCode == HttpStatus.SC_OK) {
+                            try {
+                                val jsonArray = Json.parse(EntityUtils.toString(newsListDoc.entity)).asObject().get("data").asArray()
+
+                                val newsAmount = jsonArray.size()
+
+                                var failAmount = 0
+
+                                for ((index, value) in jsonArray.withIndex()) {
+
+                                    changeProgressText("お知らせの詳細を取得しています... [${index + 1}/$newsAmount]")
+
+                                    val json = value.asObject()
+
+                                    httpClient.execute(HttpGet("https://king.kcg.kyoto/campus/Portal/TryAnnouncement/GetAnnouncement?aId=" + json.getInt("Id", 0)), context).use { newsDetailDoc ->
+                                        println("News Content StatusCode [${index + 1}/$newsAmount]: " + newsDetailDoc.statusLine.statusCode)
+                                        try {
+                                            if (newsDetailDoc.statusLine.statusCode == HttpStatus.SC_OK) {
+                                                val newsContent = NewsContent(
+                                                        this,
+                                                        EntityUtils.toString(newsDetailDoc.entity),
+                                                        !json.getBoolean("IsRead", false),
+                                                        json.getString("Published", ""))
+                                                newsList.add(newsContent)
+                                            } else {
+                                                failAmount++
+                                            }
+                                        } catch (e2: ParseException) {
+                                            failAmount++
+                                        }
+                                        newsDetailDoc.close()
+                                    }
+                                }
+
+                                filterApply()
+
+                                if (listViewButton.isSelected) {
+                                    println("List view Selected")
+                                    showListView()
+                                } else {
+                                    showGridView()
+                                }
+
+                                val end2 = System.currentTimeMillis()
+                                println("GetNews: " + (end2 - start).toString() + "ms")
+                                endUpdate()
+                                if (failAmount == 0) {
+                                    changeProgressText("お知らせの取得が完了しました [${newsAmount}件]")
+                                } else {
+                                    changeProgressText("${newsAmount}件中${failAmount}件のお知らせの取得に失敗しました", true)
+                                }
+                            } catch (e: ParseException) {
+                                changeProgressText("お知らせ一覧の取得に失敗しました。 再取得します。 [${doCount}回目]", true)
+                                e.printStackTrace()
+                                if (loginToKINGLMS(loadFromFile = true) == LoginResult.SUCCESS) {
+                                    changeProgressText("ログインに成功しました。")
+                                    doMore = true
+                                }
+                            }
+                        } else {
+                            endUpdate()
+                            showError()
+                            return
+                        }
+                    }
+                    httpClient.close()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                when (e) {
+                    is ParseException -> {
+                        if (loginToKINGLMS(loadFromFile = true) == LoginResult.SUCCESS) {
+                            println("Login Success!!")
+                            doMore = true
+                        }
+                    }
+                }
+                if (e.message?.startsWith("Connection reset") == true) doMore = true
             }
-            httpClient.close()
-        }
+        } while (doMore && doCount < 5)
+        val end = System.currentTimeMillis()
+        println("Ended News Update: " + (end - start).toString() + "ms")
     }
 
-    private fun changeProgressText(text: String, error: Boolean = false) {
+    fun changeProgressText(text: String, error: Boolean = false) {
         Platform.runLater {
             progressText.text = text
             if (error) progressText.textFill = Color.web("#e12929") else Color.BLACK
@@ -300,6 +330,7 @@ class NewsPane(mainStackPane: StackPane): BorderPane() {
             progressBar.progress = 0.0
         }
         updatingNews = false
+        main?.changePopupMenu(true, Category.NEWS)
     }
 
     fun filterApply(msg: Boolean = false, title: String = "") {

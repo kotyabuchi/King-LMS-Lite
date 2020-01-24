@@ -7,6 +7,7 @@ import com.github.kabocchi.king_LMS_Lite.Node.SettingPane
 import com.github.kabocchi.king_LMS_Lite.Utility.cleanDescription
 import com.github.kabocchi.king_LMS_Lite.Utility.cleanDescriptionVer2
 import com.github.kabocchi.king_LMS_Lite.Utility.createHttpClient
+import com.github.kabocchi.king_LMS_Lite.Utility.saveFile
 import com.google.api.client.util.DateTime
 import javafx.animation.KeyFrame
 import javafx.animation.KeyValue
@@ -29,12 +30,13 @@ import org.apache.http.client.methods.HttpGet
 import java.io.File
 import java.io.FileOutputStream
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
-class TaskContent(json: JsonObject, _description: String, _groupName: String, groupId: Int, requestVerToken: String, groupAccessToken: String, userId: String, googleCalendar: GoogleCalendar): VBox() {
-    val title: String = json.getString("Title", "")
+class TaskContent(taskPane: TaskPane, json: JsonObject, _description: String, _groupName: String, groupId: Int, requestVerToken: String, groupAccessToken: String, userId: String, googleCalendar: GoogleCalendar) : VBox() {
+    val title: String = json.getString("Title", "").trim()
     private val contentId = json.getString("ContentID", "")
     private val taskId = json.getInt("TaskID", 0)
     private val files = json.get("backgrounds")?.asArray() ?: JsonArray()
@@ -47,7 +49,7 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
     private var limitHours: Long = 0
 
     private var hasDescription = false
-    
+
     private val simpleDescription: String
     private var longDescription: VBox
 
@@ -64,29 +66,50 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
             padding = Insets(10.0, 30.0, 10.0, 10.0)
             styleClass.add("content-box")
         }
-        
+        println("$title registered: ${googleCalendar.hasEvent(title)}")
+
         if (json.toString().split("\"SubmissionStart\":\"").size >= 2) {
             strSubmissionStart = json.getString("SubmissionStart", "")
-            submissionStart = LocalDateTime.parse(strSubmissionStart, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")).plusHours(9)
+            submissionStart = LocalDateTime.parse(strSubmissionStart, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"))
         }
         if (json.get("ReSubmissions").asArray().size() >= 1) {
             val resubmissions = json.get("ReSubmissions").asArray()[0] as JsonObject
             strSubmissionEnd = resubmissions.getString("EndDate", "")
-            submissionEnd = LocalDateTime.parse(strSubmissionEnd, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")).plusHours(9)
+            submissionEnd = LocalDateTime.parse(strSubmissionEnd, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"))
             resubmission = true
         } else if (json.toString().split("\"SubmissionEnd\":\"").size >= 2) {
             strSubmissionEnd = json.getString("SubmissionEnd", "")
-            submissionEnd = LocalDateTime.parse(strSubmissionEnd, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")).plusHours(9)
+            submissionEnd = LocalDateTime.parse(strSubmissionEnd, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"))
             val start = DateTime(submissionStart!!.atZone(ZoneOffset.UTC).toInstant().toEpochMilli())
             val end = DateTime(submissionEnd!!.atZone(ZoneOffset.UTC).toInstant().toEpochMilli())
-            val end2 = DateTime(submissionEnd!!.minusMinutes(15).atZone(ZoneOffset.UTC).toInstant().toEpochMilli())
+            val end2 = DateTime(submissionEnd!!.minusMinutes(1).atZone(ZoneOffset.UTC).toInstant().toEpochMilli())
             if (!googleCalendar.hasEvent(title)) {
                 googleCalendar.registerEvent(CalendarType.MAIN, title, start, end, mutableMapOf())
             }
             if (!googleCalendar.hasEvent("$title 通知用")) {
-                val reminder = mutableMapOf<ReminderType, Int>()
-                
-                googleCalendar.registerEvent(CalendarType.NOTIFICATION, "$title 通知用", end2, end, reminder)
+                submissionEnd?.plusHours(9)?.let {
+                    val reminder = mutableMapOf<ReminderType, Int>()
+                    val popupSetting = SettingPane.getPopupNotificationSetting()
+                    val mailSetting = SettingPane.getMailNotificationSetting()
+                    println("[${title}] 締め切り時間: $it")
+                    if (popupSetting.send == true) {
+                        var notificationTime = LocalTime.parse(popupSetting.time!!.split(" ")[1])
+                        if (popupSetting.time!!.startsWith("午後")) notificationTime = notificationTime.plusHours(12)
+                        var notificationDateTime = it.minusDays(Integer.parseInt(popupSetting.day).toLong()).withHour(notificationTime.hour).withMinute(notificationTime.minute)
+                        if (notificationDateTime.isAfter(it)) notificationDateTime = notificationDateTime.minusDays(1)
+                        reminder[ReminderType.POP_UP] = (ChronoUnit.MINUTES.between(notificationDateTime, it) - 1).toInt()
+                        println("[${title}] ポップアップ通知時間: $notificationDateTime")
+                    }
+                    if (mailSetting.send == true) {
+                        var notificationTime = LocalTime.parse(mailSetting.time!!.split(" ")[1])
+                        if (mailSetting.time!!.startsWith("午後")) notificationTime = notificationTime.plusHours(12)
+                        var notificationDateTime = it.minusDays(Integer.parseInt(mailSetting.day).toLong()).withHour(notificationTime.hour).withMinute(notificationTime.minute)
+                        if (notificationDateTime.isAfter(it)) notificationDateTime = notificationDateTime.minusDays(1)
+                        reminder[ReminderType.E_MAIL] = (ChronoUnit.MINUTES.between(notificationDateTime, it) - 1).toInt()
+                        println("[${title}] メール通知時間: $notificationDateTime")
+                    }
+                    googleCalendar.registerEvent(CalendarType.NOTIFICATION, "$title 通知用", end2, end, reminder)
+                }
             }
         }
 
@@ -149,15 +172,15 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
 
         val dateText = Label().apply {
             text = if (strSubmissionEnd == "") {
-                "期限: なし"
+                "期限 : なし"
             } else {
-                limitHours = ChronoUnit.HOURS.between(LocalDateTime.now(), submissionEnd)
+                limitHours = ChronoUnit.HOURS.between(LocalDateTime.now(), submissionEnd?.plusHours(9))
                 val limit = if (limitHours / 24 <= 0) {
                     "${limitHours}時間"
                 } else {
                     "${limitHours / 24}日"
                 }
-                "期限: $limit"
+                "期限 : $limit"
             }
             style = "-fx-font-size: 13px; -fx-font-weight: bold;"
             styleClass.add("taskLimitDay")
@@ -364,8 +387,9 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
                                     }
                                     inputStream.close()
                                     fileOutputStream.close()
+                                    taskPane.changeProgressText("ファイルを保存しました [$fileName]")
                                 }
-                            }catch (exception: Exception) {
+                            } catch (exception: Exception) {
                                 throw exception
                             }
                         }
@@ -384,7 +408,7 @@ class TaskContent(json: JsonObject, _description: String, _groupName: String, gr
     fun getSubmissionEnd(): LocalDateTime? {
         return submissionEnd
     }
-    
+
     fun getDescription(): String {
         return simpleDescription
     }

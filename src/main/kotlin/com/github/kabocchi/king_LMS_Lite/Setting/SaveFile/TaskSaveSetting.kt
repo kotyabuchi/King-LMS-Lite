@@ -1,4 +1,4 @@
-package com.github.kabocchi.king_LMS_Lite.Setting
+package com.github.kabocchi.king_LMS_Lite.Setting.SaveFile
 
 import com.fasterxml.jackson.annotation.*
 import java.util.*

@@ -1,8 +1,7 @@
 package com.github.kabocchi.king_LMS_Lite
 
-import com.eclipsesource.json.Json
 import com.eclipsesource.json.JsonObject
-import com.github.kabocchi.king_LMS_Lite.Utility.decryptFile2
+import com.github.kabocchi.kingLmsLite.Node.TaskPane
 import com.google.api.client.auth.oauth2.Credential
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver
@@ -23,9 +22,11 @@ import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InputStreamReader
 import java.security.GeneralSecurityException
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.*
 
-class GoogleCalendar {
+class GoogleCalendar(taskPane: TaskPane) {
 
     private val APPLICATION_NAME = "KING-LMS Lite"
     private val JSON_FACTORY = JacksonFactory.getDefaultInstance()
@@ -36,20 +37,14 @@ class GoogleCalendar {
 
     private lateinit var service: Calendar
 
-    private var registeredEvents: JsonObject
+    private var registeredEvents = JsonObject()
 
     init {
         println("GoogleCalendar init")
-        registeredEvents = if (File(EVENTS_FILE_PATH).exists()) {
-            Json.parse(decryptFile2(EVENTS_FILE_PATH)).asObject()
-        } else {
-            JsonObject()
-        }
+        taskPane.changeProgressText("GoogleCalendarの設定中")
         try {
             val HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport()
-            service = Calendar.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
-                .setApplicationName(APPLICATION_NAME)
-                .build()
+            service = Calendar.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT)).setApplicationName(APPLICATION_NAME).build()
         } catch (e: IOException) {
             e.printStackTrace()
         } catch (e: GeneralSecurityException) {
@@ -143,12 +138,11 @@ class GoogleCalendar {
         for (calendarName in calendarTypes) {
             val calendarId = getCalendarId(calendarName.calenderName, true)
             do {
-                val events = service.events().list(calendarId).setPageToken(pageToken).execute()
+                val events = service.events().list(calendarId).setTimeMin(DateTime(System.currentTimeMillis())).setPageToken(pageToken).execute()
                 val items = events.items
                 for (event in items) {
+                    println("Get Event: ${event.summary}")
                     registeredEvents[event.summary] = event.id
-                    println("Google Registered Event: " + event.summary)
-                    println(event.end.dateTime)
                 }
                 pageToken = events.nextPageToken
             } while (pageToken != null)

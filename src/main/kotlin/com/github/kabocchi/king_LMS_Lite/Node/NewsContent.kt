@@ -34,7 +34,7 @@ import org.apache.http.message.BasicNameValuePair
 import java.io.File
 import java.io.FileOutputStream
 
-class NewsContent(doc: String, _unread: Boolean, published: String, newsCategoryMap: MutableMap<Int, NewsCategory>): VBox() {
+class NewsContent(newsPane: NewsPane, doc: String, _unread: Boolean, published: String): VBox() {
 
     private val json = Json.parse(doc).asObject()
     private var description = doc.split("\"Body\": \"")[1].split("\"SenderId\":")[0].trim().removeSuffix("\",")
@@ -46,7 +46,7 @@ class NewsContent(doc: String, _unread: Boolean, published: String, newsCategory
     var unread = _unread
     var emergency = false
     var important = false
-    val category = newsCategoryMap[json.getInt("CategoryId", 1)]!!
+    val category = NewsCategory.getCategory(json.getInt("CategoryId", 1)) ?: "一般"
 
     val title: String = json.getString("Title", "")
 
@@ -97,7 +97,7 @@ class NewsContent(doc: String, _unread: Boolean, published: String, newsCategory
                 }
             }
 
-            val categoryLabel = Label(category.categoryName)
+            val categoryLabel = Label(category)
             children.add(categoryLabel)
         }
 
@@ -220,6 +220,7 @@ class NewsContent(doc: String, _unread: Boolean, published: String, newsCategory
                                     }
                                     inputStream.close()
                                     fileOutputStream.close()
+                                    newsPane.changeProgressText("ファイルを保存しました [$fileName]")
                                 }
                             }catch (exception: Exception) {
                                 throw exception
