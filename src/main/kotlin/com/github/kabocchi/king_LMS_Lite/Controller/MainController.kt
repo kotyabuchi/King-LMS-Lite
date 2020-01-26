@@ -2,11 +2,10 @@ package com.github.kabocchi.king_LMS_Lite.Controller
 
 import com.github.kabocchi.kingLmsLite.Node.NewsPane
 import com.github.kabocchi.kingLmsLite.Node.TaskPane
-import com.github.kabocchi.king_LMS_Lite.Node.SettingPane
-import com.github.kabocchi.king_LMS_Lite.Node.TimeTablePane
+import com.github.kabocchi.king_LMS_Lite.Node.MainPane.SettingPane
+import com.github.kabocchi.king_LMS_Lite.Node.MainPane.TimeTablePane
 import com.github.kabocchi.king_LMS_Lite.Utility.getDocumentWithJsoup
 import com.github.kabocchi.king_LMS_Lite.Utility.toMap
-import com.github.kabocchi.king_LMS_Lite.connection
 import com.github.kabocchi.king_LMS_Lite.context
 import com.github.kabocchi.king_LMS_Lite.main
 import javafx.fxml.FXML

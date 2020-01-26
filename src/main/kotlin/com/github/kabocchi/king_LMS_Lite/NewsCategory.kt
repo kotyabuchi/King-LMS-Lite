@@ -17,7 +17,7 @@ object NewsCategory {
                 val jsonArray = Json.parse(EntityUtils.toString(response.entity)).asArray()
                 jsonArray.forEach {
                     it as JsonObject
-                    categoryMap[it.getInt("id", 0)] = it.getString("name", "一般")
+                    categoryMap[Integer.parseInt(it.getString("id", "1"))] = it.getString("name", "一般")
                 }
             }
         }

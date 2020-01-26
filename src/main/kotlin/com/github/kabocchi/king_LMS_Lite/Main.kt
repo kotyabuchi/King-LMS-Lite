@@ -19,7 +19,6 @@ import kotlin.system.exitProcess
 
 val FOLDER_PATH = System.getenv("APPDATA") + File.separator + "King-lms Lite" + File.separator
 val ACCOUNT_FILE_PATH = FOLDER_PATH + "account.klite"
-val EVENTS_FILE_PATH = FOLDER_PATH + "events.klite"
 val SETTING_FILE_PATH = FOLDER_PATH + "setting.klite"
 val PROJECT_FOLDER = File(FOLDER_PATH)
 val ACCOUNT_FILE = File(ACCOUNT_FILE_PATH)
