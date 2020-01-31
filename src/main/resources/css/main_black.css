@@ -1,7 +1,7 @@
 /* JavaFX CSS - Leave this comment until you have at least create one rule which uses -fx-Property */
 
 #mainPane {
-    -fx-background-color: linear-gradient(to bottom right, #FFC778, #F89174);
+    -fx-background-color: linear-gradient(to bottom right, #130f40, #30336b);
 }
 
 #closeWindow {
@@ -50,24 +50,27 @@
 
 .label {
     -fx-font-size: 14px;
+    -fx-text-fill: white;
 }
 
 .hyper-link {
+    -fx-text-fill: white;
 }
 
 .text-field {
     -fx-font-size: 14px;
-    -fx-background-color: #a9a9a9, white;
+    -fx-text-fill: white;
+    -fx-background-color: #95afc0, #30336b;
     -fx-background-insets: 0 0 0 0, 0 0 1 0;
     -fx-background-radius: 0;
 }
 
 .text-field.error {
-    -fx-background-color: #d63031, #ffdcdb;
+    -fx-background-color: #eb4d4b, #ffdcdb;
 }
 
 .text-field:focused {
-    -fx-background-color: #F89174 , white;
+    -fx-background-color: #dff9fb , #30336b;
     -fx-background-insets: 0 0 -1 0, 0 0 1 0;
 }
 
@@ -84,7 +87,7 @@
 }
 
 .progress-bar > .bar {
-    -fx-background-color: #444;
+    -fx-background-color: #130f40;
     -fx-background-insets: 1 1 2 1;
     -fx-padding: 0.25em;
 }
@@ -107,16 +110,16 @@
 }
 
 .choice-box {
-    -fx-background-color: #fff;
-    -fx-border-color: #F0A470;
+    -fx-background-color: #130f40;
+    /*-fx-border-color: #F0A470;*/
     -fx-font-weight: bold;
     -fx-cursor: hand;
-    -fx-mark-color: #F0A470;
+    -fx-mark-color: #dff9fb;
     -fx-pref-width: 100px;
 }
 
 .choice-box:focused {
-    -fx-background-color: #F0A470;
+    -fx-background-color: #95afc0;
 }
 
 .choice-box:focused > .label {
@@ -126,10 +129,11 @@
 .choice-box .context-menu {
     -fx-pref-width: 100px;
     -fx-max-height: 700px;
+    -fx-background-color: #130f40;
 }
 
 .choice-box .menu-item:focused {
-    -fx-background-color: #F0A470;
+    -fx-background-color: #95afc0;
 }
 
 .choice-box .menu-item:focused .label {
@@ -182,11 +186,11 @@
 
 .scroll-pane {
     -fx-padding: 10px;
-    -fx-background-color: #fff;
+    -fx-background-color: #30336b;
 }
 
 .scroll-pane > .viewport {
-    -fx-background-color: #fff;
+    -fx-background-color: #30336b;
 }
 
 .scroll-bar:horizontal, .scroll-bar:vertical{
@@ -199,7 +203,7 @@
 }
 
 .scroll-bar:vertical  .thumb {
-    -fx-background-color: #F89174;
+    -fx-background-color: #130f40;
     -fx-background-radius: 5em;
 }
 
@@ -208,18 +212,18 @@
 }
 
 .content-box {
-    -fx-background-color: #fff;
+    -fx-background-color: #30336b;
     -fx-border-width: 0 0 0 3px;
     -fx-border-color: #757575;
 }
 
 /* News Tab CSS */
 .news-pane {
-    -fx-background-color: white;
+    -fx-background-color: #30336b;
 }
 
 .filter-box {
-    -fx-background-color: #fff;
+    -fx-background-color: transparent;
 }
 
 .filter-box .check-box {
@@ -233,19 +237,19 @@
     -fx-text-fill: #F0A470;
     -fx-font-weight: bold;
     -fx-cursor: hand;
-    -fx-border-color: #F0A470;
+    -fx-border-color: #130f40;
     -fx-border-radius:3px;
 }
 
 .apply-button {
-    -fx-background-color: #F0A470;
+    -fx-background-color: #130f40;
     -fx-text-fill: #fff;
     -fx-font-weight: bold;
     -fx-cursor: hand;
 }
 
 .apply-button:hover {
-    -fx-background-color: rgba(240, 164, 112, 0.5);
+    /*-fx-background-color: rgba(240, 164, 112, 0.5);*/
 }
 
 .content-box.alreadyRead {
@@ -272,7 +276,7 @@
 
 /* Task Tab CSS */
 .task-pane {
-    -fx-background-color: white;
+    -fx-background-color: #30336b;
 }
 
 .content-box.task-before-one {
@@ -329,16 +333,17 @@
 
 .check-box {
     -fx-text-size: 14px;
+    -fx-text-fill: white;
 }
 
 .check-box .box {
-    -fx-background-color: #fff;
-    -fx-border-color: #F0A470;
+    -fx-background-color: #dff9fb;
+    -fx-border-color: #130f40;
     -fx-border-radius:3px;
 }
 
 .check-box:hover .box {
-    -fx-background-color: #ffd;
+    /*-fx-background-color: #ffd;*/
 }
 
 .check-box:hover .mark {
@@ -346,7 +351,7 @@
 }
 
 .check-box:selected .box {
-    -fx-background-color: #F0A470;
+    -fx-background-color: #130f40;
 }
 
 .check-box:selected .mark {
@@ -361,14 +366,14 @@
 /*  */
 .border-button {
     -fx-background-color: #fff;
-    -fx-border-color: #F0A470;
+    -fx-border-color: #130f40;
     -fx-border-radius:3px;
     -fx-font-weight: bold;
     -fx-cursor: hand;
 }
 
-.border-button:hover {
-    -fx-background-color: rgba(240, 164, 112, 0.1);
-    -fx-border-color: rgba(240, 164, 112, 0.5);
-    -fx-text-fill: rgba(0, 0, 0, 0.5);
-}
+/*.border-button:hover {*/
+/*    -fx-background-color: rgba(240, 164, 112, 0.1);*/
+/*    -fx-border-color: rgba(240, 164, 112, 0.5);*/
+/*    -fx-text-fill: rgba(0, 0, 0, 0.5);*/
+/*}*/

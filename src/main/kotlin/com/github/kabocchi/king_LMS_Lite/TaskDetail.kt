@@ -25,8 +25,10 @@ class TaskDetail {
     var hasDescription: Boolean = false
     var description: String = ""
     var simpleDescription: String = ""
+
+    var groupAccessToken: String = ""
     
-    constructor(json: JsonObject, _description: String, _groupName: String, _groupId: Int, requestVerToken: String, groupAccessToken: String, userId: String) {
+    constructor(json: JsonObject, _description: String, _groupName: String, _groupId: Int, _groupAccessToken: String) {
         title = json.getString("Title", "").trim()
         println(title)
         contentId = json.getString("ContentID", "")
@@ -43,6 +45,7 @@ class TaskDetail {
                 }
             }
             10 -> TaskType.TEST
+            22 -> TaskType.QUESTIONNAIRE
             else -> TaskType.REPORT
         }
         
@@ -70,7 +73,7 @@ class TaskDetail {
             hasDescription = true
             simpleDescription = cleanDescription(description)
         }
-        
+        groupAccessToken = _groupAccessToken
     }
     
     constructor(json: JsonObject) {
@@ -97,6 +100,7 @@ class TaskDetail {
         if (hasDescription) {
             simpleDescription = json.getString("SimpleDescription", "")
         }
+        groupAccessToken = json.getString("GroupAccessToken", groupAccessToken)
     }
     
     fun toJson(): JsonObject {
@@ -120,6 +124,7 @@ class TaskDetail {
         if (hasDescription) {
             json.add("SimpleDescription", simpleDescription)
         }
+        json.add("GroupAccessToken", groupAccessToken)
         return json
     }
 }

@@ -13,7 +13,9 @@ import javafx.scene.control.Button
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.StackPane
 import org.jsoup.nodes.Document
+import java.util.*
 import kotlin.concurrent.thread
+import kotlin.concurrent.timer
 
 class MainController {
 
@@ -40,8 +42,13 @@ class MainController {
         mainPane.center = newsPane
         taskPane = TaskPane(mainStackPane, timeTableDoc)
         timeTablePane = TimeTablePane(timeTableDoc)
-        getNews()
-        getTask()
+        val timerTask = object : TimerTask() {
+            override fun run() {
+                getNews()
+                getTask()
+            }
+        }
+        Timer().schedule(timerTask, 0, 3600000)
     }
 
     @FXML

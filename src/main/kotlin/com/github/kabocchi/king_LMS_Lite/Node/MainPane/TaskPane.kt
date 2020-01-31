@@ -19,6 +19,11 @@ import org.jsoup.nodes.Document
 import java.io.File
 import java.net.SocketException
 import java.net.URLEncoder
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import kotlin.concurrent.thread
 
 class TaskPane(mainStackPane: StackPane, timetableDoc: Document?): BorderPane() {
@@ -36,7 +41,8 @@ class TaskPane(mainStackPane: StackPane, timetableDoc: Document?): BorderPane() 
     private var gridView = VBox()
 
     private val groupList = mutableSetOf<String>()
-    private val taskList = mutableListOf<TaskContent>()
+    private val taskList = mutableMapOf<Int, TaskContent>()
+    private val newTasks = mutableListOf<Int>()
 
     private var showingFilter = false
     private var updatingTask = false
@@ -49,8 +55,12 @@ class TaskPane(mainStackPane: StackPane, timetableDoc: Document?): BorderPane() 
 
     private var userId = ""
 
+    private var lastUpdateTime: LocalDateTime? = null
+
     init {
         val start = System.currentTimeMillis()
+        this.styleClass.add("task-pane")
+//        this.style = "-fx-background-color: white;"
 
         timetableDoc?.let {
             it.select("span.tag-timetable").forEach { element ->
@@ -67,7 +77,6 @@ class TaskPane(mainStackPane: StackPane, timetableDoc: Document?): BorderPane() 
         }
         filterBox = TaskFilterContent(this)
 
-        this.style = "-fx-background-color: white;"
 
         progressBar = ProgressBar()
         progressBar.prefWidthProperty().bind(this.widthProperty())
@@ -219,6 +228,11 @@ class TaskPane(mainStackPane: StackPane, timetableDoc: Document?): BorderPane() 
 
     fun updateTask() {
         if (updatingTask) return
+
+        if (lastUpdateTime != null && ChronoUnit.MINUTES.between(lastUpdateTime, LocalDateTime.now()) < 5) {
+            changeProgressText("更新には３分以上の間を空けてください (残り${ChronoUnit.SECONDS.between(lastUpdateTime, LocalDateTime.now())})", true)
+            return
+        }
         updatingTask = true
         main?.changePopupMenu(false, Category.TASK)
 
@@ -238,10 +252,11 @@ class TaskPane(mainStackPane: StackPane, timetableDoc: Document?): BorderPane() 
                 }
                 
                 taskList.clear()
+                newTasks.clear()
 
                 listView = VBox(8.0).apply {
                     padding = Insets(0.0, 0.0, 0.0, 10.0)
-                    style = "-fx-background-color: #fff;"
+                    style = "-fx-background-color: transparent;"
                 }
 
                 changeProgressText("課題の一覧を取得しています...")
@@ -272,82 +287,90 @@ class TaskPane(mainStackPane: StackPane, timetableDoc: Document?): BorderPane() 
 
                                         val taskId = json.getInt("TaskID", 0)
                                         val groupId = json.getInt("GroupID", 0)
-                                        val tokenGetUrl = getDocumentWithJsoup(context.cookieStore.toMap(), "https://king.kcg.kyoto/campus/Course/$groupId/18/")
-                                        if (tokenGetUrl == null) {
-                                            failAmount++
-                                            continue
-                                        }
-                                        val requestVerToken = tokenGetUrl.select("input[name=RequestVerToken]").`val`()
-                                        val groupAccessToken = tokenGetUrl.select("input[name=__GroupAccessToken]").`val`()
-                                        val encodedToken = URLEncoder.encode(groupAccessToken, "UTF-8")
-                                        val taskDetailUrl = "https://king.kcg.kyoto/campus/Mvc/Manavi/GetTask?tId=$taskId&gToken=$encodedToken"
 
-                                        var retry = false
-                                        var retryCount = 0
-                                        do {
-                                            createHttpClient().use {  httpClient2 ->
-                                                try {
-                                                    println("Getting task details [${index}/$taskCount]")
-                                                    httpClient2.execute(HttpGet(taskDetailUrl), context).use { taskDetailDoc ->
-                                                        println("Task details statusCode [${index}/$taskCount]: " + taskDetailDoc.statusLine.statusCode)
-                                                        if (taskDetailDoc.statusLine.statusCode == HttpStatus.SC_OK) {
-                                                            var description = ""
-                                                            val docString = EntityUtils.toString(taskDetailDoc.entity)
-                                                            if (docString.split("\"Description\": \"").size >= 2) description = docString.split("\"Description\": \"")[1].split("\"TaskBlockID\":")[0].trim().removeSuffix("\",")
-                                                            val detailJson = Json.parse(docString).asObject()
-                                                            val detailFile = File(FOLDER_PATH + "Tasks" + File.separator + detailJson.getString("Title", "") + ".json")
-                                                            val listTaskDetail = if (detailFile.exists()) {
-                                                                println("Create Task detail from Json")
-                                                                TaskDetail(Json.parse(readFile(detailFile)).asObject())
-                                                            } else {
-                                                                println("Create Task detail from Json")
-                                                                TaskDetail(
+                                        val detailFile = File(FOLDER_PATH + "Tasks" + File.separator + groupId + "-" + taskId + ".json")
+
+                                        if (detailFile.exists()) {
+                                            val taskDetail = TaskDetail(Json.parse(readFile(detailFile)).asObject())
+                                            println(taskDetail.title + " load from json")
+                                            val listTaskContent = TaskContent(
+                                                    this,
+                                                    taskDetail,
+                                                    googleCalendar)
+                                            if (taskDetail.hasSubmissionPeriod) {
+                                                taskContents.add(listTaskContent)
+                                            } else {
+                                                unlimitedTaskContents.add(listTaskContent)
+                                            }
+                                        } else {
+                                            val tokenGetUrl = getDocumentWithJsoup(context.cookieStore.toMap(), "https://king.kcg.kyoto/campus/Course/$groupId/18/")
+                                            if (tokenGetUrl == null) {
+                                                failAmount++
+                                                continue
+                                            }
+                                            val requestVerToken = tokenGetUrl.select("input[name=RequestVerToken]").`val`()
+                                            val groupAccessToken = tokenGetUrl.select("input[name=__GroupAccessToken]").`val`()
+                                            val encodedToken = URLEncoder.encode(groupAccessToken, "UTF-8")
+                                            val taskDetailUrl = "https://king.kcg.kyoto/campus/Mvc/Manavi/GetTask?tId=$taskId&gToken=$encodedToken"
+
+                                            var retry = false
+                                            var retryCount = 0
+                                            do {
+                                                createHttpClient().use {  httpClient2 ->
+                                                    try {
+                                                        println("Getting task details [${index}/$taskCount]")
+                                                        httpClient2.execute(HttpGet(taskDetailUrl), context).use { taskDetailDoc ->
+                                                            println("Task details statusCode [${index}/$taskCount]: " + taskDetailDoc.statusLine.statusCode)
+                                                            if (taskDetailDoc.statusLine.statusCode == HttpStatus.SC_OK) {
+                                                                var description = ""
+                                                                val docString = EntityUtils.toString(taskDetailDoc.entity)
+                                                                if (docString.split("\"Description\": \"").size >= 2) description = docString.split("\"Description\": \"")[1].split("\"TaskBlockID\":")[0].trim().removeSuffix("\",")
+                                                                val detailJson = Json.parse(docString).asObject()
+                                                                val listTaskDetail = TaskDetail(
                                                                         detailJson,
                                                                         description,
                                                                         json.getString("GroupName", ""),
                                                                         groupId,
-                                                                        requestVerToken,
-                                                                        groupAccessToken,
-                                                                        userId)
-                                                                        .apply {
-                                                                    if (!File(FOLDER_PATH + "Tasks").exists()) File(FOLDER_PATH + "Tasks").mkdirs()
-                                                                    saveFile(FOLDER_PATH + "Tasks" + File.separator + this.title + ".json", this.toJson())
+                                                                        groupAccessToken)
+                                                                if (!File(FOLDER_PATH + "Tasks").exists()) File(FOLDER_PATH + "Tasks").mkdirs()
+                                                                saveFile(detailFile.path, listTaskDetail.toJson())
+                                                                newTasks.add(listTaskDetail.taskId)
+                                                                println(listTaskDetail.title + " load from web")
+                                                                val listTaskContent = TaskContent(
+                                                                        this,
+                                                                        listTaskDetail,
+                                                                        googleCalendar)
+                                                                if (listTaskDetail.hasSubmissionPeriod) {
+                                                                    taskContents.add(listTaskContent)
+                                                                } else {
+                                                                    unlimitedTaskContents.add(listTaskContent)
                                                                 }
-                                                            }
-                                                            val listTaskContent = TaskContent(
-                                                                    this,
-                                                                    listTaskDetail,
-                                                                    googleCalendar)
-                                                            if (listTaskDetail.hasSubmissionPeriod) {
-                                                                taskContents.add(listTaskContent)
                                                             } else {
-                                                                unlimitedTaskContents.add(listTaskContent)
+                                                                failAmount++
                                                             }
-                                                        } else {
-                                                            failAmount++
+                                                            taskDetailDoc.close()
                                                         }
-                                                        taskDetailDoc.close()
-                                                    }
-                                                } catch (e: SocketException) {
-                                                    println("Fails to get task details [${index}/$taskCount]")
-                                                    if (e.message == "Connection reset") {
-                                                        retry = true
-                                                        retryCount++
-                                                        println("Try to get task details again [${index}/$taskCount]")
+                                                    } catch (e: SocketException) {
+                                                        println("Fails to get task details [${index}/$taskCount]")
+                                                        if (e.message == "Connection reset") {
+                                                            retry = true
+                                                            retryCount++
+                                                            println("Try to get task details again [${index}/$taskCount]")
+                                                        }
                                                     }
                                                 }
-                                            }
-                                        } while (retry && retryCount <= 5)
+                                            } while (retry && retryCount <= 5)
+                                        }
                                     }
                                 }
 
                                 val comparator = Comparator.comparing(TaskContent::submissionEnd)
                                 Platform.runLater {
                                     for (taskContent in taskContents.stream().sorted(comparator)) {
-                                        taskList.add(taskContent)
+                                        taskList[taskContent.taskDetail.taskId] = taskContent
                                     }
                                     for (taskContent in unlimitedTaskContents) {
-                                        taskList.add(taskContent)
+                                        taskList[taskContent.taskDetail.taskId] = taskContent
                                     }
                                 }
                                 filterApply()
@@ -365,6 +388,7 @@ class TaskPane(mainStackPane: StackPane, timetableDoc: Document?): BorderPane() 
                             println("GetTasks: " + (end - start).toString() + "ms")
                             if (failAmount == 0) {
                                 changeProgressText("課題の取得が完了しました [${taskCount}件]")
+                                lastUpdateTime = LocalDateTime.now()
                             } else {
                                 changeProgressText("${taskCount}件中${failAmount}件の課題の取得に失敗しました", true)
                             }
@@ -381,9 +405,50 @@ class TaskPane(mainStackPane: StackPane, timetableDoc: Document?): BorderPane() 
             }
         } while (doMore && doCount < 5)
         thread {
-            taskList.forEach {
+            taskList.values.forEach {
                 it.registerToGoogleCalendar(googleCalendar)
             }
+            var updateCount = 0
+            taskList.keys.forEach {
+                if (!newTasks.contains(it)) {
+                    val taskContent = taskList[it]!!
+                    val detail = taskContent.taskDetail
+                    val encodedToken = URLEncoder.encode(detail.groupAccessToken, "UTF-8")
+                    val taskDetailUrl = "https://king.kcg.kyoto/campus/Mvc/Manavi/GetTask?tId=$it&gToken=$encodedToken"
+                    val detailFile = File(FOLDER_PATH + "Tasks" + File.separator + detail.groupId + "-" + it + ".json")
+                    if (detailFile.exists()) {
+                        val lastModifier = LocalDateTime.ofInstant(Instant.ofEpochMilli(detailFile.lastModified()), ZoneId.systemDefault())
+
+                        createHttpClient().use { httpClient ->
+                            httpClient.execute(HttpGet(taskDetailUrl), context).use { doc ->
+                                if (doc.statusLine.statusCode == HttpStatus.SC_OK) {
+                                    val docString = EntityUtils.toString(doc.entity)
+                                    val json = Json.parse(docString).asObject()
+                                    val lastUpdate = LocalDateTime.parse(json.getString("UpdatedDate", "").split(".")[0].removeSuffix("Z"), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"))
+                                    println("Update check [${detail.title}]: $lastModifier , $lastUpdate")
+                                    if (lastModifier.isBefore(lastUpdate)) {
+                                        var description = ""
+                                        if (docString.split("\"Description\": \"").size >= 2) description = docString.split("\"Description\": \"")[1].split("\"TaskBlockID\":")[0].trim().removeSuffix("\",")
+                                        val newDetail = TaskDetail(
+                                                json,
+                                                description,
+                                                detail.groupName,
+                                                detail.groupId,
+                                                detail.groupAccessToken
+                                        )
+                                        val newContent = TaskContent(this, newDetail, googleCalendar)
+                                        taskList[it] = newContent
+                                        saveFile(detailFile.path, newDetail.toJson())
+                                        updateCount++
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            changeProgressText("課題のアップデートチェックが完了しました [${updateCount}件]")
+            filterApply()
         }
     }
 
@@ -410,7 +475,7 @@ class TaskPane(mainStackPane: StackPane, timetableDoc: Document?): BorderPane() 
         Platform.runLater {
             listView.children.clear()
             var count = 0
-            for (it in taskList) {
+            for (it in taskList.values) {
                 if (title != "" && (!it.taskDetail.title.contains(title, true) && !it.taskDetail.simpleDescription.contains(title, true))) continue
                 if (filterBox.isResubmissionOnly() && !it.taskDetail.hasReSubmissionPeriod) continue
                 if (filterBox.getTypeFilter()[it.taskDetail.taskType]?.isSelected == false) continue

@@ -1,0 +1,112 @@
+$main_color: #F89174;
+$sub_color: white;
+$text_color: rgb(30, 30, 30);
+$link_text_color: $main_color;
+
+#mainPane {
+  -fx-background-color: $main_color;
+}
+
+.news-pane {
+  -fx-background-color: $sub_color;
+}
+
+.task-pane {
+  -fx-background-color: $sub_color;
+}
+
+.setting-pane {
+  -fx-background-color: $sub_color;
+}
+
+.filter-box {
+  -fx-background-color: $sub_color;
+}
+
+.clear-button {
+  -fx-background-color: $sub_color;
+  -fx-text-fill: $main_color;
+  -fx-border-color: $main_color;
+}
+
+.apply-button {
+  -fx-background-color: $main_color;
+  -fx-text-fill: #fff;
+}
+
+.text-field {
+  -fx-background-color: $text_color, $sub_color;
+  -fx-text-fill: $text_color;
+  &.error {
+    -fx-background-color: #d63031, #ffdcdb;
+  }
+  &:focused {
+    -fx-background-color: $main_color , $sub_color;
+  }
+}
+
+.check-box {
+  -fx-text-fill: $text_color;
+  .box {
+    -fx-background-color: $sub_color;
+    -fx-border-color: $main_color;
+  }
+  &:selected {
+    .box {
+      -fx-background-color: $main_color;
+    }
+    .mark {
+      -fx-background-color: white;
+    }
+  }
+}
+
+.choice-box {
+  -fx-background-color: $sub_color;
+  -fx-border-color: $main_color;
+  -fx-mark-color: $main_color;
+  .label {
+    -fx-text-fill: $text_color;
+  }
+  &:focused {
+    -fx-background-color: $main_color;
+    > .label {
+      -fx-text-fill: white;
+    }
+  }
+  .menu-item {
+    -fx-background-color: $sub_color;
+    &:focused {
+      -fx-background-color: $main_color;
+      .label {
+        -fx-text-fill: white;
+      }
+    }
+  }
+}
+
+.scroll-pane {
+  -fx-background-color: $sub_color;
+  .scroll-bar:vertical .thumb {
+    -fx-background-color: $main_color;
+  }
+}
+
+.border-button {
+  -fx-background-color: $sub_color;
+  -fx-border-color: $main_color;
+  -fx-text-fill: $text_color;
+  //&:hover {
+  //  -fx-background-color: rgba(240, 164, 112, 0.1);
+  //  -fx-border-color: rgba(240, 164, 112, 0.5);
+  //  -fx-text-fill: rgba(0, 0, 0, 0.5);
+  //}
+}
+
+.label {
+  -fx-text-fill: $text_color;
+}
+
+.hyperlink {
+  -fx-text-fill: $link_text_color;
+}

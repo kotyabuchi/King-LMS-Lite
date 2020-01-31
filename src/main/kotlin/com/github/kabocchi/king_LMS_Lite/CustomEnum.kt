@@ -29,5 +29,6 @@ enum class EventType {
 enum class TaskType(val typeName: String, val id: Int) {
     REPORT("レポート(ファイル提出)", 14),
     TEXT_REPORT("レポート(テキスト)", 14),
-    TEST("テスト", 10)
+    TEST("テスト", 10),
+    QUESTIONNAIRE("アンケート", 22)
 }

@@ -1,0 +1,97 @@
+#mainPane {
+  -fx-background-color: #2f3542;
+}
+
+.news-pane {
+  -fx-background-color: #57606f;
+}
+
+.task-pane {
+  -fx-background-color: #57606f;
+}
+
+.setting-pane {
+  -fx-background-color: #57606f;
+}
+
+.filter-box {
+  -fx-background-color: #57606f;
+}
+
+.clear-button {
+  -fx-background-color: #57606f;
+  -fx-text-fill: #2f3542;
+  -fx-border-color: #2f3542;
+}
+
+.apply-button {
+  -fx-background-color: #2f3542;
+  -fx-text-fill: #fff;
+}
+
+.text-field {
+  -fx-background-color: white, #57606f;
+  -fx-text-fill: white;
+}
+.text-field.error {
+  -fx-background-color: #d63031, #ffdcdb;
+}
+.text-field:focused {
+  -fx-background-color: #2f3542, #57606f;
+}
+
+.check-box {
+  -fx-text-fill: white;
+}
+.check-box .box {
+  -fx-background-color: #57606f;
+  -fx-border-color: #2f3542;
+}
+.check-box:selected .box {
+  -fx-background-color: #2f3542;
+}
+.check-box:selected .mark {
+  -fx-background-color: white;
+}
+
+.choice-box {
+  -fx-background-color: #57606f;
+  -fx-border-color: #2f3542;
+  -fx-mark-color: #2f3542;
+}
+.choice-box .label {
+  -fx-text-fill: white;
+}
+.choice-box:focused {
+  -fx-background-color: #2f3542;
+}
+.choice-box:focused > .label {
+  -fx-text-fill: white;
+}
+.choice-box .menu-item:focused {
+  -fx-background-color: #2f3542;
+}
+.choice-box .menu-item:focused .label {
+  -fx-text-fill: white;
+}
+
+.scroll-pane {
+  -fx-background-color: #57606f;
+}
+.scroll-pane .scroll-bar:vertical .thumb {
+  -fx-background-color: #2f3542;
+}
+
+.border-button {
+  -fx-background-color: #57606f;
+  -fx-border-color: #2f3542;
+  -fx-text-fill: white;
+}
+
+.label, .text {
+  -fx-text-fill: white;
+}
+
+.hyperlink {
+  -fx-text-fill: #f1f2f6;
+}

@@ -82,6 +82,7 @@ object SettingPane: BorderPane() {
     private var detailCacheHeight = 0.0
 
     init {
+        this.styleClass.add("settin-pane")
         val scrollPane = ScrollPane().apply {
             isPannable = true
             isFitToWidth = true
@@ -90,7 +91,7 @@ object SettingPane: BorderPane() {
         this.center = scrollPane
         
         val mainVBox = VBox(10.0).apply {
-            style = "-fx-background-color: white;"
+//            style = "-fx-background-color: white;"
             padding = Insets(30.0, 20.0, 30.0, 20.0)
             scrollPane.content = this
         }
@@ -430,7 +431,7 @@ object SettingPane: BorderPane() {
                 detailCacheSettingLabelBox, detailCacheSettingTab, Separator())
         
         val bottomContainer = HBox(10.0).apply {
-            style = "-fx-background-color: #fff;"
+            style = "-fx-background-color: transparent;"
             alignment = Pos.CENTER_RIGHT
             padding = Insets(8.0, 10.0, 8.0, 10.0)
         }

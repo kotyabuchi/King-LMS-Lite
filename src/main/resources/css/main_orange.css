@@ -57,7 +57,7 @@
 
 .text-field {
     -fx-font-size: 14px;
-    -fx-background-color: #a9a9a9, white;
+    -fx-background-color: #a9a9a9, transparent;
     -fx-background-insets: 0 0 0 0, 0 0 1 0;
     -fx-background-radius: 0;
 }
@@ -67,7 +67,7 @@
 }
 
 .text-field:focused {
-    -fx-background-color: #F89174 , white;
+    -fx-background-color: #F89174 , transparent;
     -fx-background-insets: 0 0 -1 0, 0 0 1 0;
 }
 
@@ -107,7 +107,7 @@
 }
 
 .choice-box {
-    -fx-background-color: #fff;
+    -fx-background-color: white;
     -fx-border-color: #F0A470;
     -fx-font-weight: bold;
     -fx-cursor: hand;
@@ -146,27 +146,6 @@
     -fx-cursor: hand;
 }
 
-#toolBoxTop > .toggle-button {
-    -fx-background-color: transparent;
-	-fx-background-size: 18px;
-	-fx-background-repeat: no-repeat;
-	-fx-background-position: center center;
-	-fx-cursor: hand;
-}
-
-#toolBoxTop > .toggle-button:selected {
-    -fx-background-color: #dcdcdc;
-}
-
-#listViewButton  {
-    -fx-background-image: url('list.png');
-}
-
-#gridViewButton {
-    -fx-background-color: transparent;
-	-fx-background-image: url('grid.png');
-}
-
 .reload-button {
     -fx-background-color: transparent;
     -fx-background-size: 18px;
@@ -182,15 +161,15 @@
 
 .scroll-pane {
     -fx-padding: 10px;
-    -fx-background-color: #fff;
+    -fx-background-color: transparent;
 }
 
 .scroll-pane > .viewport {
-    -fx-background-color: #fff;
+    -fx-background-color: transparent;
 }
 
 .scroll-bar:horizontal, .scroll-bar:vertical{
-    -fx-background-color:transparent;
+    -fx-background-color: transparent;
 }
 
 .scroll-bar:vertical  .track {
@@ -208,14 +187,18 @@
 }
 
 .content-box {
-    -fx-background-color: #fff;
+    -fx-background-color: transparent;
     -fx-border-width: 0 0 0 3px;
     -fx-border-color: #757575;
 }
 
 /* News Tab CSS */
+.news-pane {
+    -fx-background-color: white;
+}
+
 .filter-box {
-    -fx-background-color: #fff;
+    -fx-background-color: white;
 }
 
 .filter-box .check-box {
@@ -225,7 +208,7 @@
 }
 
 .clear-button {
-    -fx-background-color: #fff;
+    -fx-background-color: white;
     -fx-text-fill: #F0A470;
     -fx-font-weight: bold;
     -fx-cursor: hand;
@@ -267,6 +250,10 @@
 }
 
 /* Task Tab CSS */
+.task-pane {
+    -fx-background-color: white;
+}
+
 .content-box.task-before-one {
     -fx-border-color: #ff4500;
 }
@@ -319,6 +306,12 @@
     -fx-border-color: #a9d18e;
 }
 
+/* Time Table */
+.time-table .label {
+    -fx-font-size: 14px;
+}
+
+/*  */
 .check-box {
     -fx-text-size: 14px;
 }
@@ -345,12 +338,6 @@
     -fx-background-color: #fff;
 }
 
-/* Time Table */
-.time-table .label {
-    -fx-font-size: 14px;
-}
-
-/*  */
 .border-button {
     -fx-background-color: #fff;
     -fx-border-color: #F0A470;
