@@ -35,19 +35,19 @@ class AppUtil(private val version: String, private val main: Main) {
         stage.initStyle(StageStyle.UNDECORATED)
         stage.isResizable = true
         stage.icons.add(Image(ClassLoader.getSystemResourceAsStream("logo.png")))
-        val fxmlLoader = FXMLLoader(javaClass.getResource("/Main2.fxml"))
+        val fxmlLoader = FXMLLoader(javaClass.getResource("/Main.fxml"))
         try {
 //            val scene = Scene(fxmlLoader.load(), 1328.0, 768.0)
             val scene = Scene(fxmlLoader.load(), 1280.0, 720.0)
             scene.fill = Color.TRANSPARENT
             scene.stylesheets.add(javaClass.getResource("/style/main_base.css").toExternalForm())
 //            scene.stylesheets.add(javaClass.getResource("/style/main_orange.css").toExternalForm())
-//            scene.stylesheets.add(javaClass.getResource("/style/main_dark_blue.css").toExternalForm())
+            scene.stylesheets.add(javaClass.getResource("/style/main_dark_blue.css").toExternalForm())
 //            scene.stylesheets.add(javaClass.getResource("/style/main_black.css").toExternalForm())
-            scene.stylesheets.add(javaClass.getResource("/style/main_green.css").toExternalForm())
+//            scene.stylesheets.add(javaClass.getResource("/style/main_green.css").toExternalForm())
 //            scene.stylesheets.add(javaClass.getResource("/css/main_orange.css").toExternalForm())
 //            scene.root.effect = DropShadow()
-            stage.title = "King-lms Lite $version"
+            stage.title = "KING-LMS Lite $version"
             stage.scene = scene
             stage.show()
 

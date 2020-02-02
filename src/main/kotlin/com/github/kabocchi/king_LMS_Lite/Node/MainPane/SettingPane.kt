@@ -2,6 +2,7 @@ package com.github.kabocchi.king_LMS_Lite.Node.MainPane
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.kabocchi.king_LMS_Lite.*
+import com.github.kabocchi.king_LMS_Lite.Node.BorderButton
 import com.github.kabocchi.king_LMS_Lite.Setting.*
 import com.github.kabocchi.king_LMS_Lite.Setting.Notification.MailNotificationSetting
 import com.github.kabocchi.king_LMS_Lite.Setting.Notification.PopupNotificationSetting
@@ -19,11 +20,9 @@ import javafx.collections.FXCollections
 import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.Cursor
+import javafx.scene.canvas.Canvas
 import javafx.scene.control.*
-import javafx.scene.layout.AnchorPane
-import javafx.scene.layout.BorderPane
-import javafx.scene.layout.HBox
-import javafx.scene.layout.VBox
+import javafx.scene.layout.*
 import javafx.scene.shape.Rectangle
 import javafx.stage.DirectoryChooser
 import javafx.util.Duration
@@ -46,6 +45,7 @@ object SettingPane: BorderPane() {
     private val notificationTabMark: Label
     private val saveFileTabMark: Label
     private val cacheTabMark: Label
+    private val themeTabMark: Label
 
     private val sendPopup: CheckBox
     private val popupDayText: ChoiceBox<String>
@@ -80,6 +80,8 @@ object SettingPane: BorderPane() {
     private var saveFileHeight = 0.0
     private var detailCacheOpen = false
     private var detailCacheHeight = 0.0
+    private var themeOpen = false
+    private var themeHeight = 0.0
 
     init {
         this.styleClass.add("settin-pane")
@@ -423,12 +425,88 @@ object SettingPane: BorderPane() {
                 }
             }
         }
+        // ===========================================================================================================
+        val themeSettingLabelBox = BorderPane().apply {
+            cursor = Cursor.HAND
+            padding = Insets(0.0, 20.0, 0.0, 10.0)
+            left = Label("テーマ設定").apply {
+                style = "-fx-font-weight: bold;"
+                styleClass.add("h1")
+            }
+            themeTabMark = Label("▼").apply {
+                style = "-fx-font-weight: bold;"
+                styleClass.add("h1")
+            }
+            right = themeTabMark
+        }
+        val themeSettingTab = AnchorPane().apply {
+            minHeight = 0.0
+            padding = Insets(0.0, 15.0, 0.0, 15.0)
+            children.add(VBox(12.0).apply {
+                AnchorPane.setRightAnchor(this, 0.0)
+                AnchorPane.setBottomAnchor(this, 0.0)
+                AnchorPane.setLeftAnchor(this, 0.0)
+                val templatesContainer = FlowPane().apply {
+                    vgap = 6.0
+                    hgap = 10.0
+                    val radioButton = RadioButton().apply {
+                        width = 80.0
+                        height = 60.0
+                        style = """
+                            -fx-background-color: #F89174, white, rgb(30, 30, 30), #e74c3c;
+                            -fx-background-insets: 0 0 0 0, 0 0 0 20px, 0 0 0 40px, 0 0 0 60px;
+                        """.trimIndent()
+                    }
+                    val colorContainer = VBox(0.0).apply {
+                        val mainColor = Label().apply {
+                            width = 80.0
+                            height = 20.0
+                            style = "-fx-background-color: #F89174;"
+                        }
+                    }
+                    children.addAll(radioButton, colorContainer)
+                }
+                children.addAll(templatesContainer)
+            })
+        }
+        Rectangle().apply {
+            widthProperty().bind(themeSettingTab.widthProperty())
+            heightProperty().bind(themeSettingTab.maxHeightProperty())
+            themeSettingTab.clip = this
+        }
+        themeSettingTab.layoutBoundsProperty().addListener { _, _, bounds2 ->
+            if (themeHeight == 0.0 && bounds2.height > 0) {
+                themeHeight = bounds2.height
+                val openAnim = Timeline(
+                        KeyFrame(Duration.seconds(0.2), KeyValue(themeSettingTab.maxHeightProperty(), themeHeight)),
+                        KeyFrame(Duration.seconds(0.2), KeyValue(themeTabMark.rotateProperty(), 180.0))).apply {
+                    cycleCount = 1
+                }
+                val closeAnim = Timeline(
+                        KeyFrame(Duration.seconds(0.2), KeyValue(themeSettingTab.maxHeightProperty(), 0.0)),
+                        KeyFrame(Duration.seconds(0.2), KeyValue(themeTabMark.rotateProperty(), 0.0))).apply {
+                    cycleCount = 1
+                }
+                themeSettingLabelBox.setOnMouseClicked {
+                    if (themeOpen) {
+                        closeAnim.play()
+                    } else {
+                        openAnim.play()
+                    }
+                    themeOpen = !themeOpen
+                }
+                Platform.runLater {
+                    themeSettingTab.maxHeight = 0.0
+                }
+            }
+        }
 
 
         mainVBox.children.addAll(
                 notificationSettingLabelBox, notificationSettingTab, Separator(),
                 saveFileSettingLabelBox, saveFileSettingTab, Separator(),
-                detailCacheSettingLabelBox, detailCacheSettingTab, Separator())
+                detailCacheSettingLabelBox, detailCacheSettingTab, Separator(),
+                themeSettingLabelBox, themeSettingTab, Separator())
         
         val bottomContainer = HBox(10.0).apply {
             style = "-fx-background-color: transparent;"
@@ -439,8 +517,8 @@ object SettingPane: BorderPane() {
             style = "-fx-font-weight: bold; -fx-font-size: 14px;"
             bottomContainer.children.add(this)
         }
-        Button("ログアウト").apply {
-            styleClass.add("border-button")
+        BorderButton("ログアウト").apply {
+//            styleClass.add("border-button")
             bottomContainer.children.add(this)
             setOnAction {
                 getDocumentWithJsoup(context.cookieStore.toMap(), "https://king.kcg.kyoto/campus/Secure/Logoff.aspx")

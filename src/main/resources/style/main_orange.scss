@@ -1,7 +1,7 @@
 $main_color: #F89174;
 $sub_color: white;
 $text_color: rgb(30, 30, 30);
-$link_text_color: $main_color;
+$link_text_color: #e74c3c;
 
 #mainPane {
   -fx-background-color: $main_color;
@@ -96,14 +96,9 @@ $link_text_color: $main_color;
   -fx-background-color: $sub_color;
   -fx-border-color: $main_color;
   -fx-text-fill: $text_color;
-  //&:hover {
-  //  -fx-background-color: rgba(240, 164, 112, 0.1);
-  //  -fx-border-color: rgba(240, 164, 112, 0.5);
-  //  -fx-text-fill: rgba(0, 0, 0, 0.5);
-  //}
 }
 
-.label {
+.label, .text {
   -fx-text-fill: $text_color;
 }
 

@@ -74,10 +74,13 @@ $link_text_color: #f1f2f6;
       -fx-text-fill: white;
     }
   }
-  .menu-item:focused {
-    -fx-background-color: $main_color;
-    .label {
-      -fx-text-fill: white;
+  .menu-item {
+    -fx-background-color: $sub_color;
+    &:focused {
+      -fx-background-color: $main_color;
+      .label {
+        -fx-text-fill: white;
+      }
     }
   }
 }

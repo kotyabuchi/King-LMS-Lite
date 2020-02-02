@@ -1,7 +1,7 @@
 $main_color: #2ed573;
 $sub_color: white;
 $text_color: rgb(30, 30, 30);
-$link_text_color: #2ed573;
+$link_text_color: #27ae60;
 
 #mainPane {
   -fx-background-color: $main_color;
@@ -74,10 +74,13 @@ $link_text_color: #2ed573;
       -fx-text-fill: white;
     }
   }
-  .menu-item:focused {
-    -fx-background-color: $main_color;
-    .label {
-      -fx-text-fill: white;
+  .menu-item {
+    -fx-background-color: $sub_color;
+    &:focused {
+      -fx-background-color: $main_color;
+      .label {
+        -fx-text-fill: white;
+      }
     }
   }
 }

@@ -68,6 +68,9 @@
 .choice-box:focused > .label {
   -fx-text-fill: white;
 }
+.choice-box .menu-item {
+  -fx-background-color: white;
+}
 .choice-box .menu-item:focused {
   -fx-background-color: #2ed573;
 }
@@ -93,5 +96,5 @@
 }
 
 .hyperlink {
-  -fx-text-fill: #2ed573;
+  -fx-text-fill: #27ae60;
 }

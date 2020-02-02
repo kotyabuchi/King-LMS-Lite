@@ -74,10 +74,13 @@ $link_text_color: #dff9fb;
       -fx-text-fill: white;
     }
   }
-  .menu-item:focused {
-    -fx-background-color: $main_color;
-    .label {
-      -fx-text-fill: white;
+  .menu-item {
+    -fx-background-color: $sub_color;
+    &:focused {
+      -fx-background-color: $main_color;
+      .label {
+        -fx-text-fill: white;
+      }
     }
   }
 }
@@ -100,7 +103,7 @@ $link_text_color: #dff9fb;
   //}
 }
 
-.label {
+.label, .text {
   -fx-text-fill: $text_color;
 }
 

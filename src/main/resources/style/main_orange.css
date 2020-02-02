@@ -91,10 +91,10 @@
   -fx-text-fill: #1e1e1e;
 }
 
-.label {
+.label, .text {
   -fx-text-fill: #1e1e1e;
 }
 
 .hyperlink {
-  -fx-text-fill: #F89174;
+  -fx-text-fill: #e74c3c;
 }
