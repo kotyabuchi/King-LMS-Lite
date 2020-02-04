@@ -1,4 +1,10 @@
 /* JavaFX CSS - Leave this comment until you have at least create one rule which uses -fx-Property */
+.button {
+  -fx-border-radius: 3px;
+  -fx-font-weight: bold;
+  -fx-cursor: hand;
+}
+
 #closeWindow {
   -fx-background-color: transparent;
   -fx-background-size: 16px;
@@ -87,17 +93,6 @@
 .filter-box .check-box {
   -fx-pref-height: 22px;
   -fx-font-size: 12.5;
-  -fx-cursor: hand;
-}
-
-.clear-button {
-  -fx-font-weight: bold;
-  -fx-cursor: hand;
-  -fx-border-radius: 3px;
-}
-
-.apply-button {
-  -fx-font-weight: bold;
   -fx-cursor: hand;
 }
 
@@ -231,12 +226,6 @@
 }
 .progress-bar > .track {
   -fx-background-color: transparent;
-}
-
-.border-button {
-  -fx-border-radius: 3px;
-  -fx-font-weight: bold;
-  -fx-cursor: hand;
 }
 
 .h1 {

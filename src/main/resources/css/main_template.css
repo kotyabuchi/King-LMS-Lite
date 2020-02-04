@@ -1,0 +1,114 @@
+#mainPane {
+    -fx-background-color: main_color;
+}
+
+.news-pane {
+    -fx-background-color: sub_color;
+}
+
+.task-pane {
+    -fx-background-color: sub_color;
+}
+
+.setting-pane {
+    -fx-background-color: sub_color;
+}
+
+.filter-box {
+    -fx-background-color: sub_color;
+}
+
+.clear-button {
+    -fx-background-color: sub_color;
+    -fx-text-fill: main_color;
+    -fx-border-color: main_color;
+}
+
+.apply-button {
+    -fx-background-color: main_color;
+    -fx-text-fill: sub_text_color;
+}
+
+.text-field {
+    -fx-background-color: text_color, sub_color;
+    -fx-text-fill: text_color;
+}
+.text-field.error {
+    -fx-background-color: #d63031, #ffdcdb;
+}
+.text-field:focused {
+    -fx-background-color: main_color , sub_color;
+}
+
+.radio-button .radio {
+    -fx-border-radius: 15px;
+    -fx-background-color: sub_color;
+    -fx-border-color: text_color;
+}
+
+.radio-button:selected .radio {
+    -fx-border-color: main_color;
+}
+
+.radio-button:selected .dot {
+    -fx-background-color: main_color;
+}
+
+.check-box {
+    -fx-text-fill: text_color;
+}
+.check-box .box {
+    -fx-background-color: sub_color;
+    -fx-border-color: main_color;
+}
+.check-box:selected .box {
+    -fx-background-color: main_color;
+}
+.check-box:selected .mark {
+    -fx-background-color: sub_color;
+}
+
+.choice-box {
+    -fx-background-color: sub_color;
+    -fx-border-color: main_color;
+    -fx-mark-color: main_color;
+}
+.choice-box .label {
+    -fx-text-fill: text_color;
+}
+.choice-box:focused {
+    -fx-background-color: main_color;
+}
+.choice-box:focused > .label {
+    -fx-text-fill: sub_text_color;
+}
+.choice-box .menu-item {
+    -fx-background-color: sub_color;
+}
+.choice-box .menu-item:focused {
+    -fx-background-color: main_color;
+}
+.choice-box .menu-item:focused .label {
+    -fx-text-fill: sub_text_color;
+}
+
+.scroll-pane {
+    -fx-background-color: sub_color;
+}
+.scroll-pane .scroll-bar:vertical .thumb {
+    -fx-background-color: main_color;
+}
+
+.border-button {
+    -fx-background-color: sub_color;
+    -fx-border-color: main_color;
+    -fx-text-fill: text_color;
+}
+
+.label, .text {
+    -fx-text-fill: text_color;
+}
+
+.hyperlink {
+    -fx-text-fill: link_text_color;
+}

@@ -1,7 +1,9 @@
 package com.github.kabocchi.king_LMS_Lite.Utility
 
 import com.github.kabocchi.king_LMS_Lite.Category
+import com.github.kabocchi.king_LMS_Lite.FOLDER_PATH
 import com.github.kabocchi.king_LMS_Lite.Main
+import com.github.kabocchi.king_LMS_Lite.Node.MainPane.SettingPane
 import javafx.fxml.FXMLLoader
 import javafx.fxml.LoadException
 import javafx.scene.Scene
@@ -9,6 +11,7 @@ import javafx.scene.image.Image
 import javafx.scene.paint.Color
 import javafx.stage.Stage
 import javafx.stage.StageStyle
+import java.nio.file.Paths
 
 class AppUtil(private val version: String, private val main: Main) {
 
@@ -30,6 +33,7 @@ class AppUtil(private val version: String, private val main: Main) {
     }
 
     fun showMain(stage: Stage) {
+        SettingPane.loadColor()
         var xOffset = 0.0
         var yOffset = 0.0
         stage.initStyle(StageStyle.UNDECORATED)
@@ -41,8 +45,9 @@ class AppUtil(private val version: String, private val main: Main) {
             val scene = Scene(fxmlLoader.load(), 1280.0, 720.0)
             scene.fill = Color.TRANSPARENT
             scene.stylesheets.add(javaClass.getResource("/style/main_base.css").toExternalForm())
+            scene.stylesheets.add(Paths.get(FOLDER_PATH + "style.css").toUri().toString())
 //            scene.stylesheets.add(javaClass.getResource("/style/main_orange.css").toExternalForm())
-            scene.stylesheets.add(javaClass.getResource("/style/main_dark_blue.css").toExternalForm())
+//            scene.stylesheets.add(javaClass.getResource("/style/main_dark_blue.css").toExternalForm())
 //            scene.stylesheets.add(javaClass.getResource("/style/main_black.css").toExternalForm())
 //            scene.stylesheets.add(javaClass.getResource("/style/main_green.css").toExternalForm())
 //            scene.stylesheets.add(javaClass.getResource("/css/main_orange.css").toExternalForm())

@@ -53,7 +53,6 @@ class NewsPane(mainStackPane: StackPane): BorderPane() {
     init {
         val start = System.currentTimeMillis()
         this.styleClass.add("news-pane")
-//        this.style = "-fx-background-color: white;"
 
         val toolBoxTopV = VBox()
         progressBar = ProgressBar()

@@ -3,6 +3,8 @@ package com.github.kabocchi.kingLmsLite.Node
 import com.eclipsesource.json.Json
 import com.github.kabocchi.king_LMS_Lite.*
 import com.github.kabocchi.king_LMS_Lite.Node.Filter.TaskFilterContent
+import com.github.kabocchi.king_LMS_Lite.Node.MainPane.SettingPane
+import com.github.kabocchi.king_LMS_Lite.Node.Skin.CustomTextField
 import com.github.kabocchi.king_LMS_Lite.Utility.*
 import javafx.animation.FadeTransition
 import javafx.application.Platform
@@ -60,7 +62,6 @@ class TaskPane(mainStackPane: StackPane, timetableDoc: Document?): BorderPane() 
     init {
         val start = System.currentTimeMillis()
         this.styleClass.add("task-pane")
-//        this.style = "-fx-background-color: white;"
 
         timetableDoc?.let {
             it.select("span.tag-timetable").forEach { element ->

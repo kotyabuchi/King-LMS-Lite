@@ -3,48 +3,6 @@ $sub_color: white;
 $text_color: rgb(30, 30, 30);
 $link_text_color: #e74c3c;
 
-#mainPane {
-  -fx-background-color: $main_color;
-}
-
-.news-pane {
-  -fx-background-color: $sub_color;
-}
-
-.task-pane {
-  -fx-background-color: $sub_color;
-}
-
-.setting-pane {
-  -fx-background-color: $sub_color;
-}
-
-.filter-box {
-  -fx-background-color: $sub_color;
-}
-
-.clear-button {
-  -fx-background-color: $sub_color;
-  -fx-text-fill: $main_color;
-  -fx-border-color: $main_color;
-}
-
-.apply-button {
-  -fx-background-color: $main_color;
-  -fx-text-fill: #fff;
-}
-
-.text-field {
-  -fx-background-color: $text_color, $sub_color;
-  -fx-text-fill: $text_color;
-  &.error {
-    -fx-background-color: #d63031, #ffdcdb;
-  }
-  &:focused {
-    -fx-background-color: $main_color , $sub_color;
-  }
-}
-
 .check-box {
   -fx-text-fill: $text_color;
   .box {

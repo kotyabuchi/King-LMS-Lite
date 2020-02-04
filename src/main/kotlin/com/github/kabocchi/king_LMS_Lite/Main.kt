@@ -20,9 +20,11 @@ import kotlin.system.exitProcess
 val FOLDER_PATH = System.getenv("APPDATA") + File.separator + "King-lms Lite" + File.separator
 val ACCOUNT_FILE_PATH = FOLDER_PATH + "account.klite"
 val SETTING_FILE_PATH = FOLDER_PATH + "setting.klite"
+val COLOR_SETTING_FILE_PATH = FOLDER_PATH + "color.klite"
 val PROJECT_FOLDER = File(FOLDER_PATH)
 val ACCOUNT_FILE = File(ACCOUNT_FILE_PATH)
 val SETTING_FILE = File(SETTING_FILE_PATH)
+val COLOR_SETTING_FILE = File(COLOR_SETTING_FILE_PATH)
 var connection: Connection = Jsoup.connect("https://king.kcg.kyoto/campus/Secure/Login.aspx?ReturnUrl=%2Fcampus%2FCommunity%2FMySetting")
 var context = HttpClientContext.create()
 var cookieStore = BasicCookieStore()

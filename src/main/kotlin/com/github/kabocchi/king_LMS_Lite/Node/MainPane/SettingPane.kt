@@ -2,12 +2,14 @@ package com.github.kabocchi.king_LMS_Lite.Node.MainPane
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.kabocchi.king_LMS_Lite.*
-import com.github.kabocchi.king_LMS_Lite.Node.BorderButton
-import com.github.kabocchi.king_LMS_Lite.Setting.*
+import com.github.kabocchi.king_LMS_Lite.Setting.Color.ColorSetting
+import com.github.kabocchi.king_LMS_Lite.Setting.Color.TemplateColor
+import com.github.kabocchi.king_LMS_Lite.Setting.DetailCacheSetting
 import com.github.kabocchi.king_LMS_Lite.Setting.Notification.MailNotificationSetting
 import com.github.kabocchi.king_LMS_Lite.Setting.Notification.PopupNotificationSetting
 import com.github.kabocchi.king_LMS_Lite.Setting.SaveFile.NewsSaveSetting
 import com.github.kabocchi.king_LMS_Lite.Setting.SaveFile.TaskSaveSetting
+import com.github.kabocchi.king_LMS_Lite.Setting.Setting
 import com.github.kabocchi.king_LMS_Lite.Utility.decryptFile2
 import com.github.kabocchi.king_LMS_Lite.Utility.encryptFile2
 import com.github.kabocchi.king_LMS_Lite.Utility.getDocumentWithJsoup
@@ -20,11 +22,11 @@ import javafx.collections.FXCollections
 import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.Cursor
-import javafx.scene.canvas.Canvas
 import javafx.scene.control.*
 import javafx.scene.layout.*
 import javafx.scene.shape.Rectangle
 import javafx.stage.DirectoryChooser
+import javafx.stage.Stage
 import javafx.util.Duration
 import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.impl.client.BasicCookieStore
@@ -34,6 +36,8 @@ import kotlin.concurrent.timerTask
 
 object SettingPane: BorderPane() {
     private val mapper = ObjectMapper()
+
+    private lateinit var colorSetting: ColorSetting
 
     private lateinit var setting: Setting
     private lateinit var popupNotificationSetting: PopupNotificationSetting
@@ -84,7 +88,9 @@ object SettingPane: BorderPane() {
     private var themeHeight = 0.0
 
     init {
-        this.styleClass.add("settin-pane")
+        loadColor()
+        this.styleClass.add("setting-pane")
+
         val scrollPane = ScrollPane().apply {
             isPannable = true
             isFitToWidth = true
@@ -449,24 +455,86 @@ object SettingPane: BorderPane() {
                 val templatesContainer = FlowPane().apply {
                     vgap = 6.0
                     hgap = 10.0
-                    val radioButton = RadioButton().apply {
-                        width = 80.0
-                        height = 60.0
-                        style = """
-                            -fx-background-color: #F89174, white, rgb(30, 30, 30), #e74c3c;
-                            -fx-background-insets: 0 0 0 0, 0 0 0 20px, 0 0 0 40px, 0 0 0 60px;
-                        """.trimIndent()
-                    }
-                    val colorContainer = VBox(0.0).apply {
-                        val mainColor = Label().apply {
-                            width = 80.0
-                            height = 20.0
-                            style = "-fx-background-color: #F89174;"
+                    val color = colorSetting.getColor()
+                    colorSetting.templates?.forEach {
+                        val contentHBox = HBox(6.0)
+                        val radioButton = RadioButton()
+                        val colorContainer = VBox(0.0).apply {
+                            style = """
+                                -fx-border-radius: 10px;
+                                -fx-border-width: 1px;
+                                -fx-border-color: #a0a0a0;
+                            """.trimIndent()
+                            val mainColor = Label().apply {
+                                prefWidth = 100.0
+                                prefHeight = 25.0
+                                style = """
+                                    -fx-background-color: ${color.mainColor};
+                                    -fx-background-radius: 10px 10px 0 0;
+                                    -fx-padding: 0 20px;
+                                """.trimIndent()
+                            }
+                            val subColor = Label().apply {
+                                prefWidth = 100.0
+                                prefHeight = 25.0
+                                style = """
+                                    -fx-background-color: ${color.subColor};
+                                    -fx-padding: 0 20px;
+                                """.trimMargin()
+                            }
+                            val textColor = Label().apply {
+                                prefWidth = 100.0
+                                prefHeight = 25.0
+                                style = """
+                                    -fx-background-color: ${color.textColor};
+                                    -fx-padding: 0 20px;
+                                """.trimMargin()
+                            }
+                            val subTextColor = Label().apply {
+                                prefWidth = 100.0
+                                prefHeight = 25.0
+                                style = """
+                                    -fx-background-color: ${color.subTextColor};
+                                    -fx-padding: 0 20px;
+                                """.trimMargin()
+                            }
+                            val linkColor = Label().apply {
+                                prefWidth = 100.0
+                                prefHeight = 25.0
+                                style = """
+                                    -fx-background-color: ${color.linkColor};
+                                    -fx-background-radius: 0 0 10px 10px;
+                                    -fx-padding: 0 20px;
+                                """.trimIndent()
+                            }
+                            this.children.addAll(mainColor, subColor, textColor, subTextColor, linkColor)
                         }
+                        contentHBox.children.addAll(radioButton, colorContainer)
+                        this.children.add(contentHBox)
                     }
-                    children.addAll(radioButton, colorContainer)
                 }
-                children.addAll(templatesContainer)
+                val newColorTheme = HBox(10.0).apply {
+                    val mainColor = TextField().apply {
+                        promptText = "メインカラー"
+                    }
+                    val subColor = TextField().apply {
+                        promptText = "サブカラー"
+                    }
+                    val textColor = TextField().apply {
+                        promptText = "テキストカラー"
+                    }
+                    val subTextColor = TextField().apply {
+                        promptText = "サブテキストカラー"
+                    }
+                    val linkColor = TextField().apply {
+                        promptText = "リンクカラー"
+                    }
+                    val submitButton = Button("追加").apply {
+                        styleClass.add("apply-button")
+                    }
+                    children.addAll(mainColor, subColor, textColor, subTextColor, linkColor)
+                }
+                children.addAll(templatesContainer, newColorTheme)
             })
         }
         Rectangle().apply {
@@ -517,19 +585,19 @@ object SettingPane: BorderPane() {
             style = "-fx-font-weight: bold; -fx-font-size: 14px;"
             bottomContainer.children.add(this)
         }
-        BorderButton("ログアウト").apply {
-//            styleClass.add("border-button")
+        Button("ログアウト").apply {
+            styleClass.add("border-button")
             bottomContainer.children.add(this)
             setOnAction {
                 getDocumentWithJsoup(context.cookieStore.toMap(), "https://king.kcg.kyoto/campus/Secure/Logoff.aspx")
-//                ACCOUNT_FILE.delete()
+                ACCOUNT_FILE.delete()
                 context = HttpClientContext.create()
                 cookieStore = BasicCookieStore()
                 context.cookieStore = cookieStore
-//                main?.let {
-//                    it.primaryStage?.close()
-//                    it.appUtil.showLogin(Stage())
-//                }
+                main?.let {
+                    it.primaryStage?.close()
+                    it.appUtil.showLogin(Stage())
+                }
             }
         }
         Button("保存").apply {
@@ -544,6 +612,24 @@ object SettingPane: BorderPane() {
         this.bottom = bottomContainer
     
         loadSetting()
+    }
+
+    fun loadColor() {
+        if (!PROJECT_FOLDER.exists()) PROJECT_FOLDER.mkdirs()
+        colorSetting = if (COLOR_SETTING_FILE.exists()) {
+            ObjectMapper().readValue(decryptFile2(COLOR_SETTING_FILE_PATH), ColorSetting::class.java)
+        } else {
+            ColorSetting().apply {
+                templates = mutableListOf(TemplateColor().apply {
+                    mainColor = "#F89174"
+                    subColor = "white"
+                    textColor = "rgb(30, 30, 30)"
+                    subTextColor = "white"
+                    linkColor = "#e74c3c"
+                })
+            }
+        }
+        colorSetting.createCSS()
     }
 
     private fun loadSetting() {
@@ -641,6 +727,10 @@ object SettingPane: BorderPane() {
             }
             timer.schedule(progressTextRemoveTimer, 3000)
         }
+    }
+
+    fun getColorSetting(): ColorSetting {
+        return colorSetting
     }
 
     fun getPopupNotificationSetting(): PopupNotificationSetting {

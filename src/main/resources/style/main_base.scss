@@ -4,6 +4,12 @@
 //  -fx-background-color: linear-gradient(to bottom right, #FFC778, #F89174);
 //}
 
+.button {
+  -fx-border-radius:3px;
+  -fx-font-weight: bold;
+  -fx-cursor: hand;
+}
+
 #closeWindow {
   -fx-background-color: transparent;
   -fx-background-size: 16px;
@@ -104,25 +110,6 @@
     -fx-font-size: 12.5;
     -fx-cursor: hand;
   }
-}
-
-.clear-button {
-  //-fx-background-color: white;
-  //-fx-text-fill: #F0A470;
-  -fx-font-weight: bold;
-  -fx-cursor: hand;
-  //-fx-border-color: #F0A470;
-  -fx-border-radius:3px;
-}
-
-.apply-button {
-  //-fx-background-color: #F0A470;
-  //-fx-text-fill: #fff;
-  -fx-font-weight: bold;
-  -fx-cursor: hand;
-  //&:hover {
-  //  -fx-background-color: rgba(240, 164, 112, 0.5);
-  //}
 }
 
 .content-box {
@@ -303,19 +290,6 @@
   > .track {
     -fx-background-color: transparent;
   }
-}
-
-.border-button {
-  //-fx-background-color: #fff;
-  //-fx-border-color: #F0A470;
-  -fx-border-radius:3px;
-  -fx-font-weight: bold;
-  -fx-cursor: hand;
-  //&:hover {
-  //  -fx-background-color: rgba(240, 164, 112, 0.1);
-  //  -fx-border-color: rgba(240, 164, 112, 0.5);
-  //  -fx-text-fill: rgba(0, 0, 0, 0.5);
-  //}
 }
 
 .h1 {

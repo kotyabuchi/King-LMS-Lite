@@ -18,12 +18,6 @@
   -fx-background-color: #30336b;
 }
 
-.clear-button {
-  -fx-background-color: #30336b;
-  -fx-text-fill: #130f40;
-  -fx-border-color: #130f40;
-}
-
 .apply-button {
   -fx-background-color: #130f40;
   -fx-text-fill: #fff;

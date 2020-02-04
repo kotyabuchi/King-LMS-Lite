@@ -23,12 +23,6 @@ $link_text_color: #dff9fb;
   -fx-background-color: $sub_color;
 }
 
-.clear-button {
-  -fx-background-color: $sub_color;
-  -fx-text-fill: $main_color;
-  -fx-border-color: $main_color;
-}
-
 .apply-button {
   -fx-background-color: $main_color;
   -fx-text-fill: #fff;
@@ -56,7 +50,7 @@ $link_text_color: #dff9fb;
       -fx-background-color: $main_color;
     }
     .mark {
-      -fx-background-color: white;
+      -fx-background-color: $text_color;
     }
   }
 }
@@ -71,7 +65,7 @@ $link_text_color: #dff9fb;
   &:focused {
     -fx-background-color: $main_color;
     > .label {
-      -fx-text-fill: white;
+      -fx-text-fill: $text_color;
     }
   }
   .menu-item {
@@ -79,7 +73,7 @@ $link_text_color: #dff9fb;
     &:focused {
       -fx-background-color: $main_color;
       .label {
-        -fx-text-fill: white;
+        -fx-text-fill: $text_color;
       }
     }
   }
@@ -96,11 +90,6 @@ $link_text_color: #dff9fb;
   -fx-background-color: $sub_color;
   -fx-border-color: $main_color;
   -fx-text-fill: $text_color;
-  //&:hover {
-  //  -fx-background-color: rgba(240, 164, 112, 0.1);
-  //  -fx-border-color: rgba(240, 164, 112, 0.5);
-  //  -fx-text-fill: rgba(0, 0, 0, 0.5);
-  //}
 }
 
 .label, .text {

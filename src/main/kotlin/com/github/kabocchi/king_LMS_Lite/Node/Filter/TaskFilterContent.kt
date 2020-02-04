@@ -101,7 +101,7 @@ class TaskFilterContent(taskPane: TaskPane): VBox() {
 
         val applyBorder = BorderPane()
         val clearButton = Button("クリア").apply {
-            styleClass.add("clear-button")
+            styleClass.add("border-button")
             setOnAction {
                 tagFilter.children.forEach {
                     if (it is CheckBox) {
