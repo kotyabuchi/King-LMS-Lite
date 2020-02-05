@@ -60,19 +60,17 @@ class NewsContent(newsPane: NewsPane, val newsDetail: NewsDetail): VBox() {
                 children.add(unreadLabel)
             }
 
-            when (newsDetail.category) {
-                "緊急" -> {
-                    val priorityLabel = Label("緊急").apply {
-                        textFill = Color.web("#ff4500")
-                    }
-                    children.add(priorityLabel)
+            if (newsDetail.isEmergency) {
+                val priorityLabel = Label("緊急").apply {
+                    textFill = Color.web("#ff4500")
                 }
-                "重要" -> {
-                    val priorityLabel = Label("重要").apply {
-                        textFill = Color.web("#ff4500")
-                    }
-                    children.add(priorityLabel)
+                children.add(priorityLabel)
+            }
+            if (newsDetail.isImportant) {
+                val priorityLabel = Label("重要").apply {
+                    textFill = Color.web("#ff4500")
                 }
+                children.add(priorityLabel)
             }
 
             val categoryLabel = Label(newsDetail.category)

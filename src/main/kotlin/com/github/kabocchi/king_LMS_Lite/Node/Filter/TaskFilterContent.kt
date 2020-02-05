@@ -37,8 +37,8 @@ class TaskFilterContent(taskPane: TaskPane): VBox() {
         }
 
         tagFilter = FlowPane().apply {
-            vgap = 6.0
-            hgap = 10.0
+            vgap = 12.0
+            hgap = 14.0
         }
         val tagFilterLabel = Label("タグ")
         resubmissionOnly = CheckBox("再提出のみ")
@@ -46,8 +46,8 @@ class TaskFilterContent(taskPane: TaskPane): VBox() {
         tagFilterBuffer.add(false)
 
         typeFilter = FlowPane().apply {
-            vgap = 6.0
-            hgap = 10.0
+            vgap = 12.0
+            hgap = 14.0
         }
         val typeFilterLabel = Label("課題タイプ")
         val typeAllCheck = CheckBox("全てのタイプ").apply {
@@ -73,8 +73,8 @@ class TaskFilterContent(taskPane: TaskPane): VBox() {
         }
 
         groupFilter = FlowPane().apply {
-            vgap = 6.0
-            hgap = 10.0
+            vgap = 12.0
+            hgap = 14.0
         }
         val groupFilterLabel = Label("講義名")
         val groupAllCheck = CheckBox("全ての講義").apply {

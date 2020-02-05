@@ -21,7 +21,7 @@ class ColorSetting {
     @get:JsonProperty("templates")
     @set:JsonProperty("templates")
     @JsonProperty("templates")
-    var templates: List<TemplateColor>? = null
+    var templates: MutableList<TemplateColor>? = null
 
     @get:JsonProperty("choseColor")
     @set:JsonProperty("choseColor")
@@ -46,6 +46,9 @@ class ColorSetting {
     }
 
     fun createCSS() {
+        println("=====================================================")
+        println(choseColor)
+        println("=====================================================")
         val color = getColor()
         var cssStr = ""
         getReadAllLinesInJarFile(getURI(javaClass.getResource("/css/main_template.css").toExternalForm()))?.forEach {
@@ -57,7 +60,6 @@ class ColorSetting {
                 .replace("link_text_color", color.linkColor ?: "#e74c3c")
                 .replace("text_color", color.textColor ?: "rgb(30, 30, 30)")
         saveFile(FOLDER_PATH + "style.css", cssStr)
-        println(cssStr)
     }
 
     private fun getURI(src: String): URI {

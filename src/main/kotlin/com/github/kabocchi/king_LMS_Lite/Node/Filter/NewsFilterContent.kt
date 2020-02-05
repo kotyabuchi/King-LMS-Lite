@@ -35,8 +35,8 @@ class NewsFilterContent(newsPane: NewsPane): VBox() {
         }
         
         tagFilter = FlowPane().apply {
-            vgap = 6.0
-            hgap = 10.0
+            vgap = 12.0
+            hgap = 14.0
         }
         val tagFilterLabel = Label("タグ")
         unreadOnly = CheckBox("未読のみ")
@@ -49,8 +49,8 @@ class NewsFilterContent(newsPane: NewsPane): VBox() {
         }
 
         categoryFilter = FlowPane().apply {
-            vgap = 6.0
-            hgap = 10.0
+            vgap = 12.0
+            hgap = 14.0
         }
         val categoryAllCheck = CheckBox("全てのカテゴリー").apply {
             isSelected = true

@@ -32,6 +32,7 @@ import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.impl.client.BasicCookieStore
 import java.io.File
 import java.util.*
+import javax.swing.ButtonGroup
 import kotlin.concurrent.timerTask
 
 object SettingPane: BorderPane() {
@@ -74,6 +75,8 @@ object SettingPane: BorderPane() {
     private val taskDetailCache: CheckBox
     private val taskDetailCachePath: TextField
     private val taskDetailCache_selectFilePath: Button
+    
+    private val colorTemplates: FlowPane
 
     private val progressText: Label
     private var progressTextRemoveTimer: TimerTask? = null
@@ -448,93 +451,71 @@ object SettingPane: BorderPane() {
         val themeSettingTab = AnchorPane().apply {
             minHeight = 0.0
             padding = Insets(0.0, 15.0, 0.0, 15.0)
-            children.add(VBox(12.0).apply {
+            children.add(VBox(16.0).apply {
                 AnchorPane.setRightAnchor(this, 0.0)
                 AnchorPane.setBottomAnchor(this, 0.0)
                 AnchorPane.setLeftAnchor(this, 0.0)
-                val templatesContainer = FlowPane().apply {
+                
+                val mainColorField: TextField
+                val subColorField: TextField
+                val textColorField: TextField
+                val subTextColorField: TextField
+                val linkTextColorField: TextField
+                val colorGroup = ToggleGroup()
+                colorTemplates = FlowPane().apply {
                     vgap = 6.0
                     hgap = 10.0
-                    val color = colorSetting.getColor()
-                    colorSetting.templates?.forEach {
-                        val contentHBox = HBox(6.0)
-                        val radioButton = RadioButton()
-                        val colorContainer = VBox(0.0).apply {
-                            style = """
-                                -fx-border-radius: 10px;
-                                -fx-border-width: 1px;
-                                -fx-border-color: #a0a0a0;
-                            """.trimIndent()
-                            val mainColor = Label().apply {
-                                prefWidth = 100.0
-                                prefHeight = 25.0
-                                style = """
-                                    -fx-background-color: ${color.mainColor};
-                                    -fx-background-radius: 10px 10px 0 0;
-                                    -fx-padding: 0 20px;
-                                """.trimIndent()
-                            }
-                            val subColor = Label().apply {
-                                prefWidth = 100.0
-                                prefHeight = 25.0
-                                style = """
-                                    -fx-background-color: ${color.subColor};
-                                    -fx-padding: 0 20px;
-                                """.trimMargin()
-                            }
-                            val textColor = Label().apply {
-                                prefWidth = 100.0
-                                prefHeight = 25.0
-                                style = """
-                                    -fx-background-color: ${color.textColor};
-                                    -fx-padding: 0 20px;
-                                """.trimMargin()
-                            }
-                            val subTextColor = Label().apply {
-                                prefWidth = 100.0
-                                prefHeight = 25.0
-                                style = """
-                                    -fx-background-color: ${color.subTextColor};
-                                    -fx-padding: 0 20px;
-                                """.trimMargin()
-                            }
-                            val linkColor = Label().apply {
-                                prefWidth = 100.0
-                                prefHeight = 25.0
-                                style = """
-                                    -fx-background-color: ${color.linkColor};
-                                    -fx-background-radius: 0 0 10px 10px;
-                                    -fx-padding: 0 20px;
-                                """.trimIndent()
-                            }
-                            this.children.addAll(mainColor, subColor, textColor, subTextColor, linkColor)
-                        }
-                        contentHBox.children.addAll(radioButton, colorContainer)
-                        this.children.add(contentHBox)
+                    colorSetting.templates?.forEachIndexed { index, color ->
+                        this.children.add(createColorTheme(color.mainColor, color.subColor, color.textColor, color.subTextColor, color.linkColor, colorGroup, colorSetting.choseColor == index))
                     }
                 }
                 val newColorTheme = HBox(10.0).apply {
-                    val mainColor = TextField().apply {
+                    mainColorField = TextField().apply {
                         promptText = "メインカラー"
                     }
-                    val subColor = TextField().apply {
+                    subColorField = TextField().apply {
                         promptText = "サブカラー"
                     }
-                    val textColor = TextField().apply {
+                    textColorField = TextField().apply {
                         promptText = "テキストカラー"
                     }
-                    val subTextColor = TextField().apply {
+                    subTextColorField = TextField().apply {
                         promptText = "サブテキストカラー"
                     }
-                    val linkColor = TextField().apply {
+                    linkTextColorField = TextField().apply {
                         promptText = "リンクカラー"
                     }
                     val submitButton = Button("追加").apply {
                         styleClass.add("apply-button")
+                        setOnAction {
+                            if (    mainColorField.text.isBlank() ||
+                                    subColorField.text.isBlank() ||
+                                    textColorField.text.isBlank() ||
+                                    subTextColorField.text.isBlank() ||
+                                    linkTextColorField.text.isBlank()) {
+                                return@setOnAction
+                            }
+                            colorTemplates.children.add(createColorTheme(mainColorField.text, subColorField.text, textColorField.text, subTextColorField.text, linkTextColorField.text, colorGroup))
+                            colorSetting.templates?.add(TemplateColor().apply {
+                                mainColor = mainColorField.text
+                                subColor = subColorField.text
+                                textColor = textColorField.text
+                                subTextColor = subTextColorField.text
+                                linkColor = linkTextColorField.text
+                            })
+                            Platform.runLater {
+                                mainColorField.text = ""
+                                subColorField.text = ""
+                                textColorField.text = ""
+                                subTextColorField.text = ""
+                                linkTextColorField.text = ""
+                            }
+                            saveColor()
+                        }
                     }
-                    children.addAll(mainColor, subColor, textColor, subTextColor, linkColor)
+                    children.addAll(mainColorField, subColorField, textColorField, subTextColorField, linkTextColorField, submitButton)
                 }
-                children.addAll(templatesContainer, newColorTheme)
+                children.addAll(colorTemplates, newColorTheme)
             })
         }
         Rectangle().apply {
@@ -631,6 +612,11 @@ object SettingPane: BorderPane() {
         }
         colorSetting.createCSS()
     }
+    
+    fun saveColor() {
+        if (!PROJECT_FOLDER.exists()) PROJECT_FOLDER.mkdirs()
+        encryptFile2(COLOR_SETTING_FILE_PATH, ObjectMapper().writeValueAsString(colorSetting))
+    }
 
     private fun loadSetting() {
         if (!PROJECT_FOLDER.exists()) PROJECT_FOLDER.mkdirs()
@@ -675,6 +661,7 @@ object SettingPane: BorderPane() {
     }
 
     private fun saveSetting() {
+        if (!PROJECT_FOLDER.exists()) PROJECT_FOLDER.mkdirs()
         try {
             popupNotificationSetting.apply {
                 send = sendPopup.isSelected
@@ -705,6 +692,8 @@ object SettingPane: BorderPane() {
                 newsPath = newsDetailCachePath.text
                 taskPath = taskDetailCachePath.text
             }
+            
+            saveColor()
             encryptFile2(SETTING_FILE_PATH, mapper.writeValueAsString(setting))
             changeProgressText("設定を保存しました")
         } catch (e: Exception) {
@@ -747,5 +736,65 @@ object SettingPane: BorderPane() {
 
     fun getTaskSaveSetting(): TaskSaveSetting {
         return taskSaveSetting
+    }
+    
+    private fun createColorTheme(main: String?, sub: String?, text: String?, subText: String?, link: String?, colorGroup: ToggleGroup, checked: Boolean = false): HBox {
+        val contentHBox = HBox(6.0)
+        val radioButton = RadioButton().apply {
+            isSelected = checked
+            toggleGroup = colorGroup
+            setOnAction {
+                val index = colorTemplates.children.indexOf(contentHBox)
+                println(index)
+                colorSetting.choseColor = index
+            }
+        }
+        val colorContainer = VBox(0.0).apply {
+            val mainColor = Label().apply {
+                prefWidth = 100.0
+                prefHeight = 25.0
+                style = """
+                    -fx-background-color: ${main};
+                    -fx-background-radius: 15px 15px 0 0;
+                    -fx-padding: 0 20px;
+                """.trimIndent()
+            }
+            val subColor = Label().apply {
+                prefWidth = 100.0
+                prefHeight = 25.0
+                style = """
+                    -fx-background-color: ${sub};
+                    -fx-padding: 0 20px;
+                """.trimMargin()
+            }
+            val textColor = Label().apply {
+                prefWidth = 100.0
+                prefHeight = 25.0
+                style = """
+                    -fx-background-color: ${text};
+                    -fx-padding: 0 20px;
+                """.trimMargin()
+            }
+            val subTextColor = Label().apply {
+                prefWidth = 100.0
+                prefHeight = 25.0
+                style = """
+                    -fx-background-color: ${subText};
+                    -fx-padding: 0 20px;
+                """.trimMargin()
+            }
+            val linkTextColor = Label().apply {
+                prefWidth = 100.0
+                prefHeight = 25.0
+                style = """
+                    -fx-background-color: ${link};
+                    -fx-background-radius: 0 0 15px 15px;
+                    -fx-padding: 0 20px;
+                """.trimIndent()
+            }
+            this.children.addAll(mainColor, subColor, textColor, subTextColor, linkTextColor)
+        }
+        contentHBox.children.addAll(radioButton, colorContainer)
+        return contentHBox
     }
 }

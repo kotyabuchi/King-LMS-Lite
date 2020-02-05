@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.kabocchi.king-LMS-Lite</groupId>
-    <artifactId>king-LMS-Lite</artifactId>
+    <artifactId>KING-LMS-Lite</artifactId>
     <version>v1.0.5</version>
 
     <repositories>
